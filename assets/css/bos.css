@@ -675,3 +675,9 @@ body.gsap .toast { transition: opacity .2s; }
 .nav a svg { width: 19px; height: 19px; }
 .nav h6 { font-size: 10.5px; }
 .rail-b { width: 264px; }
+/* straggler sweep: one avatar style, amber-family accents only */
+.av-0, .av-1, .av-2, .av-3 { background: var(--b-dark); color: var(--b-amber); }
+:where(button, a, input, select, [tabindex]):focus-visible { outline-color: var(--b-amber-deep); }
+.fare-grid input.dirty { border-color: var(--b-amber-deep); background: #fff6e2; }
+.chk input { accent-color: var(--b-amber-deep); }
+.modegrid .m span svg { color: var(--b-ink-soft); }
