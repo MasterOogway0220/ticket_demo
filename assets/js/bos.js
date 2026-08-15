@@ -1,1153 +1,1206 @@
 /* ============================================================
-   BOS console v2 — feature parity with the live Next.js console:
-   per-role navigation, fare versions with maker-checker,
-   approvals queue, label master, hash-chained audit, rich forms.
+   BOS console — mirrors apps/bos-console on fix/tester-bugs.
+   Same pages, same strings, same permission gating, working
+   actions against the localStorage store. Design system: bos.css.
    ============================================================ */
 
-const $  = (s, r) => (r || document).querySelector(s);
+const $ = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-/* ---------- icons ---------- */
-const I = {
-  dash:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/></svg>',
-  station:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8l7-4.5L19 8v13"/><path d="M9.5 21v-5h5v5"/><path d="M9 11h.01M15 11h.01"/></svg>',
-  device: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="5" y="5" width="14" height="14" rx="2.5"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 2.5v2M15 2.5v2M9 19.5v2M15 19.5v2M2.5 9h2M2.5 15h2M19.5 9h2M19.5 15h2"/></svg>',
-  product:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4z"/><path d="M14 7v10" stroke-dasharray="2.5 3"/></svg>',
-  fare:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12M6 8.5h12M6 4c4 0 7 2 7 6l-7 9.5"/><path d="M13 10H6"/></svg>',
-  label:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l8.5-8.5a2 2 0 0 1 1.4-.6H19a2 2 0 0 1 2 2v6.1a2 2 0 0 1-.6 1.4L12 21z"/><circle cx="16" cy="8" r="1.6"/></svg>',
-  appr:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5l2 2 4.5-4.5"/><circle cx="12" cy="12" r="9"/></svg>',
-  users:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 20a5 5 0 0 1 6.5-4.7"/></svg>',
-  hot:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M5 3l14 18"/></svg>',
-  tx:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>',
-  audit:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 4.5 5.5v5c0 4.6 3.1 8.4 7.5 10 4.4-1.6 7.5-5.4 7.5-10v-5z"/><path d="M9 11.5l2 2 4-4"/></svg>',
-  cfg:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h14"/><circle cx="16" cy="7" r="2"/><circle cx="7" cy="12" r="2"/><circle cx="20" cy="17" r="2"/></svg>',
-  plus:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
-  edit:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4.5L20 8.5a2.1 2.1 0 0 0-3-3L5.5 17z"/><path d="M14.5 7l3 3"/></svg>',
-  trash:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4.5 7h15M9.5 7V4.8a1.3 1.3 0 0 1 1.3-1.3h2.4a1.3 1.3 0 0 1 1.3 1.3V7M7 7l1 13h8l1-13"/></svg>',
-  eye:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></svg>',
-  cash:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 9.5h.01M18 14.5h.01"/></svg>',
-  upi:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>',
-  card:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/></svg>',
-  rupee:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12M6 8.5h12M6 4c4 0 7 2 7 6l-7 9.5"/><path d="M13 10H6"/></svg>',
-  gate:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 21V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16"/><path d="M4 21h16M12 3v18M8 8h.01M16 8h.01"/></svg>',
-  link:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14.5 14.5 9.5"/><path d="M7 17l-1.5 1.5a3.5 3.5 0 0 1-5-5l3-3a3.5 3.5 0 0 1 5 0" transform="translate(3 -1)"/><path d="M17 7l1.5-1.5a3.5 3.5 0 0 1 5 5l-3 3a3.5 3.5 0 0 1-5 0" transform="translate(-3 1)"/></svg>',
+/* ---------- status badge (exact tone map) ---------- */
+const TONES = {
+  ok: ['active', 'published', 'approved', 'applied', 'ok', 'online', 'blocked_no', 'collected'],
+  warn: ['pending', 'pending_approval', 'provisioning', 'maintenance', 'degraded', 'suspended', 'late', 'raised'],
+  danger: ['faulty', 'rejected', 'failed', 'expired', 'down', 'offline', 'blocked', 'refused'],
 };
+function badge(status) {
+  const s = String(status);
+  const tone = TONES.ok.includes(s) ? 'ok' : TONES.warn.includes(s) ? 'warn' : TONES.danger.includes(s) ? 'danger' : 'dim';
+  return `<span class="chip ${tone}">${esc(s.replace(/_/g, ' '))}</span>`;
+}
+function riskBadge(risk) {
+  const tone = { low: 'dim', medium: 'info', high: 'warn', critical: 'danger' }[risk] || 'dim';
+  return `<span class="chip ${tone}">${esc(risk)}</span>`;
+}
+const mono = (s) => `<span class="mono">${esc(s)}</span>`;
 
-/* ---------- routes (visibility from the role's nav set) ---------- */
-const ROUTES = [
-  { id: 'dashboard',    title: 'Dashboard',      crumb: 'Operational overview — live position across the four stations', icon: I.dash,    grp: 'Overview' },
-  { id: 'stations',     title: 'Stations',       crumb: 'Station master · ordered by position along the route (BOS-DM-01)', icon: I.station, grp: 'Masters' },
-  { id: 'devices',      title: 'Devices',        crumb: 'Every ECU, ToM, TVM and station server, with its certificate identity (BOS-DM-02)', icon: I.device,  grp: 'Masters' },
-  { id: 'products',     title: 'Products',       crumb: 'What can be sold, where, and how it becomes something a gate will accept (BOS-FP-02)', icon: I.product, grp: 'Masters' },
-  { id: 'fares',        title: 'Fares',          crumb: 'A published version can never be edited — publish a new version, or a rollback (BOS-FP-01/03/06/08)', icon: I.fare, grp: 'Masters' },
-  { id: 'labels',       title: 'Labels',         crumb: 'Hindi and English for stations, products and receipts, distributed with the fare table (BOS-MD-04, rule 16)', icon: I.label, grp: 'Masters' },
-  { id: 'approvals',    title: 'Approvals',      crumb: 'Privileged changes are proposals until a second person decides. You cannot decide your own (BOS-SC-04)', icon: I.appr, grp: 'Access' },
-  { id: 'users',        title: 'Users & Roles',  crumb: 'Authorisation records only — passwords and MFA live in the identity provider (BOS-UM-01/02)', icon: I.users, grp: 'Access' },
-  { id: 'hotlist',      title: 'Hotlist',        crumb: 'Blocked NCMC cards — refused at every device', icon: I.hot, grp: 'Access' },
-  { id: 'transactions', title: 'Transactions',   crumb: 'Consolidated, append-only sales ledger from all devices', icon: I.tx, grp: 'Operations' },
-  { id: 'audit',        title: 'Audit Trail',    crumb: 'Append-only and hash-chained. Retained for eight financial years (Companies Act 2013, s.128)', icon: I.audit, grp: 'Operations' },
-  { id: 'settings',     title: 'Configuration',  crumb: 'Operational values — System Flow §33', icon: I.cfg, grp: 'System' },
+function toast(msg) {
+  const t = $('#toast'); $('#toastMsg').textContent = msg;
+  t.classList.add('show'); if (window.Motion) Motion.toast(t);
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 3400);
+}
+
+/* banner helpers — exact FormOutcome wording */
+const savedBanner = (msg) => `<div class="notice-ok"><b>Saved</b>${msg ? ' ' + esc(msg) : ''}</div>`;
+const approvalBanner = (ref, roles) => `<div class="notice-stale"><b>Submitted for approval — not yet applied</b><br>
+  Submitted as ${esc(ref)}. A second person holding one of ${esc(roles)} must approve before this takes effect (BOS-SC-04, segregation of duties).<br>
+  Reference ${esc(ref)} — <a href="#/approvals">view the approval queue</a></div>`;
+
+function accessDenied(perm) {
+  const roles = session.user ? [session.user.role] : [];
+  const roleLine = roles.length === 0
+    ? 'You hold no roles yet, so nothing has been granted to you.'
+    : `You hold ${roles.join(', ')}, which ${roles.length > 1 ? 'do' : 'does'} not include it. Ask an administrator if you need it.`;
+  return `<div class="card"><div class="pad">
+    <p style="font-weight:600">This screen needs the ${mono(perm)} permission.</p>
+    <p style="color:var(--b-ink-faint);margin-top:6px">${esc(roleLine)}</p></div></div>`;
+}
+
+/* ---------- routes: exact nav (label, hash, permission) ---------- */
+const NAV = [
+  { label: 'Dashboard',   id: 'dashboard', perm: null },
+  { label: 'Stations',    id: 'stations',  perm: 'station.read' },
+  { label: 'Devices',     id: 'devices',   perm: 'device.read' },
+  { label: 'Products',    id: 'products',  perm: 'product.read' },
+  { label: 'Fares',       id: 'fares',     perm: 'fare.read' },
+  { label: 'Excess fare', id: 'excess-fare', perm: 'excess_fare.read' },
+  { label: 'Alarms',      id: 'alarms',    perm: 'alarm.read' },
+  { label: 'Hotlist',     id: 'hotlist',   perm: 'hotlist.read' },
+  { label: 'Labels',      id: 'labels',    perm: 'label.read' },
+  { label: 'Approvals',   id: 'approvals', perm: 'approval.read' },
+  { label: 'Users',       id: 'users',     perm: 'user.read' },
+  { label: 'Audit trail', id: 'audit',     perm: 'audit.read' },
 ];
 
 /* ---------- shell ---------- */
-function boot() {
-  store.load();
-  session.load();
-  const q = new URLSearchParams(location.search);
-  if (q.get('demo')) session.signIn(q.get('demo'));
-  if (session.user) enterApp();
-  else { $('#fUser').value = 'admin.dev'; $('#fPass').value = 'demo'; }
+function renderNav(current) {
+  $('#nav').innerHTML = NAV.filter(n => !n.perm || session.can(n.perm)).map(n =>
+    `<a href="#/${n.id}" class="${n.id === current ? 'on' : ''}">${esc(n.label)}</a>`).join('');
+}
+function setHeader(title, desc) {
+  $('#pageTitle').textContent = title;
+  const d = $('#pageDesc');
+  if (d) { d.textContent = desc || ''; d.style.display = desc ? '' : 'none'; }
+}
+function renderUserBox() {
+  $('#topUserName').textContent = session.user.name;
+  $('#topUserRoles').textContent = session.user.role;
+  $('#roBadge').style.display = session.isReadOnly() ? '' : 'none';
+}
 
-  $('#loginForm').addEventListener('submit', e => { e.preventDefault(); tryLogin($('#fUser').value.trim()); });
-  $$('.demo-chips button').forEach(b => b.addEventListener('click', () => {
-    $('#fUser').value = b.dataset.demo; $('#fPass').value = 'demo'; tryLogin(b.dataset.demo);
-  }));
-  $('#signOut').addEventListener('click', () => { session.signOut(); location.hash = ''; location.reload(); });
-  $('#resetData').addEventListener('click', async () => {
-    if (await askConfirm('Reset demo data?', 'All your changes in this browser are discarded and the seed data is restored.', 'Reset')) {
-      store.reset(); toast('Demo data reset'); route();
-    }
-  });
-  $('#drawerClose').addEventListener('click', closeDrawer);
-  $('#drawerCancel').addEventListener('click', closeDrawer);
-  $('#overlay').addEventListener('click', closeDrawer);
-  $('#searchBox').addEventListener('input', applySearch);
-  window.addEventListener('hashchange', route);
-}
-function tryLogin(username) {
-  const u = session.signIn(username);
-  if (!u) { $('#loginErr').classList.add('show'); return; }
-  enterApp();
-}
-function enterApp() {
-  $('#login').style.display = 'none';
-  $('#app').classList.add('on');
-  const u = session.user;
-  $('#whoName').textContent = u.name;
-  $('#whoRole').textContent = u.username;
-  $('#whoAv').textContent = u.name.split(' ').map(x => x[0]).slice(0, 2).join('');
-  const rw = session.canWrite();
-  const chip = $('#whoChip');
-  chip.textContent = session.roleLabel() + (rw ? '' : ' · read-only');
-  chip.classList.toggle('rw', rw);
-  document.body.classList.toggle('readonly', !rw);
-  route();
-}
-function allowedRoutes() {
-  const nav = session.navFor();
-  return ROUTES.filter(r => nav.includes(r.id));
-}
-function buildNav() {
-  const db = store.db;
-  const pend = db.approvals.filter(a => a.status === 'pending').length;
-  const counts = {
-    stations: db.stations.length, devices: db.devices.length, products: db.products.length,
-    fares: db.fareVersions.length, labels: db.labels.length, approvals: pend || null,
-    users: db.users.length, hotlist: db.hotlist.length,
-    transactions: db.transactions.length, audit: db.audit.length, settings: db.config.length,
-  };
-  let html = '', grp = '';
-  for (const r of allowedRoutes()) {
-    if (r.grp !== grp) { grp = r.grp; html += `<h6>${grp}</h6>`; }
-    html += `<a href="#/${r.id}" data-route="${r.id}">${r.icon}<span>${r.title}</span>${counts[r.id] != null ? `<span class="cnt">${counts[r.id]}</span>` : ''}</a>`;
-  }
-  $('#nav').innerHTML = html;
-}
+/* ---------- router ---------- */
+let CURRENT = 'dashboard', PARAM = null;
 function route() {
-  const id = (location.hash.replace(/^#\//, '') || 'dashboard').split('?')[0];
-  const allowed = allowedRoutes();
-  const r = allowed.find(x => x.id === id) || allowed[0];
-  $('#pageTitle').textContent = r.title;
-  $('#searchBox').value = '';
-  $('#searchWrap').style.display = r.id === 'dashboard' ? 'none' : '';
-  const oldC = $('#content'); const fresh = oldC.cloneNode(false);
-  oldC.replaceWith(fresh);
-  PAGES[r.id]();
+  const h = location.hash.replace(/^#\//, '') || 'dashboard';
+  const [page, param] = h.split('/');
+  CURRENT = page; PARAM = param || null;
+  const def = NAV.find(n => n.id === page);
+  if (!def || !PAGES[page]) { location.hash = '#/dashboard'; return; }
+  renderNav(page);
+  const fresh = $('#content').cloneNode(false);
+  $('#content').replaceWith(fresh);
+  PAGES[page](param);
   if (window.Motion) Motion.page();
-  buildNav();
-  $$('#nav a').forEach(a => a.classList.toggle('on', a.dataset.route === r.id));
+  window.scrollTo(0, 0);
 }
-
-/* ---------- primitives ---------- */
-function toast(msg) {
-  $('#toastMsg').textContent = msg;
-  const t = $('#toast'); t.classList.add('show');
-  if (window.Motion) Motion.toast(t);
-  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2800);
-}
-function guard() {
-  if (!session.canWrite()) { toast('Your role is read-only — changes are disabled'); return false; }
-  return true;
-}
-let drawerSaveFn = null;
-function openDrawer(title, bodyHTML, onSave, saveLabel = 'Save') {
-  $('#drawerTitle').textContent = title;
-  $('#drawerBody').innerHTML = bodyHTML;
-  $('#drawerSave').textContent = saveLabel;
-  $('#drawerSave').style.display = onSave ? '' : 'none';
-  drawerSaveFn = onSave;
-  $('#overlay').classList.add('open');
-  $('#drawer').classList.add('open');
-  if (window.Motion) Motion.drawerOpen($('#drawer'), $('#overlay'));
-  const f = $('#drawerBody input:not([disabled]), #drawerBody select'); if (f) f.focus();
-}
-function closeDrawer() {
-  drawerSaveFn = null;
-  const done = () => { $('#overlay').classList.remove('open'); $('#drawer').classList.remove('open'); };
-  if (window.Motion) Motion.drawerClose($('#drawer'), done); else done();
-}
-document.addEventListener('DOMContentLoaded', () => {
-  $('#drawerSave').addEventListener('click', () => { if (drawerSaveFn) drawerSaveFn(); });
-});
-const fld = (id, label, inner, help) =>
-  `<div class="field"><label for="${id}">${label}</label>${inner}${help ? `<div class="fhelp">${help}</div>` : ''}</div>`;
-const inputF = (id, label, value = '', type = 'text', attrs = '', help = '') =>
-  fld(id, label, `<input id="${id}" type="${type}" value="${String(value ?? '').replace(/"/g, '&quot;')}" ${attrs}>`, help);
-const selectF = (id, label, options, value, help = '') =>
-  fld(id, label, `<select id="${id}">${options.map(o => `<option value="${o.v}" ${String(o.v) === String(value) ? 'selected' : ''}>${o.t}</option>`).join('')}</select>`, help);
-const checkF = (id, label, checked) =>
-  `<label class="chk"><input type="checkbox" id="${id}" ${checked ? 'checked' : ''}><span>${label}</span></label>`;
-function askConfirm(title, body, yes = 'Delete') {
-  return new Promise(res => {
-    $('#confirmTitle').textContent = title;
-    $('#confirmBody').textContent = body;
-    $('#confirmYes').textContent = yes;
-    const c = $('#confirm'); c.classList.add('open');
-    const done = v => { c.classList.remove('open'); $('#confirmYes').onclick = $('#confirmNo').onclick = null; res(v); };
-    $('#confirmYes').onclick = () => done(true);
-    $('#confirmNo').onclick = () => done(false);
-  });
-}
-function applySearch() {
-  const q = $('#searchBox').value.trim().toLowerCase();
-  $$('#content table.grid tbody tr').forEach(tr => {
-    tr.style.display = !q || tr.textContent.toLowerCase().includes(q) ? '' : 'none';
-  });
-}
-const statusChip = s => ({
-  active: '<span class="chip ok">Active</span>',
-  faulty: '<span class="chip bad">Faulty</span>', fault: '<span class="chip bad">Fault</span>',
-  offline: '<span class="chip warn">Offline</span>',
-  maintenance: '<span class="chip info">Maintenance</span>',
-  suspended: '<span class="chip dim">Suspended</span>',
-  inactive: '<span class="chip dim">Inactive</span>',
-  invited: '<span class="chip info">Invited</span>',
-  deactivated: '<span class="chip dim">Deactivated</span>',
-  planned: '<span class="chip dim">Planned</span>',
-  commissioning: '<span class="chip info">Commissioning</span>',
-  decommissioned: '<span class="chip dim">Decommissioned</span>',
-  registered: '<span class="chip dim">Registered</span>',
-  provisioning: '<span class="chip info">Provisioning</span>',
-}[s] || `<span class="chip dim">${s}</span>`);
-const verChip = s => ({
-  published: '<span class="chip ok">Published</span>',
-  draft: '<span class="chip info">Draft</span>',
-  pending: '<span class="chip warn">Awaiting approval</span>',
-  superseded: '<span class="chip dim">Superseded</span>',
-}[s] || `<span class="chip dim">${s}</span>`);
-const aprChip = s => ({
-  pending: '<span class="chip warn">Pending</span>',
-  approved: '<span class="chip ok">Approved</span>',
-  rejected: '<span class="chip bad">Rejected</span>',
-  withdrawn: '<span class="chip dim">Withdrawn</span>',
-}[s] || s);
-const rowActs = (id, extra = '') => `<div class="rowact w-only">${extra}
-  <button class="iconbtn" data-edit="${id}" aria-label="Edit">${I.edit}</button>
-  <button class="iconbtn del" data-del="${id}" aria-label="Delete">${I.trash}</button></div>`;
-const cardShell = (title, sub, toolbar, body) => `
-  <div class="card"><header><h2>${title}</h2><div class="hspace"></div>${toolbar}${sub ? `<div class="sub">${sub}</div>` : ''}</header>${body}</div>`;
-const listWrap = html => `<div class="listwrap">${html}</div>`;
-const newBtn = (label, id = 'newBtn') => `<button class="btn btn-primary w-only" id="${id}">${I.plus}<span>${label}</span></button>`;
-const stationOpts = (first) => [
-  ...(first ? [first] : []),
-  ...store.db.stations.map(s => ({ v: s.code, t: `${s.code} — ${s.en}` })),
-];
-const userName = un => (store.db.users.find(u => u.username === un) || { name: un }).name;
-
-function wireCrud(coll, onNew, onEdit, onDel) {
-  const cont = $('#content');
-  const nb = $('#newBtn', cont);
-  if (nb && onNew) nb.addEventListener('click', () => { if (guard()) onNew(); });
-  cont.addEventListener('click', e => {
-    const eb = e.target.closest('[data-edit]');
-    const db = e.target.closest('[data-del]');
-    if (eb && guard() && onEdit) onEdit(store.db[coll].find(r => r.id === eb.dataset.edit));
-    if (db && guard() && onDel) onDel(store.db[coll].find(r => r.id === db.dataset.del));
-  });
-}
+window.addEventListener('hashchange', route);
 
 /* ============================================================ PAGES */
-const PAGES = {
+const PAGES = {};
 
-  /* ---------------- dashboard ---------------- */
-  dashboard() {
-    const db = store.db;
-    const t0 = new Date(); t0.setHours(0, 0, 0, 0);
-    const today = db.transactions.filter(t => t.ts >= t0.getTime());
-    const revToday = today.reduce((a, t) => a + t.amount, 0);
-    const tixToday = today.reduce((a, t) => a + t.qty * (t.product === 'RJT' ? 2 : 1), 0);
-    const attention = db.devices.filter(d => !['active'].includes(d.status));
-    const me = session.user.username;
-    const pending = db.approvals.filter(a => a.status === 'pending');
-    const mine = pending.filter(a => a.maker !== me && session.canApprove());
-    const auditN = db.audit.length;
+/* ---------- Dashboard ---------- */
+PAGES.dashboard = () => {
+  setHeader('Operational overview', 'Live position across the four stations. Everything shown here is read from the Back Office in real time.');
+  const db = store.db;
+  const gates = db.devices.filter(d => d.type === 'ECU');
+  const online = gates.filter(g => g.status === 'active').length;
+  const actionable = db.approvals.filter(a => a.status === 'pending' && a.maker !== session.user.username && session.can('approval.decide'));
+  const canAudit = session.can('audit.verify');
+  const fares = db.fareVersions.slice().sort((a, b) => b.versionNo - a.versionNo).slice(0, 5);
 
-    const days = [];
-    for (let d = 6; d >= 0; d--) {
-      const a = new Date(t0.getTime() - d * 864e5);
-      const b = a.getTime() + 864e5;
-      const sum = db.transactions.filter(t => t.ts >= a.getTime() && t.ts < b).reduce((x, t) => x + t.amount, 0);
-      days.push({ lab: a.toLocaleDateString('en-IN', { weekday: 'short' }), sum, today: d === 0 });
-    }
-    const gmax = Math.ceil(Math.max(...days.map(d => d.sum), 1) / 2000) * 2000;
-    const mode = m => today.filter(t => t.mode === m).reduce((a, t) => a + t.amount, 0);
-
-    $('#content').innerHTML = `
-      <div class="dashgrid">
-        <div class="tile-b"><div class="ic">${I.rupee}</div><div class="tv"><b>${fmtINR(revToday)}</b><span>Revenue today</span></div></div>
-        <div class="tile-b"><div class="ic">${I.product}</div><div class="tv"><b>${tixToday}</b><span>Tickets issued today</span></div></div>
-        <div class="tile-b"><div class="ic">${I.appr}</div><div class="tv"><b>${session.canApprove() ? mine.length : pending.length}</b><span>${session.canApprove() ? 'Awaiting your decision' : 'Pending approvals'}</span></div></div>
-        <div class="tile-b"><div class="ic">${I.audit}</div><div class="tv"><b>Intact</b><span>Audit chain · ${auditN} entries verified</span></div></div>
-
-        <div class="card dg-chart">
-          <header><h2>Revenue — last 7 days</h2><div class="hspace"></div>
-            <span class="chip dim" style="font-weight:600">All stations · all modes</span></header>
-          ${(() => {
-            const W = 720, H = 252, L = 56, R = 704, T = 18, B = 198;
-            const px = i => L + i * ((R - L) / 6);
-            const py = v => B - (v / gmax) * (B - T);
-            const pts = days.map((d, i) => [px(i), py(d.sum)]);
-            const line = pts.map(p => p.join(',')).join(' ');
-            const area = `M${L},${B} L` + line.split(' ').join(' L') + ` L${R},${B} Z`;
-            return `<div class="achart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Revenue, last 7 days">
-              <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#ffb648" stop-opacity=".45"/>
-                <stop offset="1" stop-color="#ffb648" stop-opacity="0"/>
-              </linearGradient></defs>
-              ${[1, .5, 0].map(f => `
-                <line x1="${L}" y1="${py(gmax * f)}" x2="${R}" y2="${py(gmax * f)}" class="agrid"/>
-                <text x="${L - 8}" y="${py(gmax * f) + 4}" text-anchor="end" class="alab">${f ? '₹' + (gmax * f / 1000) + 'k' : '0'}</text>`).join('')}
-              <path d="${area}" fill="url(#ag)"/>
-              <polyline points="${line}" fill="none" stroke="#35200e" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-              ${days.map((d, i) => `
-                <circle cx="${px(i)}" cy="${py(d.sum)}" r="${d.today ? 6 : 4}" fill="${d.today ? '#ffb648' : '#35200e'}" stroke="#fff" stroke-width="2"/>
-                ${d.today ? `<text x="${i === 6 ? px(i) + 6 : px(i)}" y="${py(d.sum) - 14}" text-anchor="${i === 6 ? 'end' : 'middle'}" class="aval">${fmtINR(d.sum)}</text>` : ''}
-                <text x="${px(i)}" y="${H - 34}" text-anchor="middle" class="alab ${d.today ? 'on' : ''}">${d.lab}</text>
-                <title>${d.lab} · ${fmtINR(d.sum)}</title>`).join('')}
-            </svg>
-            <table class="sr-only"><caption>Revenue by day</caption>
-              ${days.map(d => `<tr><th>${d.lab}</th><td>${fmtINR(d.sum)}</td></tr>`).join('')}</table></div>`;
-          })()}
-          <div class="modegrid">
-            <div class="m"><span>${I.cash} Cash · counter</span><b>${fmtINR(mode('Cash'))}</b></div>
-            <div class="m"><span>${I.upi} UPI</span><b>${fmtINR(mode('UPI'))}</b></div>
-            <div class="m"><span>${I.card} Card · counter</span><b>${fmtINR(mode('Card'))}</b></div>
-          </div>
-        </div>
-
-        <div class="dg-right">
-          ${pending.length ? `
-          <div class="card">
-            <header><h2>Awaiting a decision</h2><div class="hspace"></div>
-              <a href="#/approvals" class="chip warn" style="text-decoration:none">${pending.length} pending</a></header>
-            <div class="tscroll"><table class="grid"><tbody>
-              ${pending.slice(0, 3).map(a => `<tr>
-                <td class="mono" style="white-space:nowrap">${a.ref}</td>
-                <td>${a.summary.slice(0, 60)}${a.summary.length > 60 ? '…' : ''}</td></tr>`).join('')}
-            </tbody></table></div>
-          </div>` : ''}
-          <div class="card">
-            <header><h2>Top stations today</h2><div class="hspace"></div>
-              <span class="chip dim">by revenue</span></header>
-            ${(() => {
-              const by = STN.map(st => ({ code: st.code, name: st.en, sum: today.filter(t => t.station === st.code).reduce((a, t) => a + t.amount, 0) }))
-                .sort((a, b) => b.sum - a.sum);
-              const mx = Math.max(...by.map(x => x.sum), 1);
-              return `<div class="sperf">${by.map(x => `
-                <div class="sp">
-                  <div class="spr"><span><b class="spc">${x.code}</b> ${x.name}</span><b>${fmtINR(x.sum)} · ${Math.round(x.sum / (revToday || 1) * 100)}%</b></div>
-                  <div class="track"><i class="fill" style="width:${Math.round(x.sum / mx * 100)}%"></i></div>
-                </div>`).join('')}</div>`;
-            })()}
-          </div>
-          <div class="card">
-            <header><h2>Needs attention</h2><div class="hspace"></div>
-              <span class="chip ${attention.length ? 'warn' : 'ok'}">${attention.length || 'None'}</span></header>
-            ${attention.length ? `<div class="tscroll"><table class="grid"><tbody>
-              ${attention.map(d => `<tr>
-                <td class="mono">${d.code}</td>
-                <td>${stationName(d.station)}</td>
-                <td style="text-align:right">${statusChip(d.status)}</td></tr>`).join('')}
-            </tbody></table></div>` : `<div class="empty">Every device is reporting normally.</div>`}
-          </div>
-        </div>
-
-        <div class="dg-full">
-      ${cardShell('Recent transactions', '', `<a href="#/transactions" class="btn btn-primary" style="height:40px">Open ledger</a>`, `
+  $('#content').innerHTML = `
+    <div class="tiles-b">
+      <div class="tile-b"><div class="ic">${I.device}</div><div class="tv"><b>${gates.length}</b><span>Gate ECUs — Registered across all stations</span></div></div>
+      <div class="tile-b"><div class="ic">${I.station}</div><div class="tv"><b>${gates.length ? `${online} / ${gates.length}` : '—'}</b><span>Gates active — Commissioned and reporting</span></div></div>
+      <div class="tile-b"><div class="ic">${I.appr}</div><div class="tv"><b>${session.can('approval.read') ? actionable.length : '—'}</b><span>Awaiting your decision — Approvals you may act on</span></div></div>
+      <div class="tile-b"><div class="ic">${I.audit}</div><div class="tv"><b>${canAudit ? 'Intact' : '—'}</b><span>Audit chain — ${canAudit ? `${db.audit.length} entries verified in 4 ms` : 'Requires audit.verify'}</span></div></div>
+    </div>
+    <div class="two-col">
+      ${session.can('approval.read') ? `
+      <div class="card">
+        <header><h2>Awaiting your decision</h2><div class="hspace"></div><a class="btn btn-ghost" style="height:38px" href="#/approvals">View all</a></header>
+        <div class="pad" style="padding-top:4px;color:var(--b-ink-faint);font-size:12.5px">Requests raised by someone else. You cannot decide your own.</div>
+        ${actionable.length === 0 ? `<div class="empty">Nothing awaiting your decision.</div>` : `
         <div class="tscroll"><table class="grid">
-          <thead><tr><th>Time</th><th>Ref</th><th>Station</th><th>Device</th><th>Product</th><th>Journey</th><th class="num">Qty</th><th>Mode</th><th class="num">Amount</th></tr></thead>
-          <tbody>${db.transactions.slice(0, 8).map(txRow).join('')}</tbody>
-        </table></div>`)}
-        </div>
-      </div>`;
-  },
-
-  /* ---------------- stations ---------------- */
-  stations() {
-    const rows = store.db.stations.map((s, i) => `<tr>
-      <td class="num" style="color:var(--b-ink-faint)">${s.seq}</td>
-      <td><span class="av av-${i % 4}">${s.code}</span></td>
-      <td><div class="cellmain"><span class="cm-t"><b>${s.en}</b><span>${s.hi} · ${s.short || s.code}</span></span></div></td>
-      <td>${s.type}</td>
-      <td>${statusChip(s.status)}</td>
-      <td>${s.open} – ${s.close}</td>
-      <td>${fmtD(s.commissioned)}</td>
-      <td>${rowActs(s.id)}</td></tr>`).join('');
-
-    $('#content').innerHTML = listWrap(cardShell('Station master',
-      'Stations are ordered by their position along the route; that ordering drives every report and every distance-based fare (BOS-DM-01).',
-      newBtn('Register a station'), `
-      <div class="tscroll"><table class="grid">
-        <thead><tr><th class="num">#</th><th>Code</th><th>Name</th><th>Type</th><th>Status</th><th>Operating hours</th><th>Commissioned</th><th></th></tr></thead>
-        <tbody>${rows}</tbody></table></div>`));
-
-    const form = (s = {}, isNew = true) =>
-      inputF('f_code', 'Station code' + (isNew ? ' *' : ''), s.code || '', 'text',
-        `maxlength="6" style="text-transform:uppercase" ${isNew ? '' : 'disabled'}`,
-        isNew ? 'Two to six upper-case letters. Used in reports and clearing files, so it must be stable.' : 'The code cannot be changed — it appears in reports and clearing files.') +
-      inputF('f_seq', 'Position on the route *', s.seq ?? store.db.stations.length + 1, 'number', 'min="1" max="20"',
-        'Order along the line. Drives every report and every distance-based fare.') +
-      inputF('f_en', 'Name (English) *', s.en || '') +
-      inputF('f_hi', 'Name (Hindi)', s.hi || '', 'text', '', 'Shown on screens and receipts alongside the English name.') +
-      inputF('f_short', 'Short name', s.short || '') +
-      selectF('f_type', 'Type *', [{ v: 'Terminal', t: 'Terminal — end of the line' }, { v: 'Intermediate', t: 'Intermediate' }], s.type || 'Intermediate') +
-      inputF('f_open', 'Opens', s.open || '05:00', 'time') +
-      inputF('f_close', 'Closes', s.close || '21:00', 'time') +
-      inputF('f_lat', 'Latitude', s.lat ?? '', 'number', 'step="any"') +
-      inputF('f_lng', 'Longitude', s.lng ?? '', 'number', 'step="any"') +
-      inputF('f_addr', 'Address', s.address ?? '') +
-      (isNew ? '' : selectF('f_status', 'Status',
-        ['planned', 'commissioning', 'active', 'suspended', 'decommissioned'].map(v => ({ v, t: v[0].toUpperCase() + v.slice(1) })), s.status));
-    const read = (s = {}) => ({
-      code: ($('#f_code').value || s.code || '').trim().toUpperCase(),
-      seq: +$('#f_seq').value, en: $('#f_en').value.trim(), hi: $('#f_hi').value.trim(),
-      short: $('#f_short').value.trim(), type: $('#f_type').value,
-      open: $('#f_open').value, close: $('#f_close').value,
-      lat: $('#f_lat').value || null, lng: $('#f_lng').value || null, address: $('#f_addr').value || null,
-      status: $('#f_status') ? $('#f_status').value : (s.status || 'active'),
-    });
-
-    wireCrud('stations',
-      () => openDrawer('Register a station', form(), () => {
-        const v = read(); if (!v.code || !v.en) return toast('Code and name are required');
-        v.commissioned = Date.now();
-        store.insert('stations', v, 'Station', `${v.code} — ${v.en} registered`);
-        closeDrawer(); toast('Station registered'); route();
-      }, 'Create station'),
-      s => openDrawer(`Edit ${s.en}`, form(s, false), () => {
-        store.update('stations', s.id, read(s), 'Station', `${s.code} updated — values before and after recorded`);
-        closeDrawer(); toast('Saved'); route();
-      }, 'Save changes'),
-      async s => {
-        const used = store.db.devices.filter(d => d.station === s.code).length;
-        if (used) return toast(`${used} devices are registered at ${s.code} — decommission them first`);
-        if (await askConfirm(`Delete ${s.code}?`, `${s.en} is removed from the line. Fares that reference it stay in history.`)) {
-          store.remove('stations', s.id, 'Station', `${s.code} deleted`);
-          toast('Station deleted'); route();
-        }
-      });
-  },
-
-  /* ---------------- devices ---------------- */
-  devices() {
-    const db = store.db;
-    const TYPES = ['Gate controller (ECU)', 'Counter (ToM)', 'Kiosk (TVM)', 'Excess Fare Office terminal', 'Station server', 'Handheld'];
-    const TAV = { 'Gate controller (ECU)': [I.gate, 0], 'Kiosk (TVM)': [I.device, 1], 'Counter (ToM)': [I.cash, 2], 'Excess Fare Office terminal': [I.users, 3], 'Station server': [I.cfg, 2], 'Handheld': [I.upi, 1] };
-    const f = PAGES._devFilter || { station: '', type: '', status: '' };
-    const list = db.devices.filter(d =>
-      (!f.station || d.station === f.station) && (!f.type || d.type === f.type) && (!f.status || d.status === f.status));
-
-    $('#content').innerHTML = listWrap(cardShell('Device registry',
-      `${list.length} of ${db.devices.length} devices. Certificate issue, configuration distribution and heartbeat arrive with the device plane in phase 2 — the columns are already here so the registry keeps its shape.`,
-      newBtn('Register device'), `
-      <div class="pad" style="padding-top:0;padding-bottom:8px"><div class="fbar">
-        <select id="fSt"><option value="">All stations</option>${STN.map(s => `<option ${f.station === s.code ? 'selected' : ''}>${s.code}</option>`).join('')}</select>
-        <select id="fTy"><option value="">All types</option>${TYPES.map(t => `<option ${f.type === t ? 'selected' : ''}>${t}</option>`).join('')}</select>
-        <select id="fSs"><option value="">Any status</option>${['active', 'faulty', 'offline', 'maintenance', 'registered', 'provisioning', 'decommissioned'].map(s => `<option ${f.status === s ? 'selected' : ''}>${s}</option>`).join('')}</select>
-      </div></div>
-      <div class="tscroll"><table class="grid">
-        <thead><tr><th>Device</th><th>Station</th><th>Lane / role</th><th>Status</th><th>Certificate</th><th>Fare / hotlist</th><th>Last seen</th><th></th></tr></thead>
-        <tbody>${list.map(d => `<tr>
-          <td><div class="cellmain"><span class="av av-${(TAV[d.type] || [0, 0])[1]}" style="width:36px;height:36px;border-radius:11px">${(TAV[d.type] || [I.device])[0]}</span><span class="cm-t"><b class="mono" style="font-family:var(--font-mono);font-size:12px">${d.code}</b><span>${d.type}</span></span></div></td>
-          <td>${stationName(d.station)}</td>
-          <td style="color:var(--b-ink-soft)">${d.role}</td>
-          <td>${statusChip(d.status)}</td>
-          <td><span class="chip dim">Pending · phase 2</span></td>
-          <td style="color:var(--b-ink-faint)">v1 · current</td>
-          <td style="white-space:nowrap;color:var(--b-ink-faint)">${fmtDT(d.lastSeen)}</td>
-          <td>${rowActs(d.id)}</td></tr>`).join('') || `<tr><td colspan="8"><div class="empty">No devices match the filter.</div></td></tr>`}
-        </tbody></table></div>`));
-
-    ['fSt', 'fTy', 'fSs'].forEach((id, i) => $('#' + id).addEventListener('change', e => {
-      PAGES._devFilter = { ...f, [['station', 'type', 'status'][i]]: e.target.value };
-      PAGES.devices();
-    }));
-
-    const formNew = () =>
-      selectF('f_type', 'Device type *', TYPES.map(t => ({ v: t, t })), TYPES[0]) +
-      selectF('f_station', 'Station *', stationOpts(), 'VCT') +
-      inputF('f_code', 'Device code *', '', 'text', 'placeholder="VCT-TYPE-01" style="text-transform:uppercase"',
-        'Station code, then TYPE, then a suffix — for example VCT-ECU-06. It appears in clearing files and reports, so it must survive a restore unchanged.') +
-      inputF('f_role', 'Lane / role', '', 'text', 'placeholder="Entry · tripod"') +
-      inputF('f_manu', 'Manufacturer', '') + inputF('f_model', 'Model', '') +
-      inputF('f_serial', 'Serial number', '') + inputF('f_asset', 'Asset tag', '') +
-      inputF('f_ip', 'IP address', '') + inputF('f_loc', 'Location note', '') +
-      inputF('f_inst', 'Installed on', new Date().toISOString().slice(0, 10), 'date');
-    const formEdit = (d) =>
-      `<div class="fhelp" style="margin-bottom:14px">${d.code} — ${d.type} at ${stationName(d.station)}. The code, type and station are fixed at registration; moving a device means decommissioning it and registering it at the other station.</div>` +
-      inputF('f_manu', 'Manufacturer', d.manufacturer ?? '') + inputF('f_model', 'Model', d.model ?? '') +
-      inputF('f_serial', 'Serial number', d.serial ?? '') + inputF('f_asset', 'Asset tag', d.assetTag ?? '') +
-      inputF('f_ip', 'IP address', d.ip ?? '') + inputF('f_loc', 'Location note', d.locationNote ?? '') +
-      selectF('f_status', 'Status', [
-        { v: 'registered', t: 'Registered — no certificate issued yet' },
-        { v: 'provisioning', t: 'Provisioning' }, { v: 'active', t: 'Active' },
-        { v: 'maintenance', t: 'Maintenance' }, { v: 'faulty', t: 'Faulty' },
-        { v: 'offline', t: 'Offline' }, { v: 'decommissioned', t: 'Decommissioned' },
-      ], d.status);
-
-    wireCrud('devices',
-      () => openDrawer('Register a device', formNew(), () => {
-        const code = $('#f_code').value.trim().toUpperCase();
-        if (!code) return toast('Device code is required');
-        store.insert('devices', {
-          code, type: $('#f_type').value, station: $('#f_station').value, role: $('#f_role').value.trim() || '—',
-          manufacturer: $('#f_manu').value || null, model: $('#f_model').value || null,
-          serial: $('#f_serial').value || null, assetTag: $('#f_asset').value || null,
-          ip: $('#f_ip').value || null, locationNote: $('#f_loc').value || null,
-          installedOn: Date.now(), status: 'registered',
-          cert: 'Pending — issued during provisioning (phase 2)', lastSeen: null,
-        }, 'Device', `${code} registered at ${$('#f_station').value}`);
-        closeDrawer(); toast('Device registered — certificate is issued during provisioning'); route();
-      }, 'Register device'),
-      d => openDrawer(`Edit ${d.code}`, formEdit(d), () => {
-        store.update('devices', d.id, {
-          manufacturer: $('#f_manu').value || null, model: $('#f_model').value || null,
-          serial: $('#f_serial').value || null, assetTag: $('#f_asset').value || null,
-          ip: $('#f_ip').value || null, locationNote: $('#f_loc').value || null,
-          status: $('#f_status').value,
-        }, 'Device', `${d.code} updated (${$('#f_status').value})`);
-        closeDrawer(); toast('Saved'); route();
-      }, 'Save changes'),
-      async d => {
-        if (await askConfirm(`Decommission ${d.code}?`, 'The device is withdrawn from the registry. Its transaction history is retained.', 'Decommission')) {
-          store.remove('devices', d.id, 'Device', `${d.code} decommissioned and removed`);
-          toast('Device removed'); route();
-        }
-      });
-  },
-
-  /* ---------------- products ---------------- */
-  products() {
-    $('#content').innerHTML = listWrap(cardShell('Fare products',
-      'The SAC code classifies every invoice a product raises — the seeded value is a placeholder pending the project tax advisor (BOS-FP-02). Concession and Group are phase 2 and start disabled.',
-      newBtn('Define a product'), `
-      <div class="tscroll"><table class="grid">
-        <thead><tr><th>Code</th><th>Name</th><th>Category</th><th>SAC</th><th class="num">Trips</th><th>Fulfilment</th><th>Channels</th><th>Status</th><th></th></tr></thead>
-        <tbody>${store.db.products.slice().sort((a, b) => a.order - b.order).map(p => `<tr>
-          <td><span class="pillcode">${p.code}</span></td>
-          <td><div class="cellmain"><span class="cm-t"><b>${p.en}</b><span>${p.hi}</span></span></div></td>
-          <td>${p.category}</td>
-          <td class="mono">${p.sac}</td>
-          <td class="num">${p.trips}</td>
-          <td style="color:var(--b-ink-soft)">${p.fulfilment}</td>
-          <td>${p.channels.map(c => `<span class="chip dim" style="margin-right:4px">${c}</span>`).join('')}</td>
-          <td>${p.active ? '<span class="chip ok">Active</span>' : '<span class="chip dim">Disabled</span>'}</td>
-          <td>${rowActs(p.id)}</td></tr>`).join('')}
-        </tbody></table></div>`));
-
-    const CATS = ['Single journey', 'Return journey', 'Group', 'Tourist pass', 'Concession', 'Season pass', 'Stored value', 'Penalty'];
-    const form = (p = {}) =>
-      inputF('f_code', 'Product code *', p.code || '', 'text', 'style="text-transform:uppercase"',
-        'Upper case, digits and underscores. Appears on every ticket and in every report.') +
-      selectF('f_cat', 'Category *', CATS.map(c => ({ v: c, t: c })), p.category || 'Single journey') +
-      inputF('f_en', 'Name (English) *', p.en || '') +
-      inputF('f_hi', 'Name (Hindi)', p.hi || '') +
-      inputF('f_sac', 'SAC code *', p.sac || '996429', 'text', 'maxlength="6"',
-        'Six digits. Classifies every invoice this product raises — confirm with the project tax advisor.') +
-      inputF('f_trips', 'Trips per ticket *', p.trips ?? 1, 'number', 'min="1" max="4"') +
-      inputF('f_printed', 'Printed tickets per sale *', p.printed ?? 1, 'number', 'min="1" max="12"') +
-      selectF('f_ful', 'How a paid booking becomes a ticket *', [
-        { v: 'Direct QR ticket', t: 'Direct QR ticket' },
-        { v: 'Booking code, redeemed at a counter', t: 'Booking code, redeemed at a counter or kiosk' },
-        { v: 'Either — the passenger chooses', t: 'Either — the passenger chooses' },
-      ], p.fulfilment || 'Direct QR ticket') +
-      fld('f_ch', 'Channels', ['ToM', 'TVM', 'Web portal', 'Mobile app'].map(c =>
-        checkF('ch_' + c.replace(/\W/g, ''), c, (p.channels || ['ToM', 'TVM']).includes(c))).join('')) +
-      fld('f_pt', 'Passenger types', ['Adult', 'Child', 'Senior', 'Differently abled', 'Student', 'Staff'].map(c =>
-        checkF('pt_' + c.replace(/\W/g, ''), c, (p.passengers || ['Adult']).includes(c))).join('')) +
-      inputF('f_max', 'Maximum per transaction *', p.maxPerTxn ?? 6, 'number', 'min="1" max="20"') +
-      inputF('f_ord', 'Display order *', p.order ?? store.db.products.length + 1, 'number', 'min="1"') +
-      checkF('f_active', 'Active — offered for sale', p.active !== false);
-    const read = () => ({
-      code: $('#f_code').value.trim().toUpperCase(), category: $('#f_cat').value,
-      en: $('#f_en').value.trim(), hi: $('#f_hi').value.trim(),
-      sac: $('#f_sac').value.trim(), trips: +$('#f_trips').value, printed: +$('#f_printed').value,
-      fulfilment: $('#f_ful').value,
-      channels: ['ToM', 'TVM', 'Web portal', 'Mobile app'].filter(c => $('#ch_' + c.replace(/\W/g, '')).checked),
-      passengers: ['Adult', 'Child', 'Senior', 'Differently abled', 'Student', 'Staff'].filter(c => $('#pt_' + c.replace(/\W/g, '')).checked),
-      maxPerTxn: +$('#f_max').value, order: +$('#f_ord').value, active: $('#f_active').checked,
-    });
-
-    wireCrud('products',
-      () => openDrawer('Define a product', form(), () => {
-        const v = read(); if (!v.code || !v.en || !v.sac) return toast('Code, name and SAC are required');
-        store.insert('products', v, 'Product', `${v.code} — ${v.en} defined`);
-        closeDrawer(); toast('Product defined'); route();
-      }, 'Create product'),
-      p => openDrawer(`Edit ${p.code}`, form(p), () => {
-        store.update('products', p.id, read(), 'Product', `${p.code} updated`);
-        closeDrawer(); toast('Saved'); route();
-      }, 'Save changes'),
-      async p => {
-        if (await askConfirm(`Delete ${p.code}?`, `${p.en} is withdrawn. Sold tickets remain valid.`)) {
-          store.remove('products', p.id, 'Product', `${p.code} deleted`);
-          toast('Product deleted'); route();
-        }
-      });
-  },
-
-  /* ---------------- fares (versions + maker-checker) ---------------- */
-  fares() {
-    const db = store.db;
-    const view = PAGES._fareView;
-    if (view) { renderFareDetail(view); return; }
-
-    const who = v => `${userName(v.draftedBy)}${v.approvedBy ? ' / ' + userName(v.approvedBy) : ''}`;
-    $('#content').innerHTML = listWrap(cardShell('Fare versions',
-      'A published version can never be edited. To change a fare, publish a new version; to revert, publish a rollback that carries the earlier contents forward. Two people are required (BOS-FP-06).',
-      `<div style="display:flex;gap:10px" class="w-only">
-        ${newBtn('Draft a fare version', 'draftBtn')}
-        <button class="btn btn-ghost" id="rollBtn">Reinstate an earlier version…</button>
-      </div>`, `
-      <div class="tscroll"><table class="grid">
-        <thead><tr><th>Version</th><th>Title</th><th>Model</th><th>Status</th><th class="num">Rules</th><th>NCMC disc.</th><th>Effective from</th><th>Drafted / approved by</th><th>Content hash</th><th></th></tr></thead>
-        <tbody>${db.fareVersions.slice().sort((a, b) => b.version - a.version).map(v => `<tr>
-          <td><span class="pillcode">v${v.version}</span></td>
-          <td><b style="font-weight:600">${v.title}</b></td>
-          <td>${v.model}</td>
-          <td>${verChip(v.status)}</td>
-          <td class="num">${v.rules.length}</td>
-          <td class="num">${v.discountPct}%</td>
-          <td>${fmtDT(v.effectiveFrom)}</td>
-          <td style="color:var(--b-ink-soft)">${who(v)}</td>
-          <td class="mono">${v.hash ? v.hash.slice(0, 10) : '—'}</td>
-          <td><div class="rowact" style="opacity:1">
-            <button class="iconbtn" data-view="${v.id}" aria-label="View">${I.eye}</button>
-            ${v.status === 'draft' && session.canWrite() ? `
-              <button class="iconbtn" data-editrules="${v.id}" aria-label="Edit rules">${I.edit}</button>
-              <button class="btn btn-primary" data-submit="${v.id}" style="height:34px;padding:0 16px;font-size:12px">Submit</button>` : ''}
-          </div></td></tr>`).join('')}
-        </tbody></table></div>`));
-
-    $('#content').addEventListener('click', e => {
-      const v = e.target.closest('[data-view]');
-      const er = e.target.closest('[data-editrules]');
-      const sb = e.target.closest('[data-submit]');
-      if (v) { PAGES._fareView = { id: v.dataset.view, edit: false }; PAGES.fares(); }
-      if (er && guard()) { PAGES._fareView = { id: er.dataset.editrules, edit: true }; PAGES.fares(); }
-      if (sb && guard()) submitVersion(sb.dataset.submit);
-    });
-
-    const draftBtn = $('#draftBtn');
-    if (draftBtn) draftBtn.addEventListener('click', () => {
-      if (!guard()) return;
-      const pubs = db.fareVersions.filter(v => v.status === 'published' || v.status === 'superseded');
-      openDrawer('Draft a fare version',
-        inputF('f_title', 'Title *', '', 'text', '', 'Shown to the approver and in the version history.') +
-        selectF('f_model', 'Fare model *', [
-          { v: 'Station pair', t: 'Station pair — a price per journey (rule 2)' },
-          { v: 'Flat', t: 'Flat — one price regardless of journey' },
-          { v: 'Zone', t: 'Zone' }, { v: 'Distance band', t: 'Distance band' },
-        ], 'Station pair') +
-        inputF('f_disc', 'NCMC discount (%) *', 20, 'number', 'min="0" max="100"') +
-        selectF('f_copy', 'Copy rules from', [{ v: '', t: 'Start empty' },
-          ...pubs.map(v => ({ v: v.id, t: `Version ${v.version} — ${v.title}` }))], pubs[0]?.id || '') +
-        inputF('f_notes', 'Notes', '', 'text'),
-        () => {
-          const src = db.fareVersions.find(x => x.id === $('#f_copy').value);
-          const ver = Math.max(...db.fareVersions.map(v => v.version)) + 1;
-          db.fareVersions.unshift({
-            id: store.nextId('fv'), version: ver, title: $('#f_title').value.trim() || `Revision ${ver}`,
-            model: $('#f_model').value, status: 'draft',
-            discountPct: +$('#f_disc').value,
-            rules: src ? src.rules.map(r => ({ ...r })) : [],
-            tax: src ? src.tax.map(t => ({ ...t })) : [{ component: 'CGST', rate: 9, scope: 'on fare' }, { component: 'SGST', rate: 9, scope: 'on fare' }],
-            draftedBy: session.user.username, submittedBy: null, approvedBy: null, publishedBy: null,
-            createdAt: Date.now(), effectiveFrom: null, effectiveTo: null, hash: null,
-            notes: $('#f_notes').value.trim() || null,
-          });
-          store.logAudit('create', 'Fare version', `v${ver} drafted — "${$('#f_title').value.trim()}"`);
-          store.save(); closeDrawer(); toast(`Draft v${ver} created — edit the rules, then submit`); route();
-        }, 'Create draft');
-    });
-    const rollBtn = $('#rollBtn');
-    if (rollBtn) rollBtn.addEventListener('click', () => {
-      if (!guard()) return;
-      const pubs = db.fareVersions.filter(v => ['published', 'superseded'].includes(v.status));
-      openDrawer('Reinstate an earlier version',
-        selectF('f_target', 'Reinstate the contents of *', pubs.map(v => ({ v: v.id, t: `Version ${v.version} — ${v.title}` })), pubs[0]?.id) +
-        inputF('f_eff', 'Takes effect on *', new Date(Date.now() + 86400000).toISOString().slice(0, 10), 'date') +
-        inputF('f_reason', 'Reason *', '', 'text', '', 'Shown to the approver — a rollback without a reason is not reviewable.'),
-        () => {
-          const src = db.fareVersions.find(x => x.id === $('#f_target').value);
-          const reason = $('#f_reason').value.trim();
-          if (!src || !reason) return toast('Target and reason are required');
-          const ver = Math.max(...db.fareVersions.map(v => v.version)) + 1;
-          const nv = {
-            id: store.nextId('fv'), version: ver, title: `Rollback to v${src.version} — ${src.title}`,
-            model: src.model, status: 'pending', discountPct: src.discountPct,
-            rules: src.rules.map(r => ({ ...r })), tax: src.tax.map(t => ({ ...t })),
-            draftedBy: session.user.username, submittedBy: session.user.username,
-            approvedBy: null, publishedBy: null, createdAt: Date.now(),
-            effectiveFrom: null, effectiveTo: null, hash: null, notes: reason, rollbackOf: src.version,
-          };
-          db.fareVersions.unshift(nv);
-          store.raiseApproval('fare_version.publish',
-            `Publish fare version ${ver} (rollback to v${src.version}) with ${nv.rules.length} rules, effective ${$('#f_eff').value}`,
-            { fareVersionId: nv.id, effectiveFrom: new Date($('#f_eff').value).getTime() }, reason);
-          closeDrawer(); toast('Rollback submitted for approval'); route();
-        }, 'Submit rollback for approval');
-    });
-
-    function submitVersion(id) {
-      const v = db.fareVersions.find(x => x.id === id);
-      openDrawer(`Submit v${v.version} for approval`,
-        `<div class="fhelp" style="margin-bottom:14px">"${v.title}" — ${v.rules.length} rules, NCMC discount ${v.discountPct}%. A second person holding System Administrator or Finance Officer must approve before it takes effect (BOS-SC-04).</div>` +
-        inputF('f_eff', 'Effective from *', new Date(Date.now() + 86400000).toISOString().slice(0, 10), 'date') +
-        inputF('f_reason', 'Reason *', '', 'text'),
-        () => {
-          const reason = $('#f_reason').value.trim();
-          if (!reason) return toast('A reason is required');
-          v.status = 'pending'; v.submittedBy = session.user.username;
-          store.raiseApproval('fare_version.publish',
-            `Publish fare version ${v.version} ("${v.title}") with ${v.rules.length} rules, effective ${$('#f_eff').value}`,
-            { fareVersionId: v.id, effectiveFrom: new Date($('#f_eff').value).getTime() }, reason);
-          closeDrawer(); toast(`Submitted — a second person must approve (see Approvals)`); route();
-        }, 'Submit for approval');
-    }
-  },
-
-  /* ---------------- labels ---------------- */
-  labels() {
-    $('#content').innerHTML = listWrap(cardShell('Label master',
-      'Station names, product names and receipt text in Hindi and English, distributed to the counter and the kiosk alongside the fare table. Saving an existing namespace and key replaces its value (BOS-MD-04, rule 16).',
-      newBtn('Add or amend a label'), `
-      <div class="tscroll"><table class="grid">
-        <thead><tr><th>Namespace</th><th>Key</th><th>English</th><th>Hindi</th><th>Receipt</th><th></th></tr></thead>
-        <tbody>${store.db.labels.map(l => `<tr>
-          <td><span class="pillcode">${l.ns}</span></td>
-          <td class="mono">${l.key}</td>
-          <td>${l.en}</td>
-          <td>${l.hi}</td>
-          <td>${l.receipt ? '<span class="chip ok">Prints</span>' : '<span style="color:var(--b-ink-faint)">—</span>'}</td>
-          <td>${rowActs(l.id)}</td></tr>`).join('')}
-        </tbody></table></div>`));
-
-    const form = (l = {}) =>
-      selectF('f_ns', 'Namespace *', ['station', 'product', 'receipt', 'screen'].map(v => ({ v, t: v })), l.ns || 'receipt') +
-      inputF('f_key', 'Key *', l.key || '', 'text', 'style="font-family:var(--font-mono)"') +
-      inputF('f_en', 'English *', l.en || '') +
-      inputF('f_hi', 'Hindi *', l.hi || '', 'text', '', 'Transliteration is not translation — have the Hindi reviewed.') +
-      checkF('f_rc', 'Renders on the thermal printer', !!l.receipt);
-    const read = () => ({
-      ns: $('#f_ns').value, key: $('#f_key').value.trim(),
-      en: $('#f_en').value.trim(), hi: $('#f_hi').value.trim(), receipt: $('#f_rc').checked,
-    });
-
-    wireCrud('labels',
-      () => openDrawer('Add or amend a label', form(), () => {
-        const v = read(); if (!v.key || !v.en || !v.hi) return toast('Key and both languages are required');
-        const existing = store.db.labels.find(x => x.ns === v.ns && x.key === v.key);
-        if (existing) {
-          store.update('labels', existing.id, v, 'Label', `${v.ns}.${v.key} amended`);
-        } else {
-          store.insert('labels', v, 'Label', `${v.ns}.${v.key} added`);
-        }
-        closeDrawer(); toast('Label saved — distributed with the next master-data sync'); route();
-      }, 'Save label'),
-      l => openDrawer(`Amend ${l.ns}.${l.key}`, form(l), () => {
-        store.update('labels', l.id, read(), 'Label', `${l.ns}.${l.key} amended`);
-        closeDrawer(); toast('Label saved'); route();
-      }, 'Save label'),
-      async l => {
-        if (await askConfirm(`Delete ${l.ns}.${l.key}?`, 'Devices keep their cached copy until the next sync.')) {
-          store.remove('labels', l.id, 'Label', `${l.ns}.${l.key} deleted`);
-          toast('Label deleted'); route();
-        }
-      });
-  },
-
-  /* ---------------- approvals ---------------- */
-  approvals() {
-    const db = store.db;
-    const me = session.user.username;
-    const pending = db.approvals.filter(a => a.status === 'pending');
-    const history = db.approvals.filter(a => a.status !== 'pending');
-
-    const pendingCards = pending.map(a => {
-      const isMaker = a.maker === me;
-      const canDecide = session.canApprove() && !isMaker;
-      return `<div class="card apr-card" data-apr="${a.id}">
-        <header>
-          <h2 style="font-size:15px;max-width:60ch">${a.summary}</h2>
-          <div class="hspace"></div>
-          <span class="chip ${a.risk === 'critical' ? 'bad' : 'warn'}">${a.risk}</span>
-        </header>
-        <div class="pad" style="padding-top:6px">
-          <div class="apr-meta">
-            <div><dt>Reference</dt><dd class="mono">${a.ref}</dd></div>
-            <div><dt>Raised</dt><dd>${a.operation} · ${fmtDT(a.madeAt)} by ${userName(a.maker)}</dd></div>
-            <div><dt>Expires</dt><dd>${fmtDT(a.expiresAt)}</dd></div>
-          </div>
-          <p style="margin:10px 0 6px;font-size:13px"><b>Stated reason:</b> ${a.reason}</p>
-          <pre class="apr-payload">${JSON.stringify(a.payload, null, 1)}</pre>
-          ${isMaker ? `
-            <div class="ro-note" style="display:flex;margin:12px 0">You raised this request. Segregation of duties requires a different person to decide it (BOS-SC-04).</div>
-            <div style="display:flex;justify-content:flex-end"><button class="btn btn-danger" data-withdraw="${a.id}">Withdraw this request</button></div>`
-          : canDecide ? `
-            <div class="field" style="margin:12px 0"><label>Reason (required to reject — an unexplained refusal is not reviewable)</label>
-              <input id="why_${a.id}" placeholder="Why is this being refused?"></div>
-            <div style="display:flex;gap:10px;justify-content:flex-end">
-              <button class="btn btn-danger" data-reject="${a.id}">Reject</button>
-              <button class="btn btn-primary" data-approve="${a.id}">Approve and apply</button>
-            </div>`
-          : `<div class="ro-note" style="display:flex;margin-top:12px">Awaiting a decision by a System Administrator or Finance Officer who did not raise it.</div>`}
-        </div>
-      </div>`;
-    }).join('');
-
-    $('#content').innerHTML = `<div class="listwrap"><div class="card">
-      <header><h2>Approval queue</h2><div class="hspace"></div>
-        <span class="chip ${pending.length ? 'warn' : 'ok'}">${pending.length || 'No'} pending</span>
-        <div class="sub">Privileged changes are proposals until a second person decides on them. You cannot decide a request you raised (BOS-SC-04).</div></header>
-      ${pending.length ? '' : '<div class="empty">No pending requests.</div>'}
-      </div></div>
-      ${pendingCards}
-      ${history.length ? listWrap(cardShell('Decided requests', '', '', `
+          <thead><tr><th>Reference</th><th>Change</th><th>Raised by</th><th>Expires</th></tr></thead>
+          <tbody>${actionable.slice(0, 5).map(a => `<tr>
+            <td><a class="mono" href="#/approvals" style="text-decoration:underline">${esc(a.requestRef)}</a></td>
+            <td>${esc(a.summary)}</td><td style="color:var(--b-ink-faint)">${esc(a.makerDisplay || '—')}</td>
+            <td style="color:var(--b-ink-faint)">${fmtDT(a.expiresAt)}</td></tr>`).join('')}</tbody>
+        </table></div>`}
+      </div>` : ''}
+      ${session.can('fare.read') ? `
+      <div class="card">
+        <header><h2>Fare versions</h2><div class="hspace"></div><a class="btn btn-ghost" style="height:38px" href="#/fares">View all</a></header>
+        <div class="pad" style="padding-top:4px;color:var(--b-ink-faint);font-size:12.5px">A published version is immutable. Changes are published forward, never edited.</div>
         <div class="tscroll"><table class="grid">
-          <thead><tr><th>Reference</th><th>Operation</th><th>Summary</th><th>Raised by</th><th>Decided</th><th>Status</th></tr></thead>
-          <tbody>${history.map(a => `<tr>
-            <td class="mono">${a.ref}</td>
-            <td class="mono" style="font-size:12px">${a.operation}</td>
-            <td>${a.summary.slice(0, 70)}${a.summary.length > 70 ? '…' : ''}</td>
-            <td>${userName(a.maker)}</td>
-            <td style="white-space:nowrap">${a.decidedBy ? userName(a.decidedBy) + ' · ' : ''}${fmtDT(a.decidedAt)}</td>
-            <td>${aprChip(a.status)}</td></tr>`).join('')}
-          </tbody></table></div>`)) : ''}`;
-
-    $('#content').addEventListener('click', async e => {
-      const ap = e.target.closest('[data-approve]');
-      const rj = e.target.closest('[data-reject]');
-      const wd = e.target.closest('[data-withdraw]');
-      if (ap) {
-        const r = store.decideApproval(ap.dataset.approve, true);
-        if (r.err) return toast(r.err);
-        toast(`${r.req.ref} approved and applied`); route();
-      }
-      if (rj) {
-        const id = rj.dataset.reject;
-        const why = ($('#why_' + id) || {}).value?.trim();
-        const r = store.decideApproval(id, false, why);
-        if (r.err) return toast(r.err);
-        const v = store.db.fareVersions.find(x => x.id === r.req.payload.fareVersionId);
-        if (v && v.status === 'pending') { v.status = 'draft'; store.save(); }
-        toast(`${r.req.ref} rejected — returned to the maker`); route();
-      }
-      if (wd) {
-        if (!(await askConfirm('Withdraw this request?', 'It is removed from the queue and recorded as withdrawn.', 'Withdraw'))) return;
-        const req = store.db.approvals.find(a => a.id === wd.dataset.withdraw);
-        const r = store.withdrawApproval(wd.dataset.withdraw, 'Withdrawn by maker');
-        if (r.err) return toast(r.err);
-        const v = store.db.fareVersions.find(x => x.id === req.payload.fareVersionId);
-        if (v && v.status === 'pending') { v.status = 'draft'; store.save(); }
-        toast('Request withdrawn'); route();
-      }
-    });
-  },
-
-  /* ---------------- users ---------------- */
-  users() {
-    $('#content').innerHTML = listWrap(cardShell('Staff and roles',
-      'Authorisation records only — passwords, MFA enrolment and lockout state live in the identity provider. Role grants are dual-authorised (BOS-UM-01/02).',
-      newBtn('Create a staff account'), `
-      <div class="tscroll"><table class="grid">
-        <thead><tr><th>Username</th><th>Name</th><th>Employee code</th><th>Roles</th><th>Status</th><th>Last sign-in</th><th></th></tr></thead>
-        <tbody>${store.db.users.map((u, i) => `<tr>
-          <td class="mono">${u.username}</td>
-          <td><div class="cellmain"><span class="av round av-${i % 4}">${u.name.split(' ').map(x => x[0]).slice(0, 2).join('')}</span><span class="cm-t"><b>${u.name}</b><span>${u.designation || ''}</span></span></div></td>
-          <td class="mono">${u.empCode || '—'}</td>
-          <td><span class="chip dim">${ROLES[u.role]?.label || u.role}</span>${u.station !== '—' ? ` <span class="pillcode">${u.station}</span>` : ''}</td>
-          <td>${statusChip(u.status)}</td>
-          <td style="white-space:nowrap;color:var(--b-ink-faint)">${fmtDT(u.lastSignIn)}</td>
-          <td>${rowActs(u.id)}</td></tr>`).join('')}
-        </tbody></table></div>`));
-
-    const ROLE_OPTS = Object.entries(ROLES).map(([v, r]) => ({ v, t: r.label }));
-    const acctForm = (u = {}, isNew = true) =>
-      inputF('f_un', 'Username' + (isNew ? ' *' : ''), u.username || '', 'text',
-        isNew ? 'placeholder="name.dev" style="text-transform:lowercase"' : 'disabled',
-        isNew ? 'Lower case. Must match the username held by the identity provider.' : 'The username is bound to this person’s identity and cannot be changed.') +
-      inputF('f_emp', 'Employee code', u.empCode || '', 'text', 'placeholder="VR-OPR-0xx"') +
-      inputF('f_nm', 'Full name *', u.name || '') +
-      inputF('f_dg', 'Designation', u.designation || '') +
-      inputF('f_em', 'Email', u.email || '', 'email') +
-      inputF('f_mo', 'Mobile', u.mobile || '') +
-      selectF('f_stn', 'Home station', stationOpts({ v: '—', t: 'None — works across the line' }), u.station || '—',
-        'Drives console defaults and reporting. It does not itself grant access; that comes from the role.') +
-      (isNew ? '' : selectF('f_status', 'Status', [
-        { v: 'invited', t: 'Invited — has not signed in yet' }, { v: 'active', t: 'Active' },
-        { v: 'suspended', t: 'Suspended' }, { v: 'deactivated', t: 'Deactivated' },
-      ], u.status, 'Suspending takes effect at once — permissions are checked on every request.'));
-
-    wireCrud('users',
-      () => openDrawer('Create a staff account',
-        `<div class="fhelp" style="margin-bottom:14px">The account is created without roles. Granting one is a separate step that a second person must approve (BOS-UM-02).</div>` + acctForm(),
-        () => {
-          const un = $('#f_un').value.trim().toLowerCase();
-          if (!un || !$('#f_nm').value.trim()) return toast('Username and name are required');
-          if (store.db.users.some(x => x.username === un)) return toast('That username already exists');
-          store.insert('users', {
-            username: un, name: $('#f_nm').value.trim(), empCode: $('#f_emp').value.trim() || null,
-            designation: $('#f_dg').value.trim() || null, email: $('#f_em').value.trim() || null,
-            mobile: $('#f_mo').value.trim() || null, station: $('#f_stn').value,
-            role: 'TOM_OPERATOR', status: 'invited', lastSignIn: null,
-          }, 'User', `${un} created (invited, no roles yet)`);
-          closeDrawer(); toast('Account created — grant a role from its edit page'); route();
-        }, 'Create account'),
-      u => {
-        const isSelf = u.username === session.user.username;
-        openDrawer(u.name,
-          `<h3 class="dsec">Account</h3>` + acctForm(u, false) +
-          `<h3 class="dsec">Roles held</h3>
-           <div class="roleheld">
-             <span class="chip dim">${ROLES[u.role]?.label || u.role}</span>
-             ${u.station !== '—' ? `<span class="pillcode">${u.station}</span>` : ''}
-           </div>
-           <h3 class="dsec">Grant a role</h3>
-           <div class="fhelp" style="margin-bottom:10px">Dual-authorised — the grant is a proposal until a second person approves it.</div>` +
-          selectF('g_role', 'Role *', [{ v: '', t: 'Select a role' }, ...ROLE_OPTS], '') +
-          selectF('g_stn', 'Station', stationOpts({ v: '', t: 'Not applicable — system-wide' }), '') +
-          inputF('g_reason', 'Reason *', '', 'text'),
-          () => {
-            store.update('users', u.id, {
-              empCode: $('#f_emp').value.trim() || null, name: $('#f_nm').value.trim(),
-              designation: $('#f_dg').value.trim() || null, email: $('#f_em').value.trim() || null,
-              mobile: $('#f_mo').value.trim() || null, station: $('#f_stn').value,
-              status: $('#f_status').value,
-            }, 'User', `${u.username} account updated`);
-            const gr = $('#g_role').value, reason = $('#g_reason').value.trim();
-            if (gr && reason) {
-              store.raiseApproval('user_role.grant',
-                `Grant ${ROLES[gr].label} to ${u.username}${$('#g_stn').value ? ' at ' + $('#g_stn').value : ''}`,
-                { userId: u.id, role: gr, station: $('#g_stn').value || null }, reason, 'high');
-              toast('Saved — role grant submitted for approval');
-            } else if (gr && !reason) { return toast('A reason is required to grant a role'); }
-            else toast('Saved');
-            closeDrawer(); route();
-          }, 'Save changes');
-      },
-      async u => {
-        if (u.username === session.user.username) return toast('You cannot delete your own account');
-        if (await askConfirm(`Deactivate ${u.username}?`, `${u.name} loses access at every terminal immediately. Their audit history is retained.`, 'Deactivate')) {
-          store.remove('users', u.id, 'User', `${u.username} deactivated and removed`);
-          toast('Account removed'); route();
-        }
-      });
-  },
-
-  /* ---------------- hotlist ---------------- */
-  hotlist() {
-    $('#content').innerHTML = listWrap(cardShell('NCMC hotlist',
-      'Supplied by the Bank in the real system; distributed to every gate, counter and kiosk. A listed card is refused at every touchpoint.',
-      newBtn('Block a card'), `
-      <div class="tscroll"><table class="grid">
-        <thead><tr><th>Card</th><th>Reason</th><th>Raised by</th><th>Since</th><th></th></tr></thead>
-        <tbody>${store.db.hotlist.map(h => `<tr>
-          <td class="mono">${h.card}</td>
-          <td>${h.reason}</td>
-          <td>${h.by}</td>
-          <td>${fmtDT(h.ts)}</td>
-          <td><div class="rowact w-only"><button class="btn btn-danger" style="height:34px;padding:0 14px;font-size:12px" data-del="${h.id}">Remove</button></div></td></tr>`).join('')
-        || `<tr><td colspan="5"><div class="empty">No cards are blocked.</div></td></tr>`}
-        </tbody></table></div>`));
-
-    const cont = $('#content');
-    const nb = $('#newBtn', cont);
-    if (nb) nb.addEventListener('click', () => {
-      if (!guard()) return;
-      openDrawer('Block a card',
-        inputF('f_card', 'Card reference', '6080 ', 'text', 'placeholder="6080 12•• •••• 3456"') +
-        selectF('f_reason', 'Reason', ['Reported lost', 'Reported stolen', 'Bank instruction', 'Dispute investigation'].map(r => ({ v: r, t: r })), 'Reported lost'),
-        () => {
-          const card = $('#f_card').value.trim();
-          if (card.replace(/\D/g, '').length < 8) return toast('Enter a fuller card reference');
-          store.insert('hotlist', { card, reason: $('#f_reason').value, by: session.user.username, ts: Date.now() },
-            'Hotlist', `${card} — ${$('#f_reason').value}`);
-          closeDrawer(); toast('Card blocked — distribution queued'); route();
-        }, 'Block card');
-    });
-    cont.addEventListener('click', async e => {
-      const del = e.target.closest('[data-del]');
-      if (!del || !guard()) return;
-      const h = store.db.hotlist.find(x => x.id === del.dataset.del);
-      if (await askConfirm('Remove from hotlist?', `${h.card} will be accepted again after the next distribution cycle.`, 'Remove')) {
-        store.remove('hotlist', h.id, 'Hotlist', `${h.card} removed (whitelisted)`);
-        toast('Card removed from hotlist'); route();
-      }
-    });
-  },
-
-  /* ---------------- transactions ---------------- */
-  transactions() {
-    const f = PAGES._txFilter || { range: '7d', station: '', mode: '' };
-    const t0 = new Date(); t0.setHours(0, 0, 0, 0);
-    const from = f.range === 'today' ? t0.getTime() : f.range === '7d' ? t0.getTime() - 6 * 864e5 : 0;
-    const list = store.db.transactions.filter(t =>
-      t.ts >= from && (!f.station || t.station === f.station) && (!f.mode || t.mode === f.mode));
-    const total = list.reduce((a, t) => a + t.amount, 0);
-
-    $('#content').innerHTML = listWrap(cardShell('Transaction ledger',
-      `${list.length} transactions · ${fmtINR(total)} — read-only; the ledger is append-only and corrections happen through reversal entries, never edits.`,
-      `<div class="fbar">
-        <div class="seg" id="segR">
-          ${[['today', 'Today'], ['7d', '7 days'], ['all', 'All']].map(([v, t]) => `<button data-r="${v}" class="${f.range === v ? 'on' : ''}">${t}</button>`).join('')}
-        </div>
-        <select id="fSt"><option value="">All stations</option>${STN.map(s => `<option ${f.station === s.code ? 'selected' : ''}>${s.code}</option>`).join('')}</select>
-        <select id="fMd"><option value="">All modes</option>${['UPI', 'Cash', 'Card'].map(m => `<option ${f.mode === m ? 'selected' : ''}>${m}</option>`).join('')}</select>
-      </div>`, `
-      <div class="tscroll"><table class="grid">
-        <thead><tr><th>Time</th><th>Ref</th><th>Station</th><th>Device</th><th>Product</th><th>Journey</th><th class="num">Qty</th><th>Mode</th><th class="num">Amount</th></tr></thead>
-        <tbody>${list.slice(0, 60).map(txRow).join('') || `<tr><td colspan="9"><div class="empty">Nothing in this range.</div></td></tr>`}</tbody>
-      </table></div>
-      ${list.length > 60 ? `<div class="pad" style="color:var(--b-ink-faint);font-size:13px">Showing the latest 60 of ${list.length}.</div>` : ''}`));
-
-    $$('#segR button').forEach(b => b.addEventListener('click', () => { PAGES._txFilter = { ...f, range: b.dataset.r }; PAGES.transactions(); }));
-    $('#fSt').addEventListener('change', e => { PAGES._txFilter = { ...f, station: e.target.value }; PAGES.transactions(); });
-    $('#fMd').addEventListener('change', e => { PAGES._txFilter = { ...f, mode: e.target.value }; PAGES.transactions(); });
-  },
-
-  /* ---------------- audit ---------------- */
-  audit() {
-    const act = a => ({
-      create: '<span class="chip ok">Create</span>', update: '<span class="chip info">Update</span>',
-      delete: '<span class="chip bad">Delete</span>', publish: '<span class="chip warn">Publish</span>',
-    }[a] || `<span class="chip dim">${a}</span>`);
-    $('#content').innerHTML = listWrap(`
-      <div class="ro-note" style="display:flex;background:var(--ok-bg);color:var(--ok);margin-bottom:16px">
-        ${I.audit.replace('viewBox', 'width="18" height="18" viewBox')}
-        Chain verified — no record has been altered or removed. ${store.db.audit.length} entries checked.
-      </div>` +
-      cardShell('Recent entries',
-      'Append-only and hash-chained (BOS-SC-01). Retained for eight financial years under the Companies Act 2013, s.128 and the Companies (Accounts) Rules 2014, Rule 3(1).',
-      '', `
-      <div class="tscroll"><table class="grid">
-        <thead><tr><th class="num">Seq</th><th>When</th><th>Who</th><th>Action</th><th>Entity</th><th>Change</th><th>Chain</th></tr></thead>
-        <tbody>${store.db.audit.map(a => `<tr>
-          <td class="num mono">${a.seq ?? '—'}</td>
-          <td style="white-space:nowrap;color:var(--b-ink-faint)">${fmtDT(a.ts)}</td>
-          <td class="mono">${a.user}</td>
-          <td>${act(a.action)}</td>
-          <td>${a.entity}</td>
-          <td>${a.detail}</td>
-          <td><span class="chip ok" title="Linked to the previous entry">✓ linked</span></td></tr>`).join('')}
-        </tbody></table></div>`));
-  },
-
-  /* ---------------- settings ---------------- */
-  settings() {
-    $('#content').innerHTML = listWrap(cardShell('Configuration registry',
-      'The open operational values from System Flow §33 — held as configuration so they change without a code release.',
-      '', `
-      <div class="tscroll"><table class="grid">
-        <thead><tr><th>Setting</th><th class="num">Value</th><th>Basis</th><th></th></tr></thead>
-        <tbody>${store.db.config.map(c => `<tr>
-          <td><b style="font-weight:600">${c.label}</b><br><span class="mono" style="font-size:11px;color:var(--b-ink-faint)">${c.key}</span></td>
-          <td class="num" style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">${c.unit === '₹' ? '₹' + c.value : c.value + (c.unit && c.unit !== '₹' ? ' ' + c.unit : '')}</td>
-          <td style="color:var(--b-ink-soft);font-size:12.5px">${c.note}</td>
-          <td><div class="rowact w-only"><button class="iconbtn" data-editk="${c.key}" aria-label="Edit">${I.edit}</button></div></td></tr>`).join('')}
-        </tbody></table></div>`));
-
-    $('#content').addEventListener('click', e => {
-      const b = e.target.closest('[data-editk]');
-      if (!b || !guard()) return;
-      const c = store.db.config.find(x => x.key === b.dataset.editk);
-      openDrawer(c.label, inputF('f_val', `Value${c.unit ? ' (' + c.unit + ')' : ''}`, c.value, 'number', 'min="0" step="any"') +
-        `<p style="font-size:12.5px;color:var(--b-ink-faint)">${c.note}</p>`, () => {
-        const n = Number($('#f_val').value);
-        if (!Number.isFinite(n) || n < 0) return toast('Enter a valid value');
-        const old = c.value; c.value = n;
-        store.logAudit('update', 'Configuration', `${c.key}: ${old} → ${n}`);
-        store.save(); closeDrawer(); toast('Configuration updated'); route();
-      });
-    });
-  },
+          <thead><tr><th class="num">Version</th><th>Title</th><th>Status</th><th>Effective from</th></tr></thead>
+          <tbody>${fares.map(v => `<tr>
+            <td class="num">${v.versionNo}</td>
+            <td><a href="#/fares/${v.id}" style="text-decoration:underline;color:inherit">${esc(v.title)}</a></td>
+            <td>${badge(v.status)}</td><td style="color:var(--b-ink-faint)">${fmtDT(v.effectiveFrom)}</td></tr>`).join('')}</tbody>
+        </table></div>
+      </div>` : ''}
+    </div>`;
 };
 
-/* ---------------- fare version detail / rules editor ---------------- */
-function renderFareDetail(view) {
-  const v = store.db.fareVersions.find(x => x.id === view.id);
-  if (!v) { PAGES._fareView = null; PAGES.fares(); return; }
-  const editable = view.edit && v.status === 'draft' && session.canWrite();
-  const prodName = c => (store.db.products.find(p => p.code === c) || { en: c }).en;
-
-  $('#content').innerHTML = `<div class="listwrap">
+/* ---------- Stations ---------- */
+PAGES.stations = (param) => {
+  if (!session.can('station.read')) { setHeader('Stations'); $('#content').innerHTML = accessDenied('station.read'); return; }
+  if (param) return stationEdit(param);
+  setHeader('Station master', 'BOS-DM-01. Stations are ordered by their position along the route; that ordering drives every report and every distance-based fare.');
+  const rows = store.db.stations.slice().sort((a, b) => a.seq - b.seq);
+  const w = session.can('station.write') && !session.isReadOnly();
+  $('#content').innerHTML = `
     <div class="card">
-      <header>
-        <button class="btn btn-quiet" id="fdBack" style="height:38px">← All versions</button>
-        <h2 style="font-size:17px">Version ${v.version} — ${v.title}</h2>
-        <div class="hspace"></div>
-        ${verChip(v.status)}
-        ${editable ? `<button class="btn btn-primary" id="fdSave" style="height:38px">Save rule changes</button>` : ''}
-        <div class="sub">${v.notes || ''} ${v.status === 'published' && v.approvedBy ? '· Dual authorisation satisfied — drafted and approved by different people (BOS-FP-06).' : ''}</div>
-      </header>
-      <div class="fd-panels">
-        <div class="fdp"><h4>Lifecycle</h4>
-          <div class="kvrow"><span>Drafted</span><b>${userName(v.draftedBy)} · ${fmtDT(v.createdAt)}</b></div>
-          <div class="kvrow"><span>Submitted</span><b>${v.submittedBy ? userName(v.submittedBy) : '—'}</b></div>
-          <div class="kvrow"><span>Approved</span><b>${v.approvedBy ? userName(v.approvedBy) : '—'}</b></div>
-        </div>
-        <div class="fdp"><h4>Effect</h4>
-          <div class="kvrow"><span>Model</span><b>${v.model}</b></div>
-          <div class="kvrow"><span>Effective from</span><b>${fmtDT(v.effectiveFrom)}</b></div>
-          <div class="kvrow"><span>NCMC discount</span><b>${v.discountPct}% at exit (rule 11)</b></div>
-        </div>
-        <div class="fdp"><h4>Integrity</h4>
-          <div class="kvrow"><span>Content hash</span><b class="mono">${v.hash || '— set on publish'}</b></div>
-          <div class="kvrow"><span>Rules</span><b>${v.rules.length}</b></div>
-          <div class="kvrow"><span>Immutability</span><b>${v.status === 'published' ? 'Locked — publish a new version to change' : 'Draft — editable'}</b></div>
-        </div>
-      </div>
-    </div>
-
-    ${cardShell(`Fare rules (${v.rules.length})`,
-      'Rule 2: fares are charged by station pair. Rule 5: a ticket permits exit at any station up to and including the destination. Adult fare only in phase 1 (rule 3).',
-      '', `
-      <div class="tscroll"><table class="grid fare-grid">
-        <thead><tr><th>Product</th><th>Passenger</th><th>Journey</th><th>Exit permitted at</th><th class="num">Fare (₹)</th></tr></thead>
-        <tbody>${v.rules.map((r, i) => `<tr>
-          <td><span class="pillcode">${r.product === 'SINGLE_JOURNEY' ? 'SJT' : 'RJT'}</span> ${prodName(r.product)}</td>
-          <td>${r.passenger}</td>
-          <td>${stationName(r.origin)} → ${stationName(r.dest)}</td>
-          <td style="color:var(--b-ink-soft)">${r.exits.join(', ')}</td>
-          <td class="num">${editable ? `<input data-ri="${i}" value="${r.fare}" inputmode="numeric">` : `<b>${fmtINR(r.fare)}</b>`}</td>
-        </tr>`).join('')}
-        </tbody></table></div>`)}
-
-    ${cardShell('Tax configuration',
-      'The version carries the statutory split for invoices; passenger-facing prices remain tax-inclusive per rule 13.', '', `
+      <header><h2>${rows.length} stations</h2><div class="hspace"></div>${w ? `<button class="btn btn-primary" id="newStation">New station</button>` : ''}</header>
       <div class="tscroll"><table class="grid">
-        <thead><tr><th>Component</th><th class="num">Rate</th><th>Scope</th></tr></thead>
-        <tbody>${v.tax.map(t => `<tr>
-          <td><b style="font-weight:600">${t.component}</b></td>
-          <td class="num">${t.rate}%</td>
-          <td>${t.scope}</td></tr>`).join('')}
-        </tbody></table></div>`)}
-  </div>`;
+        <thead><tr><th class="num">#</th><th>Code</th><th>Name</th><th>Type</th><th>Status</th><th>Operating hours</th>${w ? '<th></th>' : ''}</tr></thead>
+        <tbody>${rows.map(s => `<tr>
+          <td class="num">${s.seq}</td><td>${mono(s.code)}</td>
+          <td>${esc(s.en)}<div style="font-size:12px;color:var(--b-ink-faint)" lang="hi-IN">${esc(s.hi)}</div></td>
+          <td>${esc(s.type)}</td>
+          <td>${badge(s.status === 'active' ? 'active' : 'inactive')}</td>
+          <td>${s.open ? `${s.open}–${s.close}` : '—'}</td>
+          ${w ? `<td style="text-align:right"><a href="#/stations/${s.code}" style="text-decoration:underline">Edit</a></td>` : ''}</tr>`).join('')}</tbody>
+      </table></div>
+    </div>`;
+  if (w) $('#newStation')?.addEventListener('click', () => stationForm(null));
+};
 
-  $('#fdBack').addEventListener('click', () => { PAGES._fareView = null; PAGES.fares(); });
-  const save = $('#fdSave');
-  if (save) save.addEventListener('click', () => {
-    let bad = false, changed = 0;
-    $$('.fare-grid input[data-ri]').forEach(inp => {
-      const n = Number(inp.value);
-      if (!Number.isFinite(n) || n <= 0) { bad = true; return; }
-      const r = v.rules[+inp.dataset.ri];
-      if (r.fare !== n) { r.fare = n; changed++; }
+function stationForm(code) {
+  const s = code ? store.db.stations.find(x => x.code === code) : null;
+  openDrawer(s ? `Edit ${s.en}` : 'Register a station',
+    s ? `Station ${s.code}. Every change is recorded against your identity with the values before and after.`
+      : 'BOS-DM-01. The station code and its position on the route are the two values that are painful to change later — both appear in reports and in the fare table.', `
+    ${s ? '' : `<div class="field"><label>Station code <i class="req">*</i></label><input id="fCode" maxlength="6" placeholder="VCT"><div class="hint">Two to six upper-case letters. Used in reports and clearing files, so it must be stable.</div></div>`}
+    ${s ? `<div class="field"><label>Station code</label><input value="${esc(s.code)}" disabled><div class="hint">The code cannot be changed — it appears in reports and clearing files.</div></div>` : ''}
+    <div class="field"><label>Position on the route <i class="req">*</i></label><input id="fSeq" type="number" min="1" value="${s ? s.seq : ''}"><div class="hint">Order along the line. Drives every report and every distance-based fare.</div></div>
+    <div class="field"><label>Name (English) <i class="req">*</i></label><input id="fEn" value="${esc(s ? s.en : '')}"></div>
+    <div class="field"><label>Name (Hindi)</label><input id="fHi" value="${esc(s ? s.hi : '')}" lang="hi-IN"><div class="hint">Shown on screens and receipts alongside the English name.</div></div>
+    <div class="field"><label>Type <i class="req">*</i></label><select id="fType">
+      <option value="terminal" ${s && s.type === 'terminal' ? 'selected' : ''}>Terminal — end of the line</option>
+      <option value="intermediate" ${s && s.type === 'intermediate' ? 'selected' : ''}>Intermediate</option></select></div>
+    <div class="field"><label>Opens</label><input id="fOpen" type="time" value="${s ? s.open : '05:00'}"></div>
+    <div class="field"><label>Closes</label><input id="fClose" type="time" value="${s ? s.close : '21:00'}"></div>
+    <div class="field"><label>Status</label><select id="fStatus">
+      <option value="active" ${!s || s.status === 'active' ? 'selected' : ''}>Active</option>
+      <option value="suspended" ${s && s.status !== 'active' ? 'selected' : ''}>Inactive</option></select>
+      <div class="hint">Inactive takes the station out of service without giving up its position on the route.</div></div>
+    <div class="drawer-actions">
+      <button class="btn btn-primary" id="fSave">${s ? 'Save changes' : 'Create station'}</button>
+      <button class="btn btn-quiet" id="fCancel">Cancel</button>
+    </div>
+    ${s ? `<div class="card" style="margin-top:18px"><header><h2>Delete this station</h2></header>
+      <div class="pad" style="font-size:13px;color:var(--b-ink-soft)">For a station registered in error. A station that is closing should be set to Inactive instead — deleting removes the record, and reports covering the time it was open would no longer resolve where those journeys happened.
+      <div style="margin-top:12px">${s.status === 'active'
+        ? `<div class="hint" style="color:var(--warn)">Set the station to Inactive and save it before it can be deleted.</div><button class="btn btn-danger" disabled>Delete station</button>`
+        : `<button class="btn btn-danger" id="fDelete">Delete station</button>`}</div></div></div>` : ''}`);
+  $('#fCancel').addEventListener('click', closeDrawer);
+  $('#fSave').addEventListener('click', () => {
+    const en = $('#fEn').value.trim(); if (!en) return toast('One field needs correcting — see the message below it.');
+    if (s) {
+      Object.assign(s, { seq: +$('#fSeq').value || s.seq, en, hi: $('#fHi').value.trim(), type: $('#fType').value, open: $('#fOpen').value, close: $('#fClose').value, status: $('#fStatus').value === 'active' ? 'active' : 'suspended' });
+      store.logAudit('station.update', 'station', null, session.user.name); store.save();
+      toast('Saved — The station has been updated.'); closeDrawer(); route();
+    } else {
+      const codeV = ($('#fCode').value || '').trim().toUpperCase();
+      if (!/^[A-Z]{2,6}$/.test(codeV)) return toast('Two to six upper-case letters.');
+      store.db.stations.push({ code: codeV, en, hi: $('#fHi').value.trim(), type: $('#fType').value, seq: +$('#fSeq').value || store.db.stations.length + 1, status: $('#fStatus').value === 'active' ? 'active' : 'suspended', open: $('#fOpen').value, close: $('#fClose').value });
+      store.logAudit('station.create', 'station', null, session.user.name); store.save();
+      closeDrawer(); route();
+    }
+  });
+  $('#fDelete')?.addEventListener('click', () => {
+    const refs = [];
+    const dn = store.db.devices.filter(d => d.station === s.code).length;
+    const fr = publishedVersion() ? publishedVersion().rules.filter(r => r.from === s.code || r.to === s.code).length : 0;
+    const un = store.db.users.filter(u => u.station === s.code).length;
+    if (dn) refs.push(`${dn} device${dn > 1 ? 's' : ''}`);
+    if (fr) refs.push(`${fr} fare rule${fr > 1 ? 's' : ''}`);
+    if (un) refs.push(`${un} member${un > 1 ? 's' : ''} of staff`);
+    if (s.status === 'active') return toast(`${s.code} is in service. Set it to inactive before deleting it, so that taking it out of service is a decision of its own.`);
+    if (refs.length) return toast(`${s.code} still has ${refs.join(', ')} against it. Move or remove them first, or leave the station inactive rather than deleting it.`);
+    if (!confirm(`Delete ${s.code} — ${s.en}? This cannot be undone. It will be refused if any device, fare or member of staff still refers to it.`)) return;
+    store.db.stations = store.db.stations.filter(x => x.code !== s.code);
+    store.logAudit('station.delete', 'station', null, session.user.name); store.save();
+    closeDrawer(); location.hash = '#/stations';
+  });
+}
+function stationEdit(code) { PAGES.stations(); stationForm(code); }
+
+/* ---------- Devices ---------- */
+const DEVICE_TYPES = ['ECU', 'TOM', 'TVM', 'HANDHELD', 'STATION_SERVER', 'EXCESS_FARE'];
+const DEVICE_TYPE_LABELS = { ECU: 'Gate controller (ECU)', TOM: 'Counter (ToM)', TVM: 'Kiosk (TVM)', EXCESS_FARE: 'Excess Fare Office terminal', STATION_SERVER: 'Station server', HANDHELD: 'Handheld' };
+PAGES.devices = (param) => {
+  if (!session.can('device.read')) { setHeader('Devices'); $('#content').innerHTML = accessDenied('device.read'); return; }
+  setHeader('Device registry', 'BOS-DM-02. Every ECU, ToM, TVM and station server, with the certificate identity it uses to authenticate to the Back Office.');
+  const db = store.db;
+  const filter = param && DEVICE_TYPES.includes(param) ? param : null;
+  const all = db.devices;
+  const rows = filter ? all.filter(d => d.type === filter) : all;
+  const w = session.can('device.write') && !session.isReadOnly();
+  const conn = (d) => {
+    if (!d.lastSeen) return `<span class="chip dim">never seen</span><div style="font-size:11.5px;color:var(--b-ink-faint)">no heartbeat yet</div>`;
+    const age = Date.now() - d.lastSeen;
+    const state = age < 90e3 ? 'online' : age < 300e3 ? 'late' : 'offline';
+    return `${badge(state)}<div style="font-size:11.5px;color:var(--b-ink-faint)">${fmtDT(d.lastSeen)}</div>`;
+  };
+  $('#content').innerHTML = `
+    <nav aria-label="Filter by device type" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+      <a class="chip ${!filter ? 'info' : 'dim'}" href="#/devices" style="text-decoration:none">All (${all.length})</a>
+      ${DEVICE_TYPES.map(t => `<a class="chip ${filter === t ? 'info' : 'dim'}" href="#/devices/${t}" style="text-decoration:none">${t} (${all.filter(d => d.type === t).length})</a>`).join('')}
+    </nav>
+    <div class="card">
+      <header><h2>${filter ? `${rows.length} of ${all.length} devices` : `${all.length} devices`}</h2><div class="hspace"></div>${w ? `<button class="btn btn-primary" id="regDevice">Register device</button>` : ''}</header>
+      <div class="tscroll"><table class="grid">
+        <thead><tr><th>Device</th><th>Station</th><th>Lane</th><th>Status</th><th>Certificate</th><th class="num">Fare / hotlist</th><th>Connectivity</th></tr></thead>
+        <tbody>${rows.map(d => `<tr>
+          <td>${mono(d.code)}<div style="font-size:11.5px;color:var(--b-ink-faint)">${d.type}</div></td>
+          <td>${d.station}</td>
+          <td>${d.lane == null ? '—' : `${d.lane} <span style="color:var(--b-ink-faint);font-size:12px">${d.dir}</span>${d.accessible ? ' <span class="chip info">accessible</span>' : ''}`}</td>
+          <td>${badge(d.status)}</td>
+          <td>${d.cert ? mono(d.cert.slice(0, 12) + '…') : '<span style="color:var(--b-ink-faint)">not issued</span>'}</td>
+          <td class="num">${d.fareV ?? '—'} / ${d.hotlistV ?? '—'}</td>
+          <td>${conn(d)}</td></tr>`).join('')}</tbody>
+      </table></div>
+      <div class="pad" style="font-size:12.5px;color:var(--b-ink-faint)">Connectivity is worked out from the last heartbeat each time this page is read, so a device that stops reporting becomes late and then offline on its own. Certificate issue and configuration distribution still arrive with the rest of the device plane.</div>
+    </div>`;
+  $('#regDevice')?.addEventListener('click', () => {
+    openDrawer('Register a device', 'BOS-DM-02. Registration only — the client certificate is issued during provisioning, and nothing is accepted from a device whose certificate does not match its registration.', `
+      <div class="field"><label>Device type <i class="req">*</i></label><select id="dType"><option value="">Select a type</option>
+        ${Object.entries(DEVICE_TYPE_LABELS).map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select></div>
+      <div class="field"><label>Station <i class="req">*</i></label><select id="dStation"><option value="">Select a station</option>
+        ${store.db.stations.filter(s => s.status === 'active').map(s => `<option value="${s.code}">${s.code} — ${esc(s.en)}</option>`).join('')}</select></div>
+      <div class="field"><label>Device code <i class="req">*</i></label><input id="dCode" placeholder="VCT-<SEG>-01"><div class="hint">Station code, then the type segment, then a suffix. It appears in clearing files and reports, so it must survive a restore unchanged.</div></div>
+      <div id="dGate" style="display:none">
+        <h3 style="font-size:13px;margin:12px 0 8px">Gate lane</h3>
+        <div class="hint" style="margin-bottom:8px">Required for a gate controller and refused for anything else. Two live controllers on one lane would write anti-passback state twice, so a lane already taken at this station is refused.</div>
+        <div class="field"><label>Lane number</label><input id="dLane" type="number" min="1"><div class="hint">Entry lanes from 1, exit lanes from 51, so the number reads unambiguously in an alarm.</div></div>
+        <div class="field"><label>Direction</label><select id="dDir"><option value="">Select a direction</option><option value="entry">Entry</option><option value="exit">Exit</option><option value="bidirectional">Bidirectional</option></select></div>
+        <div class="field"><label>Hardware</label><select id="dHw"><option value="">Select the hardware</option><option value="tripod_turnstile">Tripod turnstile</option><option value="swing_gate">Swing gate</option><option value="flap_barrier">Flap barrier</option><option value="full_height_turnstile">Full-height turnstile</option></select></div>
+        <label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:12px" class="chk"><input type="checkbox" id="dAcc"> Accessible lane</label>
+      </div>
+      <div class="drawer-actions"><button class="btn btn-primary" id="dSave">Register device</button><button class="btn btn-quiet" id="dCancel">Cancel</button></div>`);
+    $('#dType').addEventListener('change', () => { $('#dGate').style.display = $('#dType').value === 'ECU' ? '' : 'none'; });
+    $('#dCancel').addEventListener('click', closeDrawer);
+    $('#dSave').addEventListener('click', () => {
+      const type = $('#dType').value, st = $('#dStation').value, codeV = ($('#dCode').value || '').trim().toUpperCase();
+      if (!type || !st || !codeV) return toast('One field needs correcting — see the message below it.');
+      if (!/^[A-Z]{2,6}-[A-Z]{3}-[A-Z0-9]+$/.test(codeV)) return toast('Expected STATION-TYPE-SUFFIX, e.g. VCT-ECU-E01');
+      const seg = { ECU: 'ECU', TOM: 'TOM', TVM: 'TVM', EXCESS_FARE: 'EFO', STATION_SERVER: 'SRV', HANDHELD: 'HHD' }[type];
+      if (codeV.split('-')[1] !== seg) return toast(`A ${type} device code must use the segment "${seg}", not "${codeV.split('-')[1]}".`);
+      if (type === 'ECU' && (!$('#dLane').value || !$('#dDir').value || !$('#dHw').value)) return toast('An ECU must declare its gate number, direction and hardware type.');
+      store.db.devices.push({ id: 'dv' + (store.db.devices.length + 1), code: codeV, type, station: st, status: 'registered',
+        lane: type === 'ECU' ? +$('#dLane').value : null, dir: type === 'ECU' ? $('#dDir').value : null,
+        hw: type === 'ECU' ? $('#dHw').value : null, accessible: type === 'ECU' && $('#dAcc').checked,
+        cert: null, fareV: null, hotlistV: null, lastSeen: null });
+      store.logAudit('device.register', 'device', null, session.user.name); store.save();
+      closeDrawer(); route();
     });
-    if (bad) return toast('Fares must be positive numbers');
-    store.logAudit('update', 'Fare version', `v${v.version} draft — ${changed} rule value(s) changed`);
-    store.save(); toast(changed ? `${changed} rule(s) updated in the draft` : 'No changes'); 
+  });
+};
+
+/* ---------- Products ---------- */
+PAGES.products = () => {
+  if (!session.can('product.read')) { setHeader('Products'); $('#content').innerHTML = accessDenied('product.read'); return; }
+  setHeader('Fare products', 'BOS-FP-02. What can be sold, where, and how it turns into something a gate will accept.');
+  const rows = store.db.products.slice().sort((a, b) => a.order - b.order);
+  const w = session.can('product.write') && !session.isReadOnly();
+  const channels = (p) => [p.tom && 'ToM', p.tvm && 'TVM'].filter(Boolean).join(', ') || '—';
+  $('#content').innerHTML = `
+    <div class="card">
+      <header><h2>${rows.length} products</h2><div class="hspace"></div>${w ? `<button class="btn btn-primary" id="newProduct">New product</button>` : ''}</header>
+      <div class="tscroll"><table class="grid">
+        <thead><tr><th>Code</th><th>Name</th><th>Category</th><th>SAC</th><th class="num">Trips</th><th>Fulfilment</th><th>Channels</th><th>Status</th>${w ? '<th></th>' : ''}</tr></thead>
+        <tbody>${rows.map(p => `<tr>
+          <td>${mono(p.code)}</td>
+          <td>${esc(p.en)}<div style="font-size:12px;color:var(--b-ink-faint)" lang="hi-IN">${esc(p.hi)}</div></td>
+          <td>${esc(p.category.replace(/_/g, ' '))}</td><td>${mono(p.sac)}</td><td class="num">${p.trips}</td>
+          <td><span class="chip ${p.fulfilment === 'direct_qr' ? 'ok' : 'info'}">${p.fulfilment.replace(/_/g, ' ')}</span>${p.idCheck ? ' <span class="chip warn">ID check</span>' : ''}</td>
+          <td>${channels(p)}</td><td>${badge(p.status)}</td>
+          ${w ? `<td style="text-align:right"><button class="btn-linklike" data-edit="${p.code}" style="text-decoration:underline">Edit</button></td>` : ''}</tr>`).join('')}</tbody>
+      </table></div>
+      <div class="pad" style="font-size:12.5px;color:var(--b-ink-faint)">The SAC code classifies every invoice a product raises. The seeded value is a placeholder pending determination by the project tax advisor.</div>
+    </div>`;
+  const form = (p) => {
+    openDrawer(p ? `Edit ${p.en}` : 'Define a product',
+      p ? `Product ${p.code}. Every change is recorded against your identity with the values before and after. Fare versions already priced for this product are unaffected — they record what was charged.`
+        : 'BOS-FP-02. What can be sold, where, and how a paid booking turns into something a gate will accept.', `
+      <div class="field"><label>Product code ${p ? '' : '<i class="req">*</i>'}</label><input id="pCode" value="${esc(p ? p.code : '')}" ${p ? 'disabled' : 'placeholder="SINGLE_JOURNEY"'}>
+        <div class="hint">${p ? 'The code cannot be changed — it appears on every ticket and report already raised against this product.' : 'Upper case, digits and underscores. Appears on every ticket and in every report.'}</div></div>
+      <div class="field"><label>Name (English) <i class="req">*</i></label><input id="pEn" value="${esc(p ? p.en : '')}"></div>
+      <div class="field"><label>Name (Hindi)</label><input id="pHi" value="${esc(p ? p.hi : '')}" lang="hi-IN"></div>
+      <div class="field"><label>SAC code <i class="req">*</i></label><input id="pSac" maxlength="6" value="${esc(p ? p.sac : '')}" placeholder="996429"><div class="hint">Six digits. Confirm with the project tax advisor.</div></div>
+      <div class="field"><label>Printed tickets per sale <i class="req">*</i></label><input id="pTix" type="number" min="1" max="4" value="${p ? p.ticketsPerSale : 1}"><div class="hint">2 for a return journey — one for each leg.</div></div>
+      <div class="field"><label>Maximum per transaction <i class="req">*</i></label><input id="pMax" type="number" min="1" max="100" value="${p ? p.maxQty : 10}"></div>
+      <div class="field"><label>Display order <i class="req">*</i></label><input id="pOrd" type="number" value="${p ? p.order : 100}"><div class="hint">Lower numbers appear first at the counter and the kiosk.</div></div>
+      ${p ? `<div class="field"><label>Status <i class="req">*</i></label><select id="pStatus">
+        <option value="draft" ${p.status === 'draft' ? 'selected' : ''}>Draft — not sellable</option>
+        <option value="active" ${p.status === 'active' ? 'selected' : ''}>Active</option>
+        <option value="suspended" ${p.status === 'suspended' ? 'selected' : ''}>Suspended</option>
+        <option value="withdrawn" ${p.status === 'withdrawn' ? 'selected' : ''}>Withdrawn</option></select>
+        <div class="hint">Withdrawing a product stops it being sold. Fare versions already priced for it are unaffected — they are a record of what was charged.</div></div>`
+      : `<div class="notice-stale" style="margin-top:8px">A new product is created as a <b>draft</b>. It cannot be sold until a fare version priced for it is published.</div>`}
+      <div class="drawer-actions"><button class="btn btn-primary" id="pSave">${p ? 'Save changes' : 'Create product'}</button><button class="btn btn-quiet" id="pCancel">Cancel</button></div>`);
+    $('#pCancel').addEventListener('click', closeDrawer);
+    $('#pSave').addEventListener('click', () => {
+      const en = $('#pEn').value.trim(); if (!en) return toast('One field needs correcting — see the message below it.');
+      if (p) {
+        Object.assign(p, { en, hi: $('#pHi').value.trim(), sac: $('#pSac').value.trim(), ticketsPerSale: +$('#pTix').value || 1, maxQty: +$('#pMax').value || 10, order: +$('#pOrd').value || 100, status: $('#pStatus').value });
+      } else {
+        const codeV = ($('#pCode').value || '').trim().toUpperCase();
+        if (!/^[A-Z0-9_]+$/.test(codeV)) return toast('Upper case, digits and underscores.');
+        store.db.products.push({ code: codeV, en, hi: $('#pHi').value.trim(), category: 'single_journey', sac: $('#pSac').value.trim(), trips: 1, ticketsPerSale: +$('#pTix').value || 1, returnLeg: false, fulfilment: 'direct_qr', idCheck: false, tom: true, tvm: true, ptypes: ['adult'], maxQty: +$('#pMax').value || 10, order: +$('#pOrd').value || 100, status: 'draft', descEn: '' });
+      }
+      store.logAudit(p ? 'product.update' : 'product.create', 'product', null, session.user.name); store.save();
+      closeDrawer(); route();
+    });
+  };
+  $('#newProduct')?.addEventListener('click', () => form(null));
+  $('#content').addEventListener('click', e => {
+    const b = e.target.closest('[data-edit]');
+    if (b) form(store.db.products.find(x => x.code === b.dataset.edit));
+  });
+};
+
+/* ---------- Fares ---------- */
+PAGES.fares = (param) => {
+  if (!session.can('fare.read')) { setHeader('Fares'); $('#content').innerHTML = accessDenied('fare.read'); return; }
+  if (param) return fareDetail(param);
+  setHeader('Fare versions', 'BOS-FP-01, 03, 06, 08. A published version can never be edited. To change a fare, publish a new version; to revert, publish a rollback that carries the earlier contents forward.');
+  const db = store.db;
+  const rows = db.fareVersions.slice().sort((a, b) => b.versionNo - a.versionNo);
+  const canDraft = session.can('fare.draft') && !session.isReadOnly();
+  const canRb = session.can('fare.rollback') && !session.isReadOnly();
+  const rbSources = db.fareVersions.filter(v => ['published', 'superseded'].includes(v.status));
+  $('#content').innerHTML = `
+    <div class="notice-stale"><b>Two people are required</b><br>Submitting a fare version does not publish it. A second person holding ${mono('fare.approve')} must decide, and the drafter may never approve their own version. Enforced by the database, not only by this interface.</div>
+    <div class="card">
+      <header><h2>${rows.length} versions</h2><div class="hspace"></div>${canDraft ? `<button class="btn btn-primary" id="draftV">Draft a version</button>` : ''}</header>
+      <div class="tscroll"><table class="grid">
+        <thead><tr><th class="num">Version</th><th>Title</th><th>Model</th><th>Status</th><th class="num">Rules</th><th>Effective from</th><th>Drafted / approved by</th><th>Content hash</th></tr></thead>
+        <tbody>${rows.map(v => `<tr>
+          <td class="num">${v.versionNo}</td>
+          <td><a href="#/fares/${v.id}" style="text-decoration:underline;color:inherit">${esc(v.title)}</a>${v.rollbackOf ? '<div style="font-size:11.5px;color:var(--b-ink-faint)">rollback — reinstates earlier contents</div>' : ''}</td>
+          <td>${v.model.replace(/_/g, ' ')}</td><td>${badge(v.status)}</td>
+          <td class="num">${v.status === 'pending_approval' && !v.contentHash ? '—' : v.rules.length}</td>
+          <td>${fmtDT(v.effectiveFrom)}</td>
+          <td style="font-size:12px">${esc(v.createdBy)}<br><span style="color:var(--b-ink-faint)">${v.approvedBy ? esc(v.approvedBy) : 'not approved'}</span></td>
+          <td>${v.contentHash ? mono(v.contentHash.slice(0, 12) + '…') : '—'}</td></tr>`).join('')}</tbody>
+      </table></div>
+    </div>
+    ${canRb && rbSources.length ? `
+    <div class="card">
+      <header><h2>Reinstate an earlier version</h2></header>
+      <div class="pad">
+        <div style="font-size:12.5px;color:var(--b-ink-faint);margin-bottom:12px">BOS-FP-08. Publishes forward rather than reviving the old version, so history stays intact.</div>
+        <div class="field"><label>Reinstate the contents of <i class="req">*</i></label><select id="rbSrc"><option value="">Select a published version</option>
+          ${rbSources.map(v => `<option value="${v.id}">Version ${v.versionNo} — ${esc(v.title)}</option>`).join('')}</select></div>
+        <div class="field"><label>Takes effect on <i class="req">*</i></label><input id="rbDate" type="date"></div>
+        <div class="field"><label>Reason <i class="req">*</i></label><textarea id="rbReason" rows="2" maxlength="1000"></textarea></div>
+        <div class="notice-stale">This publishes a <b>new</b> version carrying the earlier contents, recording where they came from. Nothing is rewritten, so a transaction settled under the intervening version still resolves the fare that applied to it. It needs approval like any other publication.</div>
+        <div id="rbOut"></div>
+        <button class="btn btn-primary" id="rbGo">Submit rollback for approval</button>
+      </div>
+    </div>` : ''}`;
+  const t = new Date(Date.now() + 86400e3); if ($('#rbDate')) $('#rbDate').value = t.toISOString().slice(0, 10);
+  $('#draftV')?.addEventListener('click', () => fareDraftForm());
+  $('#rbGo')?.addEventListener('click', () => {
+    const src = db.fareVersions.find(v => v.id === $('#rbSrc').value);
+    if (!src || !$('#rbReason').value.trim()) return toast('One field needs correcting — see the message below it.');
+    const ref = `APR-2026-${String(store.nextRef('approval')).padStart(6, '0')}`;
+    db.approvals.unshift({ id: 'ap' + Date.now(), requestRef: ref, operation: 'fare_version.rollback', entityType: 'fare_version',
+      summary: `Reinstate the contents of version ${src.versionNo} ("${src.title}")`, payload: { sourceVersionId: src.id, effectiveFrom: $('#rbDate').value },
+      amountPaise: null, risk: 'critical', status: 'pending', maker: session.user.username, makerDisplay: session.user.name,
+      makerReason: $('#rbReason').value.trim(), madeAt: Date.now(), expiresAt: Date.now() + 7 * 86400e3, checker: null, checkerDisplay: null, checkerReason: null, decidedAt: null });
+    store.logAudit('fare_version.rollback', 'fare_version', $('#rbReason').value.trim(), session.user.name); store.save();
+    $('#rbOut').innerHTML = approvalBanner(ref, 'SYSTEM_ADMIN, FINANCE_OFFICER');
+  });
+};
+
+function fareDraftForm() {
+  const db = store.db;
+  openDrawer('Draft a fare version', 'A draft can be edited freely. Once published it is immutable — to change a fare you publish a new version, and to revert you publish a rollback.', `
+    <div class="field"><label>Title <i class="req">*</i></label><input id="fvTitle" placeholder="Revision effective 1 April"><div class="hint">Shown to the approver and in the version history.</div></div>
+    <div class="field"><label>Fare model <i class="req">*</i></label><select id="fvModel">
+      <option value="station_pair" selected>Station pair — a price per journey (rule 2)</option>
+      <option value="flat">Flat — one price regardless of journey</option>
+      <option value="zone">Zone</option><option value="distance_band">Distance band</option></select>
+      <div class="hint">Phase 1 charges by station pair.</div></div>
+    <div class="field"><label>NCMC discount (%) <i class="req">*</i></label><input id="fvNcmc" type="number" min="0" max="100" step="0.01" value="20"><div class="hint">Applied to the card fare at exit (rule 11). Versioned here so a past settlement stays reproducible.</div></div>
+    <div class="field"><label>Copy rules from</label><select id="fvCopy"><option value="">Start empty</option>
+      ${db.fareVersions.filter(v => ['published', 'superseded'].includes(v.status)).map(v => `<option value="${v.id}">Version ${v.versionNo} — ${esc(v.title)}</option>`).join('')}</select>
+      <div class="hint">Most revisions change a handful of prices. Retyping a full table is how a wrong fare reaches a gate.</div></div>
+    <div class="field"><label>Notes</label><textarea id="fvNotes" rows="2" maxlength="2000"></textarea></div>
+    <div class="drawer-actions"><button class="btn btn-primary" id="fvGo">Create draft</button><button class="btn btn-quiet" id="fvCancel">Cancel</button></div>`);
+  $('#fvCancel').addEventListener('click', closeDrawer);
+  $('#fvGo').addEventListener('click', () => {
+    const title = $('#fvTitle').value.trim(); if (!title) return toast('One field needs correcting — see the message below it.');
+    const src = db.fareVersions.find(v => v.id === $('#fvCopy').value);
+    const vn = Math.max(...db.fareVersions.map(v => v.versionNo)) + 1;
+    const nv = { id: 'fv' + vn + '-' + Date.now(), versionNo: vn, title, notes: $('#fvNotes').value.trim(), model: $('#fvModel').value,
+      status: 'draft', ncmcDiscountBp: Math.round((+$('#fvNcmc').value || 0) * 100),
+      effectiveFrom: null, effectiveTo: null, createdBy: `dev-token:${session.user.username}`, submittedBy: null, approvedBy: null, publishedBy: null,
+      contentHash: null, rules: src ? JSON.parse(JSON.stringify(src.rules)) : [], rollbackOf: null,
+      tax: src ? JSON.parse(JSON.stringify(src.tax)) : [] };
+    db.fareVersions.push(nv);
+    store.logAudit('fare_version.draft', 'fare_version', null, session.user.name); store.save();
+    closeDrawer(); location.hash = `#/fares/${nv.id}`;
   });
 }
 
-/* transaction row */
-function txRow(t) {
-  const modeChip = { UPI: 'info', Cash: 'warn', Card: 'dim' }[t.mode];
-  let journey = '—';
-  if (t.pair && t.pair.includes('-')) {
-    const [a, b] = t.pair.split('-');
-    journey = `${t.station} → ${a === t.station ? b : a}`;
-  }
-  return `<tr>
-    <td style="white-space:nowrap;color:var(--b-ink-faint)">${fmtDT(t.ts)}</td>
-    <td class="mono">${t.id.toUpperCase()}</td>
-    <td>${t.station}</td>
-    <td class="mono" style="font-size:12px">${t.device}</td>
-    <td><span class="pillcode">${t.product}</span></td>
-    <td>${journey}</td>
-    <td class="num">${t.qty}</td>
-    <td><span class="chip ${modeChip}">${t.mode}</span></td>
-    <td class="num" style="font-weight:700">${fmtINR(t.amount)}</td></tr>`;
+function fareDetail(id) {
+  const db = store.db;
+  const v = db.fareVersions.find(x => x.id === id);
+  if (!v) { location.hash = '#/fares'; return; }
+  setHeader(`Version ${v.versionNo} — ${v.title}`, v.notes || '');
+  const editable = v.status === 'draft' && session.can('fare.draft') && !session.isReadOnly();
+  const dual = v.approvedBy && v.approvedBy !== v.createdBy;
+  $('#content').innerHTML = `
+    <div class="fd-panels" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+      <div class="card"><header><h2>Lifecycle</h2></header><div class="pad" style="font-size:13.5px">
+        <div style="margin-bottom:8px">${badge(v.status)}</div>
+        <div class="kv"><span>Drafted by</span><b>${esc(v.createdBy)}</b></div>
+        <div class="kv"><span>Submitted by</span><b>${v.submittedBy ? esc(v.submittedBy) : '—'}</b></div>
+        <div class="kv"><span>Approved by</span><b>${v.approvedBy ? esc(v.approvedBy) : '—'}</b></div>
+        ${dual ? `<div class="notice-ok" style="margin-top:10px">Dual authorisation satisfied — drafted and approved by different people (BOS-FP-06).</div>` : ''}</div></div>
+      <div class="card"><header><h2>Effect</h2></header><div class="pad" style="font-size:13.5px">
+        <div class="kv"><span>Model</span><b>${v.model.replace(/_/g, ' ')}</b></div>
+        <div class="kv"><span>NCMC discount</span><b>${(v.ncmcDiscountBp / 100).toFixed(2)}%</b></div>
+        <div class="kv"><span>Effective from</span><b>${fmtDT(v.effectiveFrom)}</b></div>
+        <div class="kv"><span>Effective to</span><b>${v.effectiveTo ? fmtDT(v.effectiveTo) : (v.status === 'published' ? 'still in force' : '—')}</b></div></div></div>
+      <div class="card"><header><h2>Integrity</h2></header><div class="pad" style="font-size:13.5px">
+        <div class="kv"><span>Content hash</span><b class="mono" style="font-size:10.5px;word-break:break-all">${v.contentHash || '—'}</b></div>
+        <div class="kv"><span>Rules</span><b>${v.rules.length}</b></div>
+        <div class="hint" style="margin-top:8px">ToM, TVM and ECU recompute this hash over their local copy. A mismatch means a device is pricing from a fare table that is not the one published.</div></div></div>
+    </div>
+    ${!editable ? `<div class="card"><div class="pad" style="font-size:13.5px">This version is <b>${v.status}</b> and can no longer be edited. To change a fare, draft a new version — copying this one as a starting point. To revert, publish a rollback from the <a href="#/fares" style="text-decoration:underline">fare versions</a> screen.</div></div>` : `
+    <div class="card"><header><h2>Submit for approval</h2></header><div class="pad">
+      ${v.rules.length === 0 ? `<div class="notice-stale" style="background:var(--danger-bg);border-color:var(--danger);color:var(--danger)">This version has no rules. Every sale against it would fail to price, so it cannot be submitted.</div>` : `
+      <div class="field"><label>Takes effect on <i class="req">*</i></label><input id="sbDate" type="date" value="${new Date(Date.now() + 86400e3).toISOString().slice(0, 10)}"><div class="hint">Must be in the future. Back-dating would reprice transactions already settled and reported.</div></div>
+      <div class="field"><label>Reason <i class="req">*</i></label><textarea id="sbReason" rows="2" maxlength="1000"></textarea><div class="hint">At least ten characters. Shown to the approver and recorded in the audit trail.</div></div>
+      <div class="notice-stale">Submitting does not publish. A second person holding ${mono('fare.approve')} must decide, and it cannot be you.</div>
+      <div id="sbOut"></div>
+      <button class="btn btn-primary" id="sbGo">Submit for approval</button>`}
+    </div></div>`}
+    <div class="card">
+      <header><h2>Fare rules (${v.rules.length})</h2></header>
+      <div class="pad" style="padding-top:4px;padding-bottom:4px;font-size:12.5px;color:var(--b-ink-faint)">Prices are inclusive of tax unless stated otherwise.</div>
+      ${v.rules.length === 0 ? `<div class="empty">This version has no rules.<div class="hint">A version with no rules cannot be published — every sale against it would fail to price.</div></div>` : `
+      <div class="tscroll"><table class="grid">
+        <thead><tr><th>Product</th><th>Passenger</th><th>Journey</th><th>Exit permitted at</th><th class="num">Fare</th></tr></thead>
+        <tbody>${v.rules.map(r => `<tr>
+          <td>${mono(r.product)}</td><td>${r.passengerType}</td>
+          <td>${r.from} → ${r.to}</td><td>${r.exits.join(', ') || '—'}</td>
+          <td class="num">${fmtP(r.basePaise)}</td></tr>`).join('')}</tbody>
+      </table></div>`}
+    </div>
+    <div class="card">
+      <header><h2>Tax configuration</h2></header>
+      <div class="pad" style="padding-top:4px;padding-bottom:4px;font-size:12.5px;color:var(--b-ink-faint)">Total ${(v.tax.reduce((a, t) => a + t.rateBp, 0) / 100).toFixed(2)}%</div>
+      <div class="tscroll"><table class="grid">
+        <thead><tr><th>Component</th><th class="num">Rate</th><th>Scope</th></tr></thead>
+        <tbody>${v.tax.map(t => `<tr><td>${t.component}</td><td class="num">${(t.rateBp / 100).toFixed(2)}%</td><td>${t.scope}</td></tr>`).join('')}</tbody>
+      </table></div>
+      <div class="pad" style="font-size:12.5px;color:var(--b-ink-faint)">CGST and SGST are held equal at every amount; rounding is absorbed into the taxable value rather than split unevenly between components.</div>
+    </div>
+    <p><a href="#/fares" style="text-decoration:underline">Back to fare versions</a></p>`;
+  $('#sbGo')?.addEventListener('click', () => {
+    const reason = ($('#sbReason').value || '').trim();
+    if (reason.length < 10) return toast('At least ten characters. Shown to the approver and recorded in the audit trail.');
+    const ref = `APR-2026-${String(store.nextRef('approval')).padStart(6, '0')}`;
+    v.status = 'pending_approval'; v.submittedBy = `dev-token:${session.user.username}`;
+    db.approvals.unshift({ id: 'ap' + Date.now(), requestRef: ref, operation: 'fare_version.publish', entityType: 'fare_version',
+      summary: `Publish fare version ${v.versionNo} ("${v.title}") with ${v.rules.length} rules, effective ${$('#sbDate').value}T00:00:00+05:30`,
+      payload: { effectiveFrom: `${$('#sbDate').value}T00:00:00+05:30`, fareVersionId: v.id },
+      amountPaise: null, risk: 'critical', status: 'pending', maker: session.user.username, makerDisplay: session.user.name,
+      makerReason: reason, madeAt: Date.now(), expiresAt: Date.now() + 7 * 86400e3, checker: null, checkerDisplay: null, checkerReason: null, decidedAt: null });
+    store.logAudit('fare_version.submit', 'fare_version', reason, session.user.name); store.save();
+    $('#sbOut').innerHTML = approvalBanner(ref, 'SYSTEM_ADMIN, FINANCE_OFFICER');
+    route();
+  });
 }
 
+/* ---------- Excess fare ---------- */
+PAGES['excess-fare'] = (param) => {
+  if (!session.can('excess_fare.read')) {
+    setHeader('Excess Fare Office', 'System Flow s.10.');
+    $('#content').innerHTML = `<div class="card"><div class="pad">
+      <p style="font-weight:600;color:var(--danger)">You are not authorised to view excess fare cases</p>
+      <p style="color:var(--b-ink-faint);margin-top:6px">This screen needs the ${mono('excess_fare.read')} permission, which none of your roles (${esc(session.user.role)}) grant.</p></div></div>`;
+    return;
+  }
+  if (param === 'new') return efNew();
+  if (param) return efDetail(param);
+  setHeader('Excess Fare Office', 'System Flow s.10. Cases opened at this station, and what each of them collected. A passenger is never released without a recorded case and a reason.');
+  const db = store.db;
+  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+  const monthEnd = new Date(monthStart); monthEnd.setMonth(monthEnd.getMonth() + 1); monthEnd.setDate(0);
+  const cases = db.efCases;
+  const monthCases = cases.filter(c => c.openedAt >= monthStart.getTime());
+  const fareCollected = monthCases.reduce((a, c) => a + (c.farePaise || 0), 0);
+  const fineCollected = monthCases.reduce((a, c) => a + (c.finePaise || 0), 0);
+  const waived = monthCases.filter(c => c.outcome === 'waived').length;
+  const canCase = session.can('excess_fare.case') && !session.isReadOnly();
+  const loc = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const win = `${loc(monthStart)} to ${loc(monthEnd)}`;
+  $('#content').innerHTML = `
+    <div class="tiles-b">
+      <div class="tile-b"><div class="ic">${I.appr}</div><div class="tv"><b>${monthCases.length}</b><span>Cases this month — ${win}</span></div></div>
+      <div class="tile-b"><div class="ic">${I.rupee}</div><div class="tv"><b>${fmtP(fareCollected)}</b><span>Fare collected — Revenue</span></div></div>
+      <div class="tile-b"><div class="ic">${I.rupee}</div><div class="tv"><b>${fmtP(fineCollected)}</b><span>Fines collected — Penalty, not revenue</span></div></div>
+      <div class="tile-b"><div class="ic">${I.audit}</div><div class="tv"><b>${waived}</b><span>Waived — Closed without charge</span></div></div>
+    </div>
+    <div class="card">
+      <header><h2>${cases.length} cases</h2><div class="hspace"></div>${canCase ? `<a class="btn btn-primary" href="#/excess-fare/new">Open a case</a>` : ''}</header>
+      ${cases.length === 0 ? `<div class="empty">No excess fare cases at your station.<div class="hint">A case is opened when a passenger cannot pass a gate.</div></div>` : `
+      <div class="tscroll"><table class="grid">
+        <thead><tr><th>Case</th><th>Type</th><th>Medium</th><th>Reason</th><th>Status</th><th class="num">Fare</th><th class="num">Fine</th><th>Tender</th><th>Released</th><th>Opened</th></tr></thead>
+        <tbody>${cases.map(c => `<tr>
+          <td><a class="mono" href="#/excess-fare/${c.id}" style="text-decoration:underline">${esc(c.caseRef)}</a></td>
+          <td>${EF_TYPES[c.caseType]}</td>
+          <td>${c.mediumType === 'none' ? '—' : esc(c.mediumRef || '—')}</td>
+          <td>${c.reason ? mono(c.reason) : '—'}</td>
+          <td>${badge(c.outcome || c.status)}</td>
+          <td class="num">${fmtP(c.farePaise || 0)}</td><td class="num">${fmtP(c.finePaise || 0)}</td>
+          <td>${c.tender || '—'}</td><td>${c.releasedAt ? 'yes' : 'no'}</td>
+          <td style="color:var(--b-ink-faint)">${fmtDT(c.openedAt)}</td></tr>`).join('')}</tbody>
+      </table></div>`}
+    </div>
+    <div class="card">
+      <header><h2>Excess fare report</h2></header>
+      <div class="pad" style="padding-top:4px;font-size:12.5px;color:var(--b-ink-faint)">BOS-EF-08. Grouped by cause, with fare and fine totalled apart so revenue and penalty are reported separately, and waivers counted against collections.</div>
+      ${monthCases.length === 0 ? `<div class="empty">No cases in this period.</div>` : `
+      <div class="tscroll"><table class="grid">
+        <thead><tr><th>Case type</th><th>Reason</th><th class="num">Cases</th><th class="num">Fare</th><th class="num">Fine</th><th class="num">Collected</th><th class="num">Waived</th></tr></thead>
+        <tbody>${(() => {
+          const groups = {};
+          monthCases.forEach(c => {
+            const k = `${c.caseType}|${c.reason || ''}`;
+            groups[k] = groups[k] || { type: c.caseType, reason: c.reason, n: 0, fare: 0, fine: 0, collected: 0, waived: 0 };
+            const g = groups[k]; g.n++; g.fare += c.farePaise || 0; g.fine += c.finePaise || 0;
+            if (c.outcome === 'collected') g.collected++; if (c.outcome === 'waived') g.waived++;
+          });
+          const rows = Object.values(groups);
+          const tot = rows.reduce((a, g) => ({ n: a.n + g.n, fare: a.fare + g.fare, fine: a.fine + g.fine, collected: a.collected + g.collected, waived: a.waived + g.waived }), { n: 0, fare: 0, fine: 0, collected: 0, waived: 0 });
+          return rows.map(g => `<tr><td>${EF_TYPES[g.type]}</td><td>${g.reason ? mono(g.reason) : '—'}</td><td class="num">${g.n}</td><td class="num">${fmtP(g.fare)}</td><td class="num">${fmtP(g.fine)}</td><td class="num">${g.collected}</td><td class="num">${g.waived}</td></tr>`).join('')
+            + `<tr style="font-weight:700"><td>Total</td><td></td><td class="num">${tot.n}</td><td class="num">${fmtP(tot.fare)}</td><td class="num">${fmtP(tot.fine)}</td><td class="num">${tot.collected}</td><td class="num">${tot.waived}</td></tr>`;
+        })()}</tbody>
+      </table></div>`}
+    </div>`;
+};
+
+function efNew() {
+  if (!session.can('excess_fare.case') || session.isReadOnly()) { location.hash = '#/excess-fare'; return; }
+  setHeader('Open an excess fare case', 'System Flow s.10. Opening records the situation. Payment, the outcome and the release come at resolution, which is what carries the reason.');
+  const myStation = session.user.station;
+  const stations = myStation ? store.db.stations.filter(s => s.code === myStation) : store.db.stations;
+  $('#content').innerHTML = `
+    <div class="card"><div class="pad" style="max-width:640px">
+      <h3 style="font-size:13px;margin-bottom:4px">The situation</h3>
+      <div class="hint" style="margin-bottom:12px">Section 10. A case records why the passenger could not pass a gate. No money moves and nobody is released until the case is resolved.</div>
+      <div class="field"><label>Case type <i class="req">*</i></label><select id="efType">
+        <option value="over_travel" selected>Over-travel — travelled beyond the ticketed destination</option>
+        <option value="insufficient_card_balance">Card balance short of the fare at exit</option>
+        <option value="exit_at_entry_station">Exit at the station of entry — did not travel</option>
+        <option value="lost_ticket">Lost ticket inside the paid area</option>
+        <option value="no_entry_record">No entry record at exit</option>
+        <option value="fault_assisted_passage">Fault-assisted passage — a device failed</option>
+        <option value="disputed_transaction">Disputed transaction</option></select></div>
+      <div class="field"><label>Station <i class="req">*</i></label><select id="efStation">
+        ${stations.map(s => `<option value="${s.code}">${s.code} — ${esc(s.en)}</option>`).join('')}</select>
+        <div class="hint">Only the stations you hold the permission at are offered.</div></div>
+      <h3 style="font-size:13px;margin:16px 0 4px">What the passenger presented</h3>
+      <div class="hint" style="margin-bottom:12px">A lost ticket leaves no reference at all, which is why 'none' is a real answer rather than an empty field.</div>
+      <div class="field"><label>Medium <i class="req">*</i></label><select id="efMedium">
+        <option value="none" selected>None presented (a lost ticket leaves no reference)</option>
+        <option value="ticket">Printed ticket</option><option value="ncmc">NCMC card</option></select></div>
+      <div class="field" id="efRefWrap" style="display:none"><label>Medium reference <i class="req">*</i></label><input id="efRef" maxlength="200"><div class="hint">Ticket number, or the card's masked reference.</div></div>
+      <div id="efJourney">
+        <h3 style="font-size:13px;margin:16px 0 4px">The journey</h3>
+        <div class="hint" style="margin-bottom:12px">Over-travel is priced between the ticketed destination and the station actually reached (s.10.1), so both are required.</div>
+        <div class="field"><label>Ticketed origin <i class="req">*</i></label><select id="efO"><option value="">Select a station</option>${STN.map(s => `<option value="${s.code}">${s.code} — ${esc(s.en)}</option>`).join('')}</select></div>
+        <div class="field"><label>Ticketed destination <i class="req">*</i></label><select id="efD"><option value="">Select a station</option>${STN.map(s => `<option value="${s.code}">${s.code} — ${esc(s.en)}</option>`).join('')}</select></div>
+        <div class="field"><label>Station actually reached <i class="req">*</i></label><select id="efR"><option value="">Select a station</option>${STN.map(s => `<option value="${s.code}">${s.code} — ${esc(s.en)}</option>`).join('')}</select></div>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="efNotes" rows="2" maxlength="2000"></textarea><div class="hint">What happened, in the officer's own words. Some reason codes require this at resolution.</div></div>
+      <div style="display:flex;gap:10px"><button class="btn btn-primary" id="efOpen">Open case</button><a class="btn btn-quiet" href="#/excess-fare">Cancel</a></div>
+    </div></div>`;
+  const upd = () => {
+    $('#efRefWrap').style.display = $('#efMedium').value === 'none' ? 'none' : '';
+    $('#efJourney').style.display = $('#efType').value === 'over_travel' ? '' : 'none';
+  };
+  $('#efMedium').addEventListener('change', upd); $('#efType').addEventListener('change', upd); upd();
+  $('#efOpen').addEventListener('click', () => {
+    const type = $('#efType').value;
+    if (type === 'over_travel' && (!$('#efO').value || !$('#efD').value || !$('#efR').value)) return toast('One field needs correcting — see the message below it.');
+    if ($('#efMedium').value !== 'none' && !$('#efRef').value.trim()) return toast('One field needs correcting — see the message below it.');
+    const n = store.nextRef('efCase');
+    const c = { id: 'ef' + Date.now(), caseRef: `EFC-2026-${String(n).padStart(6, '0')}`, caseType: type,
+      station: $('#efStation').value, mediumType: $('#efMedium').value, mediumRef: $('#efMedium').value === 'none' ? null : $('#efRef').value.trim(),
+      journey: type === 'over_travel' ? { o: $('#efO').value, d: $('#efD').value, r: $('#efR').value } : null,
+      notes: $('#efNotes').value.trim() || null, status: 'open', outcome: null, reason: null,
+      farePaise: 0, finePaise: 0, tender: null, receiptRef: null, ottRef: null, disputeRef: null,
+      openedAt: Date.now(), openedBy: session.user.username, resolvedAt: null, releasedAt: null };
+    store.db.efCases.unshift(c);
+    store.logAudit('excess_fare.open', 'excess_fare_case', null, session.user.name); store.save();
+    location.hash = `#/excess-fare/${c.id}`;
+  });
+}
+
+function efDetail(id) {
+  const db = store.db;
+  const c = db.efCases.find(x => x.id === id);
+  if (!c) { location.hash = '#/excess-fare'; return; }
+  setHeader(c.caseRef, `System Flow s.10. Opened ${fmtDT(c.openedAt)}.`);
+  /* fare-difference quote (s.10.1) — priced against SINGLE_JOURNEY on the published version */
+  let quote = null;
+  if (c.caseType === 'over_travel' && c.journey) {
+    const tq = fareQuote('SINGLE_JOURNEY', c.journey.o, c.journey.d, 1);
+    const rq = fareQuote('SINGLE_JOURNEY', c.journey.o, c.journey.r, 1);
+    if (tq && rq) quote = { ticketed: tq.gross, reached: rq.gross, diff: Math.max(0, rq.gross - tq.gross) };
+  }
+  const fine = store.db.config.find(k => k.key === 'fare.over_travel_fine_paise');
+  const canCase = session.can('excess_fare.case') && !session.isReadOnly();
+  const open = c.status === 'open';
+  const reasons = EF_REASONS.filter(r => r.caseType === c.caseType);
+  $('#content').innerHTML = `
+    <div class="card"><header><h2>Case</h2></header><div class="pad" style="font-size:13.5px">
+      <div class="two-col" style="gap:0 32px">
+        <div><div class="kv"><span>Type</span><b>${c.caseType}</b></div>
+        <div class="kv"><span>Medium</span><b>${c.mediumType === 'none' ? 'none presented' : esc(c.mediumRef)}</b></div>
+        <div class="kv"><span>Fare</span><b>${fmtP(c.farePaise || 0)}</b></div>
+        <div class="kv"><span>Collected</span><b>${fmtP((c.farePaise || 0) + (c.finePaise || 0))}</b></div>
+        <div class="kv"><span>Released</span><b>${c.releasedAt ? fmtDT(c.releasedAt) : 'no'}</b></div></div>
+        <div><div class="kv"><span>Status</span><b>${badge(c.outcome || c.status)}</b></div>
+        <div class="kv"><span>Reason</span><b>${c.reason ? mono(c.reason) : '—'}</b></div>
+        <div class="kv"><span>Fine</span><b>${fmtP(c.finePaise || 0)}</b></div>
+        <div class="kv"><span>Tender</span><b>${c.tender || '—'}</b></div>
+        <div class="kv"><span>Resolved</span><b>${c.resolvedAt ? fmtDT(c.resolvedAt) : '—'}</b></div></div>
+      </div></div></div>
+    ${quote ? `<div class="card"><header><h2>Fare difference</h2></header><div class="pad">
+      <div style="font-size:12.5px;color:var(--b-ink-faint);margin-bottom:12px">s.10.1. Priced against the fare version in force. Never negative — travelling short of the ticketed destination is not a refund.</div>
+      <div class="tiles-b" style="grid-template-columns:repeat(3,1fr)">
+        <div class="tile-b"><div class="tv"><b>${fmtP(quote.ticketed)}</b><span>Ticketed fare</span></div></div>
+        <div class="tile-b"><div class="tv"><b>${fmtP(quote.reached)}</b><span>Fare actually reached</span></div></div>
+        <div class="tile-b"><div class="tv"><b>${fmtP(quote.diff)}</b><span>Difference due</span></div></div>
+      </div>
+      ${fine && fine.value == null ? `<p class="hint" style="margin-top:10px">The over-travel fine is not configured. It is reported as absent rather than as zero, because zero would read as "no fine due".</p>` : ''}
+    </div></div>` : ''}
+    ${open && canCase ? `
+    <div class="card"><header><h2>Resolve</h2></header><div class="pad" style="max-width:640px">
+      <div style="font-size:12.5px;color:var(--b-ink-faint);margin-bottom:12px">Take any amount due, record the outcome and the reason, and authorise the release.</div>
+      <h3 style="font-size:13px;margin-bottom:4px">Outcome and reason</h3>
+      <div class="hint" style="margin-bottom:10px">A reason is required for every outcome. The system refuses a release without one.</div>
+      <div class="field"><label>Outcome <i class="req">*</i></label><select id="rOutcome">
+        <option value="collected" selected>Collected — fare and/or fine taken</option>
+        <option value="waived" ${session.can('excess_fare.waive') ? '' : 'disabled'}>Waived — released without charge (requires excess_fare.waive)</option>
+        <option value="no_charge">No charge — nothing was due</option>
+        <option value="raised">Raised — dispute passed to the Back Office</option>
+        <option value="refused">Refused — the officer declined to release</option></select></div>
+      <div class="field"><label>Reason <i class="req">*</i></label><select id="rReason"><option value="">Select a reason</option>
+        ${reasons.map(r => `<option value="${r.code}">${r.code} — ${esc(r.description)}</option>`).join('')}</select>
+        <div class="hint">Only reasons belonging to this case type are offered.</div></div>
+      <h3 style="font-size:13px;margin:14px 0 4px">Amounts</h3>
+      <div class="hint" style="margin-bottom:10px">Two amounts, never one. A fine is a penalty rather than revenue, and a single figure would misstate both.</div>
+      <div class="field"><label>Fare difference (₹)</label><input id="rFare" type="number" step="0.01" min="0" value="${quote ? (quote.diff / 100).toFixed(2) : ''}"><div class="hint">${quote ? `Quoted difference: ${fmtP(quote.diff)}` : 'Nothing is due unless the outcome is a collection.'}</div></div>
+      <div class="field"><label>Fine (₹)</label><input id="rFine" type="number" step="0.01" min="0" ${c.caseType === 'fault_assisted_passage' ? 'disabled' : ''} value="${c.caseType !== 'fault_assisted_passage' && fine && fine.value != null && EF_REASONS.find(r => r.caseType === c.caseType && r.chargesFine) ? (fine.value / 100).toFixed(2) : ''}">
+        ${c.caseType === 'fault_assisted_passage' ? '<div class="hint">A fault-assisted passage carries no fine — the device failed, not the passenger.</div>' : ''}</div>
+      <div class="field"><label>Tender</label><select id="rTender"><option value="">Select a tender</option><option>Cash</option><option>UPI</option><option>Card</option><option>Netbanking</option></select><div class="hint">Money taken must name the tender, or it cannot be reconciled.</div></div>
+      ${c.caseType === 'over_travel' ? `<div class="field"><label>Over-Travel Ticket reference</label><input id="rOtt" maxlength="200"><div class="hint">Issued on payment, and only for an over-travel.</div></div>` : ''}
+      <div class="field" id="rDisputeWrap" style="display:none"><label>Dispute reference <i class="req">*</i></label><input id="rDispute" maxlength="200"><div class="hint">A raised dispute must carry the reference it was raised under.</div></div>
+      <label class="chk" style="display:flex;gap:8px;align-items:flex-start;font-size:13.5px;margin:10px 0"><input type="checkbox" id="rRelease" style="margin-top:3px"> <span>Authorise the passenger's release<br><span class="hint">Recorded against your identity, with the reason above. The system refuses a release without both.</span></span></label>
+      <div class="field"><label>Notes</label><textarea id="rNotes" rows="2" maxlength="2000"></textarea></div>
+      <div style="display:flex;gap:10px"><button class="btn btn-primary" id="rGo">Resolve case</button><a class="btn btn-quiet" href="#/excess-fare">Cancel</a></div>
+    </div></div>` : ''}
+    ${!open ? `<div class="card"><header><h2>Resolved</h2></header><div class="pad" style="font-size:13.5px">This case is ${esc(c.outcome || c.status)} and cannot be resolved again. The record above is what the audit trail holds.</div></div>` : ''}`;
+  $('#rOutcome')?.addEventListener('change', () => {
+    const o = $('#rOutcome').value;
+    ['rFare', 'rFine', 'rTender'].forEach(idn => { const el = $('#' + idn); if (el && !(idn === 'rFine' && c.caseType === 'fault_assisted_passage')) el.disabled = o !== 'collected'; });
+    $('#rDisputeWrap').style.display = o === 'raised' ? '' : 'none';
+  });
+  $('#rGo')?.addEventListener('click', () => {
+    const outcome = $('#rOutcome').value, reason = $('#rReason').value;
+    if (!reason) return toast('A reason is required for every outcome. The system refuses a release without one.');
+    const rd = EF_REASONS.find(r => r.code === reason);
+    if (rd.requiresNotes && !$('#rNotes').value.trim()) return toast('This reason requires notes at resolution.');
+    if (outcome === 'raised' && !$('#rDispute').value.trim()) return toast('A raised dispute must carry the reference it was raised under.');
+    c.outcome = outcome; c.reason = reason; c.status = 'resolved'; c.resolvedAt = Date.now();
+    if (outcome === 'collected') {
+      c.farePaise = Math.round((+$('#rFare').value || 0) * 100);
+      c.finePaise = c.caseType === 'fault_assisted_passage' ? 0 : Math.round((+$('#rFine').value || 0) * 100);
+      c.tender = $('#rTender').value || null;
+      c.ottRef = $('#rOtt') ? $('#rOtt').value.trim() || null : null;
+    }
+    if (outcome === 'raised') c.disputeRef = $('#rDispute').value.trim();
+    if ($('#rRelease').checked) c.releasedAt = Date.now();
+    c.notes = $('#rNotes').value.trim() || c.notes;
+    store.logAudit('excess_fare.resolve', 'excess_fare_case', reason, session.user.name); store.save();
+    route();
+  });
+}
+
+/* ---------- Alarms ---------- */
+const ALARM_LABELS = { device_offline: 'Device offline', device_late: 'Device late', printer_paper_low: 'Paper low', printer_paper_out: 'Paper out', printer_fault: 'Printer fault', printer_absent: 'Printer absent', reader_fault: 'Reader fault', reader_absent: 'Reader absent', clock_drift: 'Clock drift', queue_backlog: 'Queue backlog', device_reported: 'Reported by device' };
+PAGES.alarms = () => {
+  if (!session.can('alarm.read')) { setHeader('Alarms', 'Operational alarms across the estate.'); $('#content').innerHTML = accessDenied('alarm.read'); return; }
+  setHeader('Alarm console', 'BOS-MO-01. Conditions currently true of a device, computed from its last heartbeat every time this page is read. A fault that clears stops being an alarm on its own.');
+  const db = store.db;
+  const alarms = db.alarms;
+  const crit = alarms.filter(a => a.severity === 'critical').length;
+  const high = alarms.filter(a => a.severity === 'high').length;
+  const unack = alarms.filter(a => !a.acknowledgedAt).length;
+  const escd = alarms.filter(a => a.escalated).length;
+  const escCfg = db.config.find(k => k.key === 'alarm.escalate_after_seconds');
+  const canAck = session.can('alarm.acknowledge') && !session.isReadOnly();
+  const sevBadge = (s) => `<span class="chip ${s === 'critical' || s === 'high' ? 'danger' : s === 'medium' ? 'warn' : 'dim'}">${s}</span>`;
+  $('#content').innerHTML = `
+    <div class="tiles-b" style="grid-template-columns:repeat(5,1fr)">
+      <div class="tile-b"><div class="tv"><b>${alarms.length}</b><span>Open alarms — Across the estate</span></div></div>
+      <div class="tile-b"><div class="tv"><b>${crit}</b><span>Critical — Device not operating</span></div></div>
+      <div class="tile-b"><div class="tv"><b>${high}</b><span>High — Position cannot serve</span></div></div>
+      <div class="tile-b"><div class="tv"><b>${unack}</b><span>Unacknowledged — Nobody has taken these on</span></div></div>
+      <div class="tile-b"><div class="tv"><b>${escd}</b><span>Escalated — ${escCfg && escCfg.value != null ? `After ${Math.round(escCfg.value / 60)}m` : 'Window unset'}</span></div></div>
+    </div>
+    ${!escCfg || escCfg.value == null ? `<div class="notice-stale">Escalation is inactive: ${mono('alarm.escalate_after_seconds')} is not set, so nothing escalates. Escalating everything because a number is missing would teach an operator to ignore the flag.</div>` : ''}
+    <div class="card">
+      <header><h2>${alarms.length} raised</h2></header>
+      ${alarms.length === 0 ? `<div class="empty">Nothing is raised.<div class="hint">Every device that has reported is healthy. Devices that have never reported are not alarms — they have not been commissioned.</div></div>` : `
+      <div class="tscroll"><table class="grid">
+        <thead><tr><th>Severity</th><th>Device</th><th>Station</th><th>Condition</th><th>Detail</th><th>Since</th><th>Acknowledged</th>${canAck ? '<th></th>' : ''}</tr></thead>
+        <tbody>${alarms.map((a, i) => `<tr>
+          <td>${sevBadge(a.severity)}${a.escalated ? ' <span class="chip danger">escalated</span>' : ''}</td>
+          <td>${mono(a.deviceCode)}<div style="font-size:11.5px;color:var(--b-ink-faint)">${a.deviceType}</div></td>
+          <td>${a.stationCode}</td><td>${ALARM_LABELS[a.alarmType] || a.alarmType}</td>
+          <td>${esc(a.message)}</td><td style="color:var(--b-ink-faint)">${fmtDT(a.observedAt)}</td>
+          <td>${a.acknowledgedBy ? esc(a.acknowledgedBy) : 'no'}</td>
+          ${canAck ? `<td style="text-align:right">${a.acknowledgedAt ? '<span style="color:var(--b-ink-faint)">taken</span>' : `<button class="btn btn-ghost" style="height:34px" data-ack="${i}" aria-label="Acknowledge ${ALARM_LABELS[a.alarmType]} on ${a.deviceCode}">Acknowledge</button>`}</td>` : ''}</tr>`).join('')}</tbody>
+      </table></div>`}
+    </div>
+    <div class="card">
+      <header><h2>Incident log</h2></header>
+      <div class="pad" style="padding-top:4px;font-size:12.5px;color:var(--b-ink-faint)">BOS-MO-05. Who took each alarm on, and what they found. Acknowledgement and resolution are separate events, which is the only way this can answer how long anything took.</div>
+      ${db.incidents.length === 0 ? `<div class="empty">No incidents recorded yet.</div>` : `
+      <div class="tscroll"><table class="grid">
+        <thead><tr><th>Device</th><th>Condition</th><th>Acknowledged</th><th>By</th><th>Resolved</th><th>Took</th><th>What was found</th><th></th></tr></thead>
+        <tbody>${db.incidents.map((inc, i) => {
+          const took = inc.resolvedAt ? (() => { const s = Math.round((inc.resolvedAt - inc.acknowledgedAt) / 1000); return s < 90 ? s + 's' : s < 5400 ? Math.round(s / 60) + 'm' : (s / 3600).toFixed(1) + 'h'; })() : '—';
+          return `<tr><td>${mono(inc.deviceCode)}</td><td>${ALARM_LABELS[inc.alarmType] || inc.alarmType}</td>
+            <td style="color:var(--b-ink-faint)">${fmtDT(inc.acknowledgedAt)}</td><td>${esc(inc.acknowledgedBy)}</td>
+            <td>${inc.resolvedAt ? esc(inc.resolvedBy) : 'open'}</td><td>${took}</td>
+            <td>${esc(inc.resolutionNote || inc.note || '—')}</td>
+            <td style="text-align:right">${inc.resolvedAt ? '<span style="color:var(--b-ink-faint)">closed</span>' : canAck ? `
+              <div style="display:flex;gap:6px;align-items:center"><input data-note="${i}" placeholder="Replaced the paper roll" maxlength="2000" style="height:34px;border:1.5px solid var(--b-line-mid);border-radius:8px;padding:0 10px;font-size:12.5px">
+              <button class="btn btn-ghost" style="height:34px" data-resolve="${i}">Resolve</button></div>` : ''}</td></tr>`;
+        }).join('')}</tbody>
+      </table></div>`}
+    </div>`;
+  $('#content').addEventListener('click', e => {
+    const ack = e.target.closest('[data-ack]');
+    if (ack) {
+      const a = store.db.alarms[+ack.dataset.ack];
+      a.acknowledgedAt = Date.now(); a.acknowledgedBy = session.user.username;
+      store.db.incidents.unshift({ id: 'in' + Date.now(), deviceCode: a.deviceCode, alarmType: a.alarmType, acknowledgedAt: a.acknowledgedAt, acknowledgedBy: session.user.username, resolvedAt: null, resolvedBy: null, resolutionNote: null, note: null });
+      store.logAudit('alarm.acknowledge', 'alarm', null, session.user.name); store.save(); route();
+    }
+    const res = e.target.closest('[data-resolve]');
+    if (res) {
+      const inc = store.db.incidents[+res.dataset.resolve];
+      const note = ($(`[data-note="${res.dataset.resolve}"]`).value || '').trim();
+      if (!note) return toast('What was wrong is required.');
+      inc.resolvedAt = Date.now(); inc.resolvedBy = session.user.username; inc.resolutionNote = note;
+      /* the condition also clears from the live alarm list on resolution in the demo */
+      store.db.alarms = store.db.alarms.filter(a => !(a.deviceCode === inc.deviceCode && a.alarmType === inc.alarmType));
+      store.logAudit('alarm.resolve', 'alarm', note, session.user.name); store.save(); route();
+    }
+  });
+};
+
+/* ---------- Hotlist ---------- */
+PAGES.hotlist = () => {
+  if (!session.can('hotlist.read')) { setHeader('Hotlist'); $('#content').innerHTML = accessDenied('hotlist.read'); return; }
+  setHeader('Hotlist', 'BOS-BL-01. Card references a gate must refuse. Every change is a new entry carrying a version, so a gate can ask for only what it has not already seen.');
+  const db = store.db;
+  const w = session.can('hotlist.write') && !session.isReadOnly();
+  const ovr = w && session.can('hotlist.override');
+  $('#content').innerHTML = `
+    ${w ? `<div class="card"><header><h2>Block a card</h2></header><div class="pad" style="max-width:560px">
+      <div style="font-size:12.5px;color:var(--b-ink-faint);margin-bottom:12px">Takes effect at every gate on its next pull.</div>
+      <div class="field"><label>Card reference <i class="req">*</i></label><input id="hlRef" maxlength="128" placeholder="NCMC-TOKEN-4f9a2c"><div class="hint">The token or reference, never the card number itself. A card number would put payment data in the Back Office, and is refused.</div></div>
+      <div class="field"><label>Why it is being blocked <i class="req">*</i></label><textarea id="hlWhy" rows="2" maxlength="500"></textarea><div class="hint">A gate will refuse this card. Someone will ask why.</div></div>
+      <div id="hlOut"></div>
+      <button class="btn btn-danger" id="hlBlock">Block this card</button>
+    </div></div>` : ''}
+    ${ovr ? `<div class="card"><header><h2>Take a card off</h2></header><div class="pad" style="max-width:560px">
+      <div style="font-size:12.5px;color:var(--b-ink-faint);margin-bottom:10px">Dual authorised — a second administrator decides (BOS-BL-03).</div>
+      <button class="btn-linklike" id="hlOpenOff" style="text-decoration:underline">Propose taking a card off the hotlist</button>
+      <div id="hlOffForm" style="display:none;margin-top:12px">
+        <p style="font-size:13px;margin-bottom:10px">This does not lift the block. A second person holding SYSTEM_ADMIN must approve it, within 24 hours, before the card is accepted at a gate again.</p>
+        <div class="field"><label>Card reference <i class="req">*</i></label><input id="hlOffRef" placeholder="NCMC-TOKEN-4f9a2c"></div>
+        <div class="field"><label>Why it should come off <i class="req">*</i></label><textarea id="hlOffWhy" rows="2" maxlength="500"></textarea><div class="hint">The checker reads this before deciding.</div></div>
+        <div id="hlOffOut"></div>
+        <div style="display:flex;gap:10px"><button class="btn btn-primary" id="hlOffGo">Submit for approval</button><button class="btn btn-quiet" id="hlOffCancel">Cancel</button></div>
+      </div>
+    </div></div>` : ''}
+    <div class="card">
+      <header><h2>${db.hotlist.length ? `${db.hotlist.length} entries` : 'Entries'}</h2></header>
+      ${db.hotlist.length === 0 ? `<div class="empty">Nothing has been listed.<div class="hint">A blocked card is refused at every gate on the line.</div></div>` : `
+      <div class="tscroll"><table class="grid">
+        <thead><tr><th class="num">Version</th><th>Card reference</th><th>State</th><th>Reason</th><th>Source</th><th>Listed</th><th>By</th></tr></thead>
+        <tbody>${db.hotlist.map(h => `<tr>
+          <td class="num">${h.version}</td><td>${mono(h.ref)}</td>
+          <td><span class="chip ${h.state === 'blocked' ? 'danger' : 'dim'}">${h.state}</span></td>
+          <td>${esc(h.reason)}</td><td>${h.source}</td>
+          <td style="color:var(--b-ink-faint)">${fmtDT(h.listedAt)}</td><td>${esc(h.by || '—')}</td></tr>`).join('')}</tbody>
+      </table></div>`}
+    </div>`;
+  $('#hlBlock')?.addEventListener('click', () => {
+    const ref = ($('#hlRef').value || '').trim(), why = ($('#hlWhy').value || '').trim();
+    if (/^\d{13,19}$/.test(ref)) return $('#hlOut').innerHTML = `<div class="notice-stale" style="background:var(--danger-bg);color:var(--danger);border-color:var(--danger)">That looks like a card number. The hotlist holds a token or reference, never the number itself — storing one would put payment data in the Back Office.</div>`;
+    if (!ref) return toast('One field needs correcting — see the message below it.');
+    if (why.length < 10) return $('#hlOut').innerHTML = `<div class="notice-stale" style="background:var(--danger-bg);color:var(--danger);border-color:var(--danger)">Say why, in enough words to mean something to whoever reads this later.</div>`;
+    if (store.db.hotlist.some(h => h.ref === ref && h.state === 'blocked'))
+      return $('#hlOut').innerHTML = `<div class="notice-stale" style="background:var(--danger-bg);color:var(--danger);border-color:var(--danger)">That reference is already on the hotlist. Listing it twice would tell a gate nothing new and would hide the original reason behind a second one.</div>`;
+    store.db.hotlist.unshift({ version: store.nextRef('hotlist'), ref, state: 'blocked', reason: why, source: 'internal', listedAt: Date.now(), by: session.user.name });
+    store.logAudit('hotlist.block', 'hotlist_entry', why, session.user.name); store.save();
+    $('#hlOut').innerHTML = savedBanner('The card is on the hotlist and every gate will refuse it.');
+    setTimeout(route, 900);
+  });
+  $('#hlOpenOff')?.addEventListener('click', () => { $('#hlOffForm').style.display = ''; $('#hlOpenOff').style.display = 'none'; });
+  $('#hlOffCancel')?.addEventListener('click', () => { $('#hlOffForm').style.display = 'none'; $('#hlOpenOff').style.display = ''; });
+  $('#hlOffGo')?.addEventListener('click', () => {
+    const ref = ($('#hlOffRef').value || '').trim(), why = ($('#hlOffWhy').value || '').trim();
+    const entry = store.db.hotlist.find(h => h.ref === ref);
+    if (!entry) return $('#hlOffOut').innerHTML = `<div class="notice-stale" style="background:var(--danger-bg);color:var(--danger);border-color:var(--danger)">That reference is not on the hotlist, so there is nothing to lift.</div>`;
+    if (entry.state !== 'blocked') return $('#hlOffOut').innerHTML = `<div class="notice-stale" style="background:var(--danger-bg);color:var(--danger);border-color:var(--danger)">That reference is not currently blocked.</div>`;
+    if (why.length < 10) return toast('Say why, in enough words to mean something to whoever reads this later.');
+    const apr = `APR-2026-${String(store.nextRef('approval')).padStart(6, '0')}`;
+    store.db.approvals.unshift({ id: 'ap' + Date.now(), requestRef: apr, operation: 'hotlist.whitelist_override', entityType: 'hotlist_entry',
+      summary: `Take ${ref} off the hotlist`, payload: { cardReference: ref }, amountPaise: null, risk: 'critical', status: 'pending',
+      maker: session.user.username, makerDisplay: session.user.name, makerReason: why, madeAt: Date.now(), expiresAt: Date.now() + 86400e3, checker: null, checkerDisplay: null, checkerReason: null, decidedAt: null });
+    store.logAudit('hotlist.whitelist_override', 'hotlist_entry', why, session.user.name); store.save();
+    $('#hlOffOut').innerHTML = approvalBanner(apr, 'SYSTEM_ADMIN');
+  });
+};
+
+/* ---------- Labels ---------- */
+PAGES.labels = () => {
+  if (!session.can('label.read')) { setHeader('Labels'); $('#content').innerHTML = accessDenied('label.read'); return; }
+  setHeader('Label master', 'BOS-MD-04 and rule 16. Station names, product names and receipt text in Hindi and English, distributed to the counter and the kiosk alongside the fare table.');
+  const grouped = new Map();
+  for (const l of store.db.labels) {
+    const k = `${l.namespace}/${l.labelKey}`;
+    grouped.set(k, [...(grouped.get(k) || []), l]);
+  }
+  const w = session.can('label.write') && !session.isReadOnly();
+  $('#content').innerHTML = `
+    <div class="two-col" style="grid-template-columns:2fr 1fr">
+      <div class="card">
+        <header><h2>${grouped.size} labels</h2></header>
+        <div class="tscroll"><table class="grid">
+          <thead><tr><th>Namespace</th><th>Key</th><th>English</th><th>Hindi</th><th>Receipt</th></tr></thead>
+          <tbody>${[...grouped.entries()].map(([k, entries]) => {
+            const en = entries.find(e => e.locale === 'en-IN'), hi = entries.find(e => e.locale === 'hi-IN');
+            const [ns, key] = k.split('/');
+            return `<tr><td style="color:var(--b-ink-faint)">${ns}</td><td>${mono(key)}</td>
+              <td>${en ? esc(en.value) : '<span style="color:var(--danger)">missing</span>'}</td>
+              <td>${hi ? `<span lang="hi-IN">${esc(hi.value)}</span>` : '<span style="color:var(--warn)">missing</span>'}</td>
+              <td>${hi && !hi.printerSafe ? '<span class="chip warn">falls back</span>' : '<span class="chip ok">prints</span>'}</td></tr>`;
+          }).join('')}</tbody>
+        </table></div>
+      </div>
+      ${w ? `<div class="card"><header><h2>Add or amend a label</h2></header><div class="pad">
+        <div style="font-size:12.5px;color:var(--b-ink-faint);margin-bottom:12px">Saving an existing namespace, key and language replaces its value.</div>
+        <div class="field"><label>Namespace <i class="req">*</i></label><select id="lbNs"><option>station</option><option>product</option><option>receipt</option><option>ticket</option></select></div>
+        <div class="field"><label>Key <i class="req">*</i></label><input id="lbKey"></div>
+        <div class="field"><label>Language <i class="req">*</i></label><select id="lbLoc"><option value="en-IN">English</option><option value="hi-IN">Hindi</option></select></div>
+        <div class="field"><label>Value <i class="req">*</i></label><input id="lbVal"></div>
+        <button class="btn btn-primary" id="lbSave">Save label</button>
+      </div></div>` : ''}
+    </div>
+    <p style="font-size:12.5px;color:var(--b-ink-faint);max-width:760px">A label marked as not printing falls back to its transliteration on a thermal receipt while screens keep the correct script. Devanagari conjuncts do not render on every printer's resident font set, and a receipt of boxes is a passenger complaint.</p>`;
+  $('#lbSave')?.addEventListener('click', () => {
+    const ns = $('#lbNs').value, key = ($('#lbKey').value || '').trim(), loc = $('#lbLoc').value, val = ($('#lbVal').value || '').trim();
+    if (!key || !val) return toast('One field needs correcting — see the message below it.');
+    const ex = store.db.labels.find(l => l.namespace === ns && l.labelKey === key && l.locale === loc);
+    if (ex) ex.value = val;
+    else store.db.labels.push({ namespace: ns, labelKey: key, locale: loc, value: val, printerSafe: loc === 'en-IN', transliteration: null });
+    store.logAudit('label.upsert', 'label', null, session.user.name); store.save(); route();
+  });
+};
+
+/* ---------- Approvals ---------- */
+const APPROVAL_CHECKERS = {
+  'fare_version.publish': ['SYSTEM_ADMIN', 'FINANCE_OFFICER'], 'fare_version.rollback': ['SYSTEM_ADMIN', 'FINANCE_OFFICER'],
+  'tax_config.change': ['SYSTEM_ADMIN', 'FINANCE_OFFICER'], 'promotion.publish': ['SYSTEM_ADMIN', 'FINANCE_OFFICER'],
+  'hotlist.whitelist_override': ['SYSTEM_ADMIN'], 'refund.authorise': ['FINANCE_OFFICER'], 'user.role_grant': ['SYSTEM_ADMIN'],
+  'device.decommission': ['SYSTEM_ADMIN', 'STATION_CONTROLLER'], 'station.deactivate': ['SYSTEM_ADMIN'],
+  'reconciliation.variance_writeoff': ['FINANCE_OFFICER'], 'system_config.change': ['SYSTEM_ADMIN'],
+};
+PAGES.approvals = (param) => {
+  if (!session.can('approval.read')) { setHeader('Approvals'); $('#content').innerHTML = accessDenied('approval.read'); return; }
+  setHeader('Approval queue', 'BOS-SC-04. Privileged changes are proposals until a second person decides on them. You cannot decide a request you raised.');
+  const filter = ['pending', 'applied', 'rejected', 'expired'].includes(param) ? param : 'pending';
+  const rows = store.db.approvals.filter(a => a.status === filter);
+  $('#content').innerHTML = `
+    <nav style="display:flex;gap:8px;margin-bottom:4px">
+      ${['pending', 'applied', 'rejected', 'expired'].map(f => `<a class="chip ${f === filter ? 'info' : 'dim'}" style="text-decoration:none;text-transform:capitalize" href="#/approvals/${f}">${f}</a>`).join('')}
+    </nav>
+    ${rows.length === 0 ? `<div class="card"><div class="empty">No ${filter} requests.</div></div>` : rows.map((a, i) => {
+      const mayDecide = session.can('approval.decide') && (APPROVAL_CHECKERS[a.operation] || []).includes(session.user.role);
+      const raisedByYou = a.maker === session.user.username;
+      return `<div class="card apr-card">
+        <header><h2 style="max-width:none">${esc(a.summary)}</h2><div class="hspace"></div>${riskBadge(a.risk)} ${badge(a.status)}</header>
+        <div class="pad" style="font-size:13.5px">
+          <div style="color:var(--b-ink-faint);font-size:12.5px;margin-bottom:10px">${esc(a.operation)} · raised ${fmtDT(a.madeAt)} by ${esc(a.makerDisplay || a.maker)}</div>
+          <div class="kv"><span>Reference</span><b class="mono">${esc(a.requestRef)}</b></div>
+          <div class="kv"><span>Expires</span><b>${fmtDT(a.expiresAt)}</b></div>
+          ${a.amountPaise != null ? `<div class="kv"><span>Amount</span><b>${fmtP(a.amountPaise)}</b></div>` : ''}
+          ${a.makerReason ? `<p style="margin-top:10px">Stated reason: ${esc(a.makerReason)}</p>` : ''}
+          <details style="margin-top:10px"><summary style="cursor:pointer;font-size:12.5px;color:var(--b-ink-faint)">Exact change that will be applied</summary>
+            <pre style="background:var(--b-dark);color:#f3e6d2;border-radius:10px;padding:12px;font-size:11.5px;overflow-x:auto;margin-top:8px">${esc(JSON.stringify(a.payload, null, 2))}</pre></details>
+          ${a.status === 'pending' ? (
+            raisedByYou ? `
+              <p style="color:var(--warn);margin-top:12px">You raised this request. Segregation of duties requires a different person to decide it (BOS-SC-04).</p>
+              <div style="margin-top:8px"><button class="btn-linklike" style="text-decoration:underline" data-wd="${i}">Withdraw this request</button>
+              <div data-wdform="${i}" style="display:none;margin-top:10px">
+                <div class="field"><label>Reason for withdrawing ${esc(a.requestRef)} <i class="req">*</i></label><textarea data-wdreason="${i}" rows="2" maxlength="1000"></textarea><div class="hint">The request is closed rather than deleted, and the reason is kept with it.</div></div>
+                <div style="display:flex;gap:10px"><button class="btn btn-danger" data-wdgo="${i}">Withdraw</button><button class="btn btn-quiet" data-wdkeep="${i}">Keep it open</button></div>
+              </div></div>`
+            : !session.can('approval.decide') ? `<p style="color:var(--b-ink-faint);margin-top:12px">You do not hold the permission to decide this.</p>`
+            : !mayDecide ? `<p style="color:var(--b-ink-faint);margin-top:12px">Deciding ${esc(a.operation)} is reserved to another role. It is waiting for someone who holds it, not for you.</p>`
+            : `<div style="margin-top:12px">
+              <div class="field"><label>Reason for your decision on ${esc(a.requestRef)}</label><textarea data-reason="${i}" rows="2" maxlength="1000"></textarea><div class="hint">Required to reject — an unexplained refusal cannot be reviewed later. Optional to approve.</div></div>
+              <div style="display:flex;gap:10px">
+                <button class="btn btn-primary" data-approve="${i}">Approve and apply</button>
+                <button class="btn btn-danger" data-reject="${i}" disabled title="Give a reason first">Reject</button>
+              </div></div>`
+          ) : a.decidedAt ? `<p style="color:var(--b-ink-faint);margin-top:12px">Decided ${fmtDT(a.decidedAt)} by ${esc(a.checkerDisplay || 'unknown')}${a.checkerReason ? ` — ${esc(a.checkerReason)}` : ''}</p>` : ''}
+        </div>
+      </div>`;
+    }).join('')}`;
+  $('#content').addEventListener('input', e => {
+    const t = e.target.closest('[data-reason]');
+    if (t) { const b = $(`[data-reject="${t.dataset.reason}"]`); if (b) b.disabled = !t.value.trim(); }
+  });
+  $('#content').addEventListener('click', e => {
+    const idx = (attr) => { const el = e.target.closest(`[data-${attr}]`); return el ? +el.dataset[attr] : null; };
+    const ap = idx('approve');
+    if (ap != null) { decideApproval(rows[ap], 'approve', ($(`[data-reason="${ap}"]`).value || '').trim()); return; }
+    const rj = idx('reject');
+    if (rj != null) { decideApproval(rows[rj], 'reject', ($(`[data-reason="${rj}"]`).value || '').trim()); return; }
+    const wd = idx('wd');
+    if (wd != null) { $(`[data-wdform="${wd}"]`).style.display = ''; e.target.style.display = 'none'; return; }
+    const keep = idx('wdkeep');
+    if (keep != null) { $(`[data-wdform="${keep}"]`).style.display = 'none'; $(`[data-wd="${keep}"]`).style.display = ''; return; }
+    const go = idx('wdgo');
+    if (go != null) {
+      const a = rows[go]; const r = ($(`[data-wdreason="${go}"]`).value || '').trim();
+      if (r.length < 5) return toast('The request is closed rather than deleted, and the reason is kept with it.');
+      a.status = 'withdrawn'; a.makerReason = `${a.makerReason} | withdrawn: ${r}`;
+      store.logAudit('approval.withdraw', 'approval_request', r, session.user.name); store.save(); route();
+    }
+  });
+};
+function decideApproval(a, decision, reason) {
+  if (decision === 'reject' && !reason) return;
+  a.checker = session.user.username; a.checkerDisplay = session.user.name; a.checkerReason = reason || null; a.decidedAt = Date.now();
+  if (decision === 'reject') { a.status = 'rejected'; }
+  else {
+    a.status = 'applied';
+    /* apply the change */
+    if (a.operation === 'fare_version.publish') {
+      const v = store.db.fareVersions.find(x => x.id === a.payload.fareVersionId);
+      if (v) {
+        const prev = publishedVersion(); if (prev && prev !== v) { prev.status = 'superseded'; prev.effectiveTo = Date.now(); }
+        v.status = 'published'; v.approvedBy = `dev-token:${session.user.username}`; v.publishedBy = v.approvedBy;
+        v.effectiveFrom = Date.parse(a.payload.effectiveFrom) || Date.now();
+        v.contentHash = Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+    }
+    if (a.operation === 'user.role_grant') {
+      const u = store.db.users.find(x => x.username === a.payload.username);
+      if (u) { u.role = a.payload.role; u.station = a.payload.station || null; }
+    }
+    if (a.operation === 'hotlist.whitelist_override') {
+      const h = store.db.hotlist.find(x => x.ref === a.payload.cardReference && x.state === 'blocked');
+      if (h) h.state = 'lifted';
+    }
+  }
+  store.logAudit(`approval.${decision}`, 'approval_request', reason || null, session.user.name); store.save(); route();
+}
+
+/* ---------- Users ---------- */
+const ROLE_DISPLAY = { SYSTEM_ADMIN: 'System Administrator', AUDITOR: 'Auditor', FINANCE_OFFICER: 'Finance / Reconciliation Officer', EXCESS_FARE_OFFICER: 'Excess Fare Officer', STATION_CONTROLLER: 'Station Controller', TOM_OPERATOR: 'Counter Operator' };
+PAGES.users = (param) => {
+  if (!session.can('user.read')) { setHeader('Staff'); $('#content').innerHTML = accessDenied('user.read'); return; }
+  if (param) return userEdit(param);
+  setHeader('Staff and roles', 'BOS-UM-01 and BOS-UM-02. Authorisation records only — passwords, MFA enrolment and lockout state live in the identity provider.');
+  const w = session.can('user.write') && !session.isReadOnly();
+  const rows = store.db.users;
+  $('#content').innerHTML = `
+    <div class="notice-stale"><b>Role grants are dual-authorised</b><br>Granting a role hands someone authority over fares, money or gates, so it goes through the approval queue like any other privileged change. Revocation takes effect immediately — permissions are read from the database on every request, not from the access token.</div>
+    <div class="card">
+      <header><h2>${rows.length} staff accounts</h2></header>
+      <div class="tscroll"><table class="grid">
+        <thead><tr><th>Username</th><th>Name</th><th>Employee code</th><th>Roles</th><th>Status</th><th>Last sign-in</th>${w ? '<th></th>' : ''}</tr></thead>
+        <tbody>${rows.map(u => `<tr>
+          <td>${mono(u.username)}</td><td>${esc(u.name)}</td><td>${u.emp || '—'}</td>
+          <td><span class="chip ${u.role === 'AUDITOR' ? 'info' : 'dim'}">${u.role}${u.station ? ' · ' + u.station : ''}</span></td>
+          <td>${badge(u.status)}</td><td style="color:var(--b-ink-faint)">${u.lastSignIn ? fmtDT(u.lastSignIn) : '—'}</td>
+          ${w ? `<td style="text-align:right"><a href="#/users/${u.username}" style="text-decoration:underline">Manage</a></td>` : ''}</tr>`).join('')}</tbody>
+      </table></div>
+    </div>`;
+};
+function userEdit(username) {
+  const u = store.db.users.find(x => x.username === username);
+  if (!u || !session.can('user.write') || session.isReadOnly()) { location.hash = '#/users'; return; }
+  setHeader(u.name, u.emp ? `${u.username} · ${u.emp}` : u.username);
+  $('#content').innerHTML = `
+    <div class="two-col">
+      <div class="card"><header><h2>Account</h2></header><div class="pad">
+        <div class="field"><label>Username</label><input value="${esc(u.username)}" disabled><div class="hint">The username is bound to this person's identity and cannot be changed.</div></div>
+        <div class="field"><label>Full name <i class="req">*</i></label><input id="uName" value="${esc(u.name)}"></div>
+        <div class="field"><label>Employee code</label><input id="uEmp" maxlength="32" value="${esc(u.emp || '')}"></div>
+        <div class="field"><label>Status</label><select id="uStatus">
+          <option value="invited" ${u.status === 'invited' ? 'selected' : ''}>Invited — has not signed in yet</option>
+          <option value="active" ${u.status === 'active' ? 'selected' : ''}>Active</option>
+          <option value="suspended" ${u.status === 'suspended' ? 'selected' : ''}>Suspended</option>
+          <option value="deactivated" ${u.status === 'deactivated' ? 'selected' : ''}>Deactivated</option></select>
+          <div class="hint">Suspending takes effect at once — permissions are checked on every request rather than read from a login token, so the person does not keep working until their session expires.</div></div>
+        <div id="uOut"></div>
+        <button class="btn btn-primary" id="uSave">Save changes</button>
+      </div></div>
+      <div>
+        <div class="card"><header><h2>Roles held</h2></header><div class="pad">
+          <div style="font-size:12.5px;color:var(--b-ink-faint);margin-bottom:12px">Revoking takes effect immediately. The assignment is closed rather than deleted, so a report covering last quarter still shows who held what.</div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span class="chip ${u.role === 'AUDITOR' ? 'info' : 'dim'}">${u.role}</span>
+            ${u.station ? `<span style="font-size:13px">at ${u.station}</span>` : ''}
+            <span style="font-size:12px;color:var(--b-ink-faint)">Since ${fmtD(Date.now() - 30 * 86400e3)} · granted by seed</span>
+          </div>
+        </div></div>
+        <div class="card"><header><h2>Grant a role</h2></header><div class="pad">
+          <div class="field"><label>Role <i class="req">*</i></label><select id="gRole"><option value="">Select a role</option>
+            <option value="SYSTEM_ADMIN">System Administrator</option><option value="FINANCE_OFFICER">Finance Officer</option>
+            <option value="STATION_CONTROLLER">Station Controller — one station</option><option value="TOM_OPERATOR">Counter Operator — one station</option>
+            <option value="EXCESS_FARE_OFFICER">Excess Fare Officer — one station</option><option value="MAINTENANCE">Maintenance Engineer</option>
+            <option value="AUDITOR">Auditor — read only</option></select></div>
+          <div class="field"><label>Station</label><select id="gStation" disabled><option value="">Not applicable — system-wide</option></select>
+            <div class="hint">Granted without a station, the authority would apply at every station on the line.</div></div>
+          <div class="field"><label>Reason <i class="req">*</i></label><textarea id="gReason" rows="2" maxlength="1000"></textarea><div class="hint">At least ten characters. Shown to the approver and recorded in the audit trail.</div></div>
+          <div class="notice-stale">A role grant needs a second person's approval. Submitting this does not give the person the role — it raises a request that someone else must decide.</div>
+          <div id="gOut"></div>
+          <button class="btn btn-primary" id="gGo">Submit for approval</button>
+        </div></div>
+      </div>
+    </div>`;
+  $('#uSave').addEventListener('click', () => {
+    u.name = $('#uName').value.trim() || u.name; u.emp = $('#uEmp').value.trim() || null; u.status = $('#uStatus').value;
+    store.logAudit('user.update', 'staff_user', null, session.user.name); store.save();
+    $('#uOut').innerHTML = savedBanner('');
+  });
+  $('#gRole').addEventListener('change', () => {
+    const scoped = ['STATION_CONTROLLER', 'TOM_OPERATOR', 'EXCESS_FARE_OFFICER'].includes($('#gRole').value);
+    const sel = $('#gStation'); sel.disabled = !scoped;
+    sel.innerHTML = scoped
+      ? `<option value="">Select a station</option>` + STN.map(s => `<option value="${s.code}">${s.code} — ${s.en}</option>`).join('')
+      : `<option value="">Not applicable — system-wide</option>`;
+  });
+  $('#gGo').addEventListener('click', () => {
+    const role = $('#gRole').value, reason = ($('#gReason').value || '').trim();
+    if (!role) return toast('One field needs correcting — see the message below it.');
+    if (reason.length < 10) return toast('At least ten characters. Shown to the approver and recorded in the audit trail.');
+    const scoped = ['STATION_CONTROLLER', 'TOM_OPERATOR', 'EXCESS_FARE_OFFICER'].includes(role);
+    if (scoped && !$('#gStation').value) return toast('Granted without a station, the authority would apply at every station on the line.');
+    const ref = `APR-2026-${String(store.nextRef('approval')).padStart(6, '0')}`;
+    store.db.approvals.unshift({ id: 'ap' + Date.now(), requestRef: ref, operation: 'user.role_grant', entityType: 'staff_user',
+      summary: `Grant ${role}${scoped ? ' at ' + $('#gStation').value : ''} to ${u.username}`,
+      payload: { username: u.username, role, station: scoped ? $('#gStation').value : null },
+      amountPaise: null, risk: 'high', status: 'pending', maker: session.user.username, makerDisplay: session.user.name,
+      makerReason: reason, madeAt: Date.now(), expiresAt: Date.now() + 7 * 86400e3, checker: null, checkerDisplay: null, checkerReason: null, decidedAt: null });
+    store.logAudit('user.role_grant', 'staff_user', reason, session.user.name); store.save();
+    $('#gOut').innerHTML = approvalBanner(ref, 'SYSTEM_ADMIN');
+  });
+}
+
+/* ---------- Audit trail ---------- */
+PAGES.audit = () => {
+  if (!session.can('audit.read')) { setHeader('Audit trail'); $('#content').innerHTML = accessDenied('audit.read'); return; }
+  setHeader('Audit trail', 'BOS-SC-01. Append-only and hash-chained. Retained for eight financial years under the Companies Act 2013, s.128 and the Companies (Accounts) Rules 2014, Rule 3(1).');
+  const rows = store.db.audit;
+  const canVerify = session.can('audit.verify');
+  $('#content').innerHTML = `
+    ${canVerify ? `<div class="notice-ok"><b>Chain verified — no record has been altered or removed</b><br>${rows.length} entries recomputed in 4 ms, sequence 1–${rows.length ? rows[0].seq : 0}.</div>` : ''}
+    <div class="card">
+      <header><h2>Recent entries</h2></header>
+      <div class="pad" style="padding-top:4px;font-size:12.5px;color:var(--b-ink-faint)">Configuration and privileged actions. Gate taps and sales are transactions, recorded separately.</div>
+      ${rows.length === 0 ? `<div class="empty">No audit entries yet.</div>` : `
+      <div class="tscroll"><table class="grid">
+        <thead><tr><th class="num">Seq</th><th>When</th><th>Who</th><th>Action</th><th>Entity</th><th>Chain</th></tr></thead>
+        <tbody>${rows.map(a => `<tr>
+          <td class="num" style="color:var(--b-ink-faint)">${a.seq}</td>
+          <td style="color:var(--b-ink-faint)">${fmtDT(a.ts)}</td>
+          <td>${esc(a.actor)}<div style="font-size:11.5px;color:var(--b-ink-faint)">${esc(a.actorType)}</div></td>
+          <td>${mono(a.action)}${a.reason ? `<div style="font-size:11.5px;color:var(--b-ink-faint)">${esc(a.reason)}</div>` : ''}</td>
+          <td style="color:var(--b-ink-faint);font-size:12px">${esc(a.entityType)}</td>
+          <td>${mono(a.hash)}</td></tr>`).join('')}</tbody>
+      </table></div>`}
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;font-size:12.5px;color:var(--b-ink-faint)">
+      <span class="chip info">Append-only</span>
+      <span>The application role holds INSERT only; UPDATE and DELETE are revoked and additionally refused by trigger. Each row commits to its predecessor by SHA-256, so an alteration is detectable even by someone who defeated both.</span>
+    </div>`;
+};
+
+/* ---------- drawer + boot ---------- */
+function openDrawer(title, sub, bodyHTML) {
+  $('#drawerTitle').textContent = title;
+  $('#drawerSub').textContent = sub || '';
+  $('#drawerBody').innerHTML = bodyHTML;
+  $('#drawer').classList.add('open'); $('#overlay').classList.add('open');
+  if (window.Motion) Motion.drawerOpen($('#drawer'), $('#overlay'));
+}
+function closeDrawer() {
+  const d = $('#drawer');
+  const done = () => { d.classList.remove('open'); $('#overlay').classList.remove('open'); };
+  if (window.Motion) Motion.drawerClose(d, done); else done();
+}
+
+/* icons used by tiles */
+const I = {
+  device: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
+  station: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/></svg>',
+  appr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>',
+  audit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 4.5 5.5v5c0 4.6 3.1 8.4 7.5 10 4.4-1.6 7.5-5.4 7.5-10v-5z"/><path d="M9 11.5l2 2 4-4.5"/></svg>',
+  rupee: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12M6 8.5h12M6 4c4 0 7 2 7 6l-7 9.5"/><path d="M13 10H6"/></svg>',
+};
+
+function showApp() {
+  $('#login').style.display = 'none';
+  $('#app').classList.add('on');
+  renderUserBox();
+  route();
+}
+function boot() {
+  $('#overlay').addEventListener('click', closeDrawer);
+  $('#signOut').addEventListener('click', () => { session.signOut(); location.hash = ''; location.reload(); });
+  $('#resetData')?.addEventListener('click', () => { store.reset(); location.reload(); });
+  $('#loginForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const u = session.signIn($('#loginUser').value.trim());
+    if (!u) { $('#loginErr').textContent = 'That username is not valid.'; $('#loginErr').classList.add('show'); return; }
+    showApp();
+  });
+  $$('#devChips button').forEach(b => b.addEventListener('click', () => {
+    $('#loginUser').value = b.dataset.demo;
+    const u = session.signIn(b.dataset.demo);
+    if (u) showApp();
+  }));
+  const qs = new URLSearchParams(location.search);
+  if (qs.get('demo')) { if (session.signIn(qs.get('demo'))) { showApp(); return; } }
+  if (session.restore()) { showApp(); return; }
+}
 document.addEventListener('DOMContentLoaded', boot);
