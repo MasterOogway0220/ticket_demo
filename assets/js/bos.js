@@ -118,7 +118,6 @@ function route() {
   const allowed = allowedRoutes();
   const r = allowed.find(x => x.id === id) || allowed[0];
   $('#pageTitle').textContent = r.title;
-  $('#pageCrumb').textContent = r.crumb;
   $('#searchBox').value = '';
   $('#searchWrap').style.display = r.id === 'dashboard' ? 'none' : '';
   const oldC = $('#content'); const fresh = oldC.cloneNode(false);

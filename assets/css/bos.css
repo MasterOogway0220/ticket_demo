@@ -642,3 +642,6 @@ body.gsap .toast { transition: opacity .2s; }
 .rail-b .brand { padding: 18px 16px 12px; }
 .login-scene .mark .brandplate { border-radius: 16px; padding: 12px 18px; }
 .login-scene .mark .brandplate img { height: 52px; }
+
+/* headers carry the title only — no descriptive sub-lines */
+.card > header .sub { display: none; }
