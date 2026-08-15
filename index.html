@@ -6,9 +6,16 @@
 <title>Varanasi Ropeway AFC — UI Prototype</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Mukta:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/tokens.css">
 <style>
+  :root {
+    --font-display: 'Poppins', 'Noto Sans', system-ui, sans-serif;
+    --font-body: 'Noto Sans', system-ui, sans-serif;
+    --w-paper: #f4f4f2; --w-card: #ffffff; --w-cream: #f6f6f4;
+    --w-ink: #22262b; --w-ink-soft: #4d545c; --w-ink-faint: #6d747d;
+    --w-line: #e6e7e9; --w-line-strong: #d3d5d9; --w-primary: #c94802;
+  }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
   body {
@@ -35,8 +42,8 @@
   }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
   .mod {
-    background: var(--w-card); border: 2px solid var(--w-line);
-    border-radius: 18px; padding: 24px 26px 22px; text-decoration: none; color: inherit;
+    background: var(--w-card); border: 1px solid var(--w-line);
+    border-radius: 12px; padding: 24px 26px 22px; text-decoration: none; color: inherit;
     display: flex; flex-direction: column; gap: 8px; position: relative;
     transition: border-color .15s, transform .15s var(--ease);
   }
@@ -55,8 +62,8 @@
   .st.live { background: var(--ok-bg); color: var(--ok); }
   .st.next { background: var(--w-cream); color: var(--w-ink-faint); }
   .note {
-    margin-top: 40px; background: var(--w-cream); border: 2px solid var(--w-line-strong);
-    border-radius: 16px; padding: 20px 26px; font-size: 14.5px; color: var(--w-ink-soft);
+    margin-top: 40px; background: var(--w-cream); border: 1px solid var(--w-line);
+    border-radius: 12px; padding: 20px 26px; font-size: 14.5px; color: var(--w-ink-soft);
   }
   .note b { color: var(--w-ink); }
   :where(a):focus-visible { outline: 3px solid var(--w-primary); outline-offset: 3px; border-radius: 6px; }

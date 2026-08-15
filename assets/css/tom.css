@@ -416,3 +416,43 @@ h3.sh span { letter-spacing: .1em; }
 
 /* image logo */
 .th-bar .brand .brandimg { height: 38px; width: auto; display: block; }
+
+/* ════════ professional pass — terminal side ════════ */
+.tlogin { background: var(--b-canvas); }
+.tlogin::after { display: none; }
+.tlogin-card { border-radius: 14px; box-shadow: 0 10px 40px rgba(20, 24, 30, .08); }
+.statpill { background: #f2f3f5; }
+button.statpill:hover { background: #e9eaed; }
+.tabs button { border-radius: 8px 8px 0 0; }
+.pick { background: #fff; border: 1.5px solid var(--b-line-mid); border-radius: 10px; }
+.pick:hover { border-color: #c94802; }
+.pick.on { background: #fdf3ec; border-color: #c94802; }
+.selcheck { background: #c94802; }
+.pick.on .pin { color: #c94802; }
+.qtybtn { border-radius: 10px; border-color: #c94802; color: #c94802; }
+.qtybtn:disabled { border-color: var(--b-line-mid); color: var(--b-ink-faint); }
+.denom { background: #fff; border-radius: 10px; }
+.denom input { border-radius: 8px; }
+.float-total { background: var(--b-card-warm); border: 1px solid var(--b-line-mid); border-radius: 10px; }
+.tominfo { background: var(--b-card-warm); border-color: var(--b-line); border-radius: 10px; }
+.tominfo > svg { color: #c94802; }
+.featrow .feat { background: #fff; border-color: var(--b-line); border-radius: 10px; }
+.feat > svg { color: #c94802; }
+.totalband { background: var(--b-card-warm); border: 1px solid var(--b-line); border-radius: 10px; }
+.totalband .amt { color: #c94802; }
+.taxnote { color: var(--b-ink-faint); }
+.paybtn { border-radius: 10px; }
+.paybtn.hero { background: #c94802; box-shadow: none; }
+.paybtn.hero:hover { background: #a8410a; }
+.paymodal .pcard, .flash .fcard { border-radius: 14px; }
+.tender button { border-radius: 8px; background: #fff; }
+.shcard { border-radius: 10px; }
+.shhead { background: #f2f3f5; border-color: var(--b-line); color: var(--b-ink-soft); }
+.shhead svg { color: #c94802; }
+.ric { background: #f1f2f4 !important; color: #4d545c !important; border-radius: 8px; }
+.shrow.big b { color: #c94802; }
+.shic { background: #fdf3ec; color: #c94802; border-radius: 10px; }
+h3.sh svg { color: #c94802; }
+.ticket-card { border-radius: 10px; }
+.th-out { border-radius: 8px; }
+.th-av { background: var(--b-dark); color: #ff9a57; }
