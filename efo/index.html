@@ -47,26 +47,25 @@
 <body>
 
 <header class="th-bar">
-  <div class="brand">
-    <img class="brandimg" src="../assets/img/logo.png" alt="Varanasi Ropeway">
-  </div>
+  <a class="brand" href="../index.html" title="Back to all modules">
+    <img class="brandimg" src="../assets/img/logo.png" alt="Varanasi Ropeway — all modules">
+  </a>
+  <span class="th-div" aria-hidden="true"></span>
   <div class="th-title">
     <h1>Excess Fare Office (EFO)</h1>
-    <div class="sub">Gadoliya Chowk · गदौलिया चौक — GDC-EFO-01 · serves the paid and non-paid area</div>
+    <div class="sub">Gadoliya Chowk · गदौलिया चौक · GDC-EFO-01 · paid &amp; non-paid area</div>
   </div>
-  <div class="th-cardlet">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/></svg>
-    <div><b id="thClock">–:–</b><span id="thDate">—</span></div>
-  </div>
-  <button class="th-cardlet" id="linkChip" title="Demo: click to toggle the Back Office link">
+  <div class="hspace"></div>
+  <button class="statpill" id="linkChip" title="Demo: click to toggle the Back Office link">
     <span class="okdot" id="linkDot">linked</span>
   </button>
-  <div class="th-cardlet" id="queueChip" style="display:none"><div><b id="queueN">queue 0</b><span>cases awaiting sync</span></div></div>
-  <div class="th-cardlet" id="thOp" style="display:none">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></svg>
+  <div class="statpill" id="queueChip" style="display:none" title="Cases awaiting sync"><b id="queueN">queue 0</b></div>
+  <div class="th-clock"><b id="thClock">–:–</b><span id="thDate">—</span></div>
+  <div class="th-user" id="thOp" style="display:none">
+    <span class="th-av" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span>
     <div><b id="thOpName">—</b><span id="thOpId">—</span></div>
   </div>
-  <button class="btn btn-quiet" id="thLogout" style="display:none;height:42px">Sign out</button>
+  <button class="th-out" id="thLogout" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3M16 17l5-5-5-5M21 12H9"/></svg><span>Sign out</span></button>
 </header>
 
 <!-- ═══ LOGIN ═══ -->
