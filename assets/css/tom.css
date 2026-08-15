@@ -417,42 +417,92 @@ h3.sh span { letter-spacing: .1em; }
 /* image logo */
 .th-bar .brand .brandimg { height: 38px; width: auto; display: block; }
 
-/* ════════ professional pass — terminal side ════════ */
-.tlogin { background: var(--b-canvas); }
-.tlogin::after { display: none; }
-.tlogin-card { border-radius: 14px; box-shadow: 0 10px 40px rgba(20, 24, 30, .08); }
-.statpill { background: #f2f3f5; }
-button.statpill:hover { background: #e9eaed; }
-.tabs button { border-radius: 8px 8px 0 0; }
-.pick { background: #fff; border: 1.5px solid var(--b-line-mid); border-radius: 10px; }
-.pick:hover { border-color: #c94802; }
-.pick.on { background: #fdf3ec; border-color: #c94802; }
-.selcheck { background: #c94802; }
-.pick.on .pin { color: #c94802; }
-.qtybtn { border-radius: 10px; border-color: #c94802; color: #c94802; }
-.qtybtn:disabled { border-color: var(--b-line-mid); color: var(--b-ink-faint); }
-.denom { background: #fff; border-radius: 10px; }
-.denom input { border-radius: 8px; }
-.float-total { background: var(--b-card-warm); border: 1px solid var(--b-line-mid); border-radius: 10px; }
-.tominfo { background: var(--b-card-warm); border-color: var(--b-line); border-radius: 10px; }
-.tominfo > svg { color: #c94802; }
-.featrow .feat { background: #fff; border-color: var(--b-line); border-radius: 10px; }
-.feat > svg { color: #c94802; }
-.totalband { background: var(--b-card-warm); border: 1px solid var(--b-line); border-radius: 10px; }
-.totalband .amt { color: #c94802; }
+/* ════════ selection v2 — option A: numbered steps, filled-dark selected ════════ */
+.stepn {
+  width: 22px; height: 22px; border-radius: 50%; flex: 0 0 auto;
+  background: var(--b-orange-deep); color: #fff;
+  font-size: 12px; font-weight: 700; display: grid; place-items: center;
+  font-family: var(--font-display);
+}
+.pick { min-height: 92px; padding: 18px 20px; }
+.pick b { font-size: 18px; }
+.pick .pf { font-size: 20px; }
+.pick.on {
+  background: linear-gradient(180deg, #3d2410, #2a1809);
+  border-color: #2e1206;
+}
+.pick.on b { color: #fff; }
+.pick.on > span:not(.pf):not(.selcheck) { color: #e5c9a4; }
+.pick.on .pf { color: #ffb648; margin-right: 38px; }
+.selcheck { width: 26px; height: 26px; top: 14px; right: 14px; background: #ffb648; color: #2e1206; }
+.selcheck svg { width: 14px; height: 14px; }
+.qtypick { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.qn {
+  width: 58px; height: 58px; border-radius: 12px;
+  border: 2px solid var(--b-line-mid); background: #fff;
+  font-family: var(--font-display); font-size: 21px; font-weight: 700; color: var(--b-ink);
+  transition: border-color .12s, background .12s;
+}
+.qn:hover { border-color: var(--b-orange); }
+.qn.on {
+  background: linear-gradient(180deg, #3d2410, #2a1809);
+  color: #ffb648; border-color: #2e1206;
+}
+
+/* ════════ color consolidation — each hue gets one job ════════
+   dark brown = chosen state + total · one orange = act (Cash, active tab)
+   amber = only on dark surfaces · banners/tiles/icons go quiet ════════ */
+.stepn { background: var(--b-maroon); }
+h3.sh svg { color: var(--b-ink-soft); }
+.pick .pf { color: var(--b-maroon); }
+.pick:hover { border-color: var(--b-ink-faint); }
+.qn:hover { border-color: var(--b-ink-faint); }
+.tominfo { background: #fbf6ea; border-color: var(--b-line-mid); }
+.tominfo > svg { color: var(--b-ink-soft); }
+.feat > svg { color: var(--b-ink-soft); }
+.totalband { background: linear-gradient(180deg, #3d2410, #2a1809); }
+.totalband > span:first-child { color: #e5c9a4; }
+.totalband .amt { color: #ffb648; }
 .taxnote { color: var(--b-ink-faint); }
-.paybtn { border-radius: 10px; }
-.paybtn.hero { background: #c94802; box-shadow: none; }
-.paybtn.hero:hover { background: #a8410a; }
-.paymodal .pcard, .flash .fcard { border-radius: 14px; }
-.tender button { border-radius: 8px; background: #fff; }
-.shcard { border-radius: 10px; }
-.shhead { background: #f2f3f5; border-color: var(--b-line); color: var(--b-ink-soft); }
-.shhead svg { color: #c94802; }
-.ric { background: #f1f2f4 !important; color: #4d545c !important; border-radius: 8px; }
-.shrow.big b { color: #c94802; }
-.shic { background: #fdf3ec; color: #c94802; border-radius: 10px; }
-h3.sh svg { color: #c94802; }
-.ticket-card { border-radius: 10px; }
-.th-out { border-radius: 8px; }
-.th-av { background: var(--b-dark); color: #ff9a57; }
+/* shift tab joins the same system */
+.shic { background: #f5efe3; color: var(--b-ink-soft); }
+.shhead svg { color: var(--b-ink-soft); }
+.ric { background: #f5efe3 !important; color: var(--b-ink-soft) !important; }
+.shrow.big b { color: var(--b-maroon); }
+
+/* passenger counter — the count wears the chosen-state style */
+.qtyval {
+  min-width: 64px; height: 58px; border-radius: 12px;
+  display: grid; place-items: center; padding: 0 10px;
+  background: linear-gradient(180deg, #3d2410, #2a1809);
+  color: #ffb648; font-size: 26px;
+}
+.qtybtn { border-color: var(--b-line-mid); color: var(--b-ink); }
+.qtybtn:hover { border-color: var(--b-ink-faint); }
+
+/* ════════ theme: brand red (from the logo maroon) + option B selection ════════
+   selected = red wash + heavy red border · act = solid red · total = deep maroon
+   status greens/reds (linked dot, stale, errors) unchanged ════════ */
+.pick.on {
+  background: #fbeae7;
+  border: 2.5px solid #a02218;
+}
+.pick.on b { color: var(--b-ink); }
+.pick.on > span:not(.pf):not(.selcheck) { color: var(--b-ink-faint); }
+.pick.on .pf { color: #a02218; }
+.selcheck { background: #a02218; color: #fff; }
+.stepn { background: #a02218; }
+.qtyval {
+  background: #a02218; border: none; color: #fff;
+}
+.qtybtn:hover { border-color: #a02218; color: #a02218; }
+.tabs button.on::after { background: #a02218; }
+.totalband { background: linear-gradient(180deg, #6b2013, #4a120a); }
+.totalband > span:first-child { color: #e9b8ac; }
+.totalband .amt { color: #fff; }
+.paybtn.hero { background: linear-gradient(100deg, #8f1d13, #b3271e); box-shadow: 0 8px 20px rgba(160, 34, 24, .3); }
+.paybtn svg { color: #a02218; }
+.btn-primary { background: #a02218; color: #fff; }
+.btn-primary:hover { background: #8f1d13; }
+.shrow.big b { color: #a02218; }
+.float-total { border-color: #e6b3aa; }

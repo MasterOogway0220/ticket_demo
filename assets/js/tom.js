@@ -194,9 +194,9 @@ function renderSale() {
 
   $('#pkDest').innerHTML = destList().map(s => `
     <button class="pick ${o.dest === s.code ? 'on' : ''}" data-dest="${s.code}">
+      <span class="selcheck" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
       <span class="pf">${fmtINR(fareFor(o.product, s.code))}</span>
       <b>${s.en}</b><span>${s.hi}</span>
-      <span class="pin" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.3-7-11a7 7 0 0 1 14 0c0 5.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
     </button>`).join('');
   $$('#pkDest .pick').forEach(b => b.addEventListener('click', () => { T.order.dest = b.dataset.dest; renderSale(); }));
 
@@ -204,7 +204,7 @@ function renderSale() {
   $('#qVal').textContent = o.qty;
   $('#qMinus').disabled = o.qty <= 1;
   $('#qPlus').disabled = o.qty >= maxG;
-  $('#qNote').textContent = `up to ${maxG} per payment · one payment mode only`;
+  $('#qNote').textContent = `up to ${maxG} per payment · one payment mode`;
 
   const unit = fareFor(o.product, o.dest);
   const total = unit * o.qty;
@@ -215,6 +215,10 @@ function renderSale() {
   $('#bUnit').textContent = fmtINR(unit);
   $('#bTix').textContent = tix;
   $('#bTotal').textContent = fmtINR(total);
+  if (T._lastTotal !== total) {
+    if (T._lastTotal !== undefined && window.Motion) Motion.pop($('#bTotal'));
+    T._lastTotal = total;
+  }
   const ts = taxSplit(total);
   $('#bTaxable').textContent = inr2(ts.taxable);
   $('#bCgstL').textContent = `CGST @ ${ts.half.toFixed(2)}%`;
