@@ -645,3 +645,33 @@ body.gsap .toast { transition: opacity .2s; }
 
 /* headers carry the title only — no descriptive sub-lines */
 .card > header .sub { display: none; }
+
+/* sidebar: heavier nav labels */
+.nav a { font-weight: 600; }
+
+/* station performance — ranked horizontal bars (replaces the pill graph) */
+.sperf { padding: 8px 24px 18px; }
+.sp { margin: 12px 0; }
+.sp .spr { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; margin-bottom: 6px; color: var(--b-ink-soft); }
+.sp .spr b { font-variant-numeric: tabular-nums; color: var(--b-ink); font-weight: 600; }
+.sp .spr .spc { font-family: var(--font-mono); font-size: 11px; color: var(--b-ink-faint); font-weight: 700; }
+.sp .track { height: 7px; background: #f0ebe0; border-radius: 4px; overflow: hidden; }
+.sp .fill { display: block; height: 100%; background: var(--b-orange); border-radius: 4px; }
+
+/* ── BOS color strip-down: neutrals + amber accent + semantic green/red only ── */
+.sp .fill { background: #35200e; }               /* data wears ink-brown, not orange */
+.chip.info { background: var(--b-card-warm); color: var(--b-ink-soft); }  /* blue retired */
+:root { --info: #5c4a3d; --info-bg: #f0ebe0; }   /* blue leaves the palette entirely */
+
+/* revenue chart v2 — area line, no pills */
+.achart { padding: 16px 24px 0; }
+.achart svg { display: block; width: 100%; height: auto; }
+.agrid { stroke: var(--b-line); stroke-dasharray: 4 5; }
+.alab { font: 600 11.5px 'Noto Sans', sans-serif; fill: var(--b-ink-faint); }
+.alab.on { font-weight: 700; fill: var(--b-ink); }
+.aval { font: 700 13.5px 'Poppins', sans-serif; fill: var(--b-ink); }
+/* sidebar type: bigger + heavier */
+.nav a { font-size: 14.5px; font-weight: 700; padding: 12px 14px; }
+.nav a svg { width: 19px; height: 19px; }
+.nav h6 { font-size: 10.5px; }
+.rail-b { width: 264px; }

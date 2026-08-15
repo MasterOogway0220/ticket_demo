@@ -272,22 +272,32 @@ const PAGES = {
         <div class="card dg-chart">
           <header><h2>Revenue — last 7 days</h2><div class="hspace"></div>
             <span class="chip dim" style="font-weight:600">All stations · all modes</span></header>
-          <div class="chart">
-            <div class="bars">
-              <div class="gline" style="bottom:100%"><span>${fmtINR(gmax)}</span></div>
-              <div class="gline" style="bottom:50%"><span>${fmtINR(gmax / 2)}</span></div>
-              ${days.map(d => `
-                <div class="bcol ${d.today ? 'today' : ''}">
-                  <div class="bar" style="height:${Math.max(Math.round(d.sum / gmax * 100), 8)}%">
-                    <span class="tip">${d.lab} · ${fmtINR(d.sum)}</span>
-                    ${d.today ? `<span class="dlab">${fmtINR(d.sum)}</span>` : ''}
-                  </div>
-                  <div class="xlab">${d.lab}</div>
-                </div>`).join('')}
-            </div>
+          ${(() => {
+            const W = 720, H = 252, L = 56, R = 704, T = 18, B = 198;
+            const px = i => L + i * ((R - L) / 6);
+            const py = v => B - (v / gmax) * (B - T);
+            const pts = days.map((d, i) => [px(i), py(d.sum)]);
+            const line = pts.map(p => p.join(',')).join(' ');
+            const area = `M${L},${B} L` + line.split(' ').join(' L') + ` L${R},${B} Z`;
+            return `<div class="achart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Revenue, last 7 days">
+              <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#ffb648" stop-opacity=".45"/>
+                <stop offset="1" stop-color="#ffb648" stop-opacity="0"/>
+              </linearGradient></defs>
+              ${[1, .5, 0].map(f => `
+                <line x1="${L}" y1="${py(gmax * f)}" x2="${R}" y2="${py(gmax * f)}" class="agrid"/>
+                <text x="${L - 8}" y="${py(gmax * f) + 4}" text-anchor="end" class="alab">${f ? '₹' + (gmax * f / 1000) + 'k' : '0'}</text>`).join('')}
+              <path d="${area}" fill="url(#ag)"/>
+              <polyline points="${line}" fill="none" stroke="#35200e" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+              ${days.map((d, i) => `
+                <circle cx="${px(i)}" cy="${py(d.sum)}" r="${d.today ? 6 : 4}" fill="${d.today ? '#ffb648' : '#35200e'}" stroke="#fff" stroke-width="2"/>
+                ${d.today ? `<text x="${i === 6 ? px(i) + 6 : px(i)}" y="${py(d.sum) - 14}" text-anchor="${i === 6 ? 'end' : 'middle'}" class="aval">${fmtINR(d.sum)}</text>` : ''}
+                <text x="${px(i)}" y="${H - 34}" text-anchor="middle" class="alab ${d.today ? 'on' : ''}">${d.lab}</text>
+                <title>${d.lab} · ${fmtINR(d.sum)}</title>`).join('')}
+            </svg>
             <table class="sr-only"><caption>Revenue by day</caption>
-              ${days.map(d => `<tr><th>${d.lab}</th><td>${fmtINR(d.sum)}</td></tr>`).join('')}</table>
-          </div>
+              ${days.map(d => `<tr><th>${d.lab}</th><td>${fmtINR(d.sum)}</td></tr>`).join('')}</table></div>`;
+          })()}
           <div class="modegrid">
             <div class="m"><span>${I.cash} Cash · counter</span><b>${fmtINR(mode('Cash'))}</b></div>
             <div class="m"><span>${I.upi} UPI</span><b>${fmtINR(mode('UPI'))}</b></div>
@@ -311,14 +321,12 @@ const PAGES = {
               <span class="chip dim">by revenue</span></header>
             ${(() => {
               const by = STN.map(st => ({ code: st.code, name: st.en, sum: today.filter(t => t.station === st.code).reduce((a, t) => a + t.amount, 0) }))
-                .sort((a, b) => b.sum - a.sum).slice(0, 3);
+                .sort((a, b) => b.sum - a.sum);
               const mx = Math.max(...by.map(x => x.sum), 1);
-              return `<div class="pillbars">${by.map((x, i) => `
-                <div class="pb pb-${i}">
-                  <div class="pbar" style="height:${Math.round(115 + (x.sum / mx) * 95)}px">
-                    <span class="plabel">${x.name}</span><span class="pdot">${x.code}</span>
-                  </div>
-                  <span class="pval">${fmtINR(x.sum)}</span>
+              return `<div class="sperf">${by.map(x => `
+                <div class="sp">
+                  <div class="spr"><span><b class="spc">${x.code}</b> ${x.name}</span><b>${fmtINR(x.sum)} · ${Math.round(x.sum / (revToday || 1) * 100)}%</b></div>
+                  <div class="track"><i class="fill" style="width:${Math.round(x.sum / mx * 100)}%"></i></div>
                 </div>`).join('')}</div>`;
             })()}
           </div>

@@ -42,6 +42,12 @@ const Motion = (() => {
         { scaleY: 1, duration: .55, ease: EASE, stagger: .08, delay: .2, clearProps: 'transform' });
     }
     root.querySelectorAll('.tile-b .tv b, .modegrid .m b').forEach(countUp);
+    const fills = root.querySelectorAll('.sp .fill');
+    if (fills.length) {
+      gsap.fromTo(fills,
+        { scaleX: 0, transformOrigin: 'left' },
+        { scaleX: 1, duration: .55, ease: EASE, stagger: .07, delay: .2, clearProps: 'transform' });
+    }
   }
 
   /* ₹12,340 / 58 / 61 — animate digits, keep every non-numeric part */
