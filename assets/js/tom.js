@@ -62,7 +62,10 @@ function renderStatus() {
   $('#queueN').textContent = `queue ${T.queued}`;
   $('#thOp').style.display = T.op ? '' : 'none';
   $('#thLogout').style.display = T.op ? '' : 'none';
-  if (T.op) $('#thOpName').textContent = T.op.name;
+  if (T.op) {
+    $('#thOpName').textContent = T.op.name;
+    $('#thAv').textContent = T.op.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  }
   /* stale banner (exact) */
   const sn = $('#staleNote');
   if (sn) {
@@ -118,10 +121,15 @@ function renderSale() {
   const o = T.order;
   $('#saleErr').style.display = 'none';
   /* products */
+  const PICONS = {
+    SINGLE_JOURNEY: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4z"/><path d="M13 7v10" stroke-dasharray="2 3"/></svg>',
+    RETURN_JOURNEY: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h11l-3-3M17 16H6l3 3"/></svg>',
+  };
   $('#pkProduct').innerHTML = sellableProducts().map(p => `
-    <button class="pick ${o.product === p.code ? 'on' : ''}" data-p="${p.code}" aria-pressed="${o.product === p.code}">
-      ${o.product === p.code ? '<span class="selcheck" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' : ''}
-      <b>${esc(p.en)}</b><span lang="hi-IN">${esc(p.hi)}</span>
+    <button class="pick prod ${o.product === p.code ? 'on' : ''}" data-p="${p.code}" aria-pressed="${o.product === p.code}">
+      <span class="pico">${PICONS[p.code] || PICONS.SINGLE_JOURNEY}</span>
+      <span class="radio" aria-hidden="true"></span>
+      <span class="ptxt"><b>${esc(p.en)}</b><span lang="hi-IN">${esc(p.hi)}</span></span>
     </button>`).join('');
   $$('#pkProduct .pick').forEach(b => b.addEventListener('click', () => {
     T.order.product = b.dataset.p; T.order.dest = null; renderSale();
@@ -129,12 +137,14 @@ function renderSale() {
   /* destinations — only stations with a published fare, station order, mono gross fare */
   $('#destWrap').style.display = o.product ? '' : 'none';
   if (o.product) {
+    const DICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2 3h-4z"/><path d="M8 10l4-4 4 4"/><path d="M6 21v-8l6-5 6 5v8"/><path d="M10 21v-4h4v4"/></svg>';
     $('#pkDest').innerHTML = destinations(o.product).map(s => {
       const q = fareQuote(o.product, ORIGIN, s.code, 1);
-      return `<button class="pick ${o.dest === s.code ? 'on' : ''}" data-d="${s.code}" aria-pressed="${o.dest === s.code}">
-        ${o.dest === s.code ? '<span class="selcheck" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' : ''}
-        <span class="pf">${q ? rupees(q.gross) : '—'}</span>
+      return `<button class="pick dest ${o.dest === s.code ? 'on' : ''}" data-d="${s.code}" aria-pressed="${o.dest === s.code}">
+        <span class="pico">${DICON}</span>
+        <span class="radio" aria-hidden="true"></span>
         <b>${esc(s.en)}</b><span lang="hi-IN">${esc(s.hi)}</span>
+        <span class="pf">${q ? rupees(q.gross) : '—'}</span>
       </button>`;
     }).join('');
     $$('#pkDest .pick').forEach(b => b.addEventListener('click', () => { T.order.dest = b.dataset.d; renderSale(); }));
@@ -174,20 +184,20 @@ function renderSale() {
 }
 
 /* ---------- take cash → issued ---------- */
-function takeCash() {
+function recordSale(mode) {
   const o = T.order;
   if (!T.op) return toast('Error: No operator is signed in at this terminal.');
   if (T.link === 'stale') return;
   const q = fareQuote(o.product, ORIGIN, o.dest, o.qty);
   if (!q) return;
-  const btn = $('#takeCash'); btn.textContent = 'Recording…'; btn.disabled = true;
+  const btn = $('#takeCash'); btn.disabled = true;
   const product = store.db.products.find(p => p.code === o.product);
   const nTickets = o.qty * product.ticketsPerSale;
   const tickets = Array.from({ length: nTickets }, (_, i) => ({
     ref: ticketNumber(), pos: i + 1,
   }));
   const sale = {
-    saleRef: saleRef(), product: o.product, dest: o.dest, qty: o.qty,
+    saleRef: saleRef(), product: o.product, dest: o.dest, qty: o.qty, mode,
     taxable: q.taxable, cgst: q.cgst, sgst: q.sgst, gross: q.gross,
     tickets, at: Date.now(),
   };
@@ -195,7 +205,7 @@ function takeCash() {
   T.current = sale;
   T.queued += 1;           /* held locally and queued for the Back Office */
   setTimeout(() => {
-    btn.textContent = 'Take cash'; btn.disabled = false;
+    btn.disabled = false;
     showIssued(sale);
   }, 380);
 }
@@ -250,11 +260,14 @@ function boot() {
     const s = $('#tSignIn'); s.textContent = 'Checking…'; s.disabled = true;
     setTimeout(() => { s.textContent = 'Sign in'; upd(); doSignIn(b.dataset.demo); }, 300);
   }));
+  $('#tEye').addEventListener('click', () => {
+    const p = $('#tPass'); p.type = p.type === 'password' ? 'text' : 'password';
+  });
   $('#thLogout').addEventListener('click', signOut);
   $('#linkChip').addEventListener('click', cycleLink);
   $('#qMinus').addEventListener('click', () => { if (T.order.qty > 1) { T.order.qty--; renderSale(); } });
   $('#qPlus').addEventListener('click', () => { T.order.qty++; renderSale(); });   /* no UI ceiling — the quote refuses beyond 10 */
-  $('#takeCash').addEventListener('click', takeCash);
+  $('#takeCash').addEventListener('click', () => recordSale('cash'));
   $('#isNext').addEventListener('click', () => {
     T.order = { product: null, dest: null, qty: 1 }; T._lastTotal = undefined;
     renderSale(); show('v-sale');

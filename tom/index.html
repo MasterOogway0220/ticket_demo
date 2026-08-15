@@ -6,7 +6,7 @@
 <title>Varanasi Ropeway — Terminal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/css/bos.css">
 <link rel="stylesheet" href="../assets/css/tom.css">
 </head>
@@ -27,7 +27,7 @@
   <div class="statpill" id="faresChip"><b id="faresVer">fares v—</b></div>
   <div class="statpill" id="queueChip" style="display:none"><b id="queueN">queue 0</b></div>
   <div class="th-user" id="thOp" style="display:none">
-    <span class="th-av" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></span>
+    <span class="th-av" aria-hidden="true" id="thAv">—</span>
     <div><b id="thOpName">—</b></div>
   </div>
   <button class="th-out" id="thLogout" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3M16 17l5-5-5-5M21 12H9"/></svg><span>Sign out</span></button>
@@ -35,15 +35,17 @@
 
 <!-- ═══ SIGN-IN ═══ -->
 <section class="view on tlogin" id="v-login">
+  <div class="tlogin-bg" aria-hidden="true"></div>
   <form class="tlogin-card" id="tLoginForm" autocomplete="off">
-    <img class="loginlogo" src="../assets/img/logo.png" alt="Varanasi Ropeway" style="height:44px;width:auto;display:block;margin:0 auto 16px">
+    <img class="loginlogo" src="../assets/img/logo.png" alt="Varanasi Ropeway">
     <h2>Operator sign-in</h2>
+    <p class="lsub">Access your dashboard and manage operations</p>
     <div class="login-err" id="tLoginErr">—</div>
     <div class="field">
       <label for="tUser">Username</label>
       <div class="fwrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
-        <input id="tUser" placeholder="" autocomplete="off">
+        <input id="tUser" autocomplete="off">
       </div>
     </div>
     <div class="field">
@@ -51,34 +53,44 @@
       <div class="fwrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2.5"/><path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/></svg>
         <input id="tPass" type="password">
+        <button type="button" class="eyebtn" id="tEye" aria-label="Show password">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></svg>
+        </button>
       </div>
     </div>
-    <button class="btn btn-primary btn-lg" type="submit" id="tSignIn" disabled>Sign in</button>
+    <button class="btn btn-primary btn-lg signin-btn" type="submit" id="tSignIn" disabled>
+      <span>Sign in</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M14 6l6 6-6 6"/></svg>
+    </button>
+    <div class="orsep" aria-hidden="true"><span>OR</span></div>
     <div class="demo-row">
-      <p><b>Development accounts — any non-empty password.</b></p>
+      <p>Development accounts — any non-empty password.</p>
       <div class="demo-chips">
-        <button type="button" data-demo="tom.dev">tom.dev · assigned to VCT</button>
-        <button type="button" data-demo="tom.ryt.dev">tom.ryt.dev · assigned to RYT — refused here</button>
+        <button type="button" data-demo="tom.dev"><b>tom.dev</b> <span>• assigned to VCT</span></button>
       </div>
+    </div>
+    <div class="login-secure">
+      <span class="lsic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 4.5 5.5v5c0 4.6 3.1 8.4 7.5 10 4.4-1.6 7.5-5.4 7.5-10v-5z"/><path d="M9 11.5l2 2 4-4.5"/></svg></span>
+      Secure access <i>•</i> Authorized personnel only
     </div>
   </form>
 </section>
 
 <!-- ═══ SALE ═══ -->
 <section class="view" id="v-sale">
-  <div class="wsbody" style="padding-top:20px">
-    <div class="card sale-grid">
-      <div class="sale-left">
+  <div class="wsbody" style="padding-top:26px">
+    <div class="salewrap">
+      <div class="card sale-left">
         <div class="notice-stale" id="staleNote" style="display:none"></div>
-        <div class="notice-stale" id="saleErr" style="display:none;background:var(--danger-bg);border-color:var(--danger);color:var(--danger)"></div>
-        <h3 class="sh"><span class="stepn">1</span><span>Product</span></h3>
+        <div class="notice-stale" id="saleErr" style="display:none;background:#fef2f2;border-color:#fecaca;color:#b91c1c"></div>
+        <h3 class="sh"><span class="stepn">01</span><span>Select Product</span></h3>
         <div class="pickrow" id="pkProduct"></div>
         <div id="destWrap" style="display:none">
-          <h3 class="sh"><span class="stepn">2</span><span>Destination</span></h3>
-          <div class="pickrow" id="pkDest"></div>
+          <h3 class="sh"><span class="stepn">02</span><span>Select Destination</span></h3>
+          <div class="pickrow dests" id="pkDest"></div>
         </div>
         <div id="qtyWrap" style="display:none">
-          <h3 class="sh"><span class="stepn">3</span><span>Passengers</span></h3>
+          <h3 class="sh"><span class="stepn">03</span><span>Passengers</span></h3>
           <div class="qtyrow">
             <button class="qtybtn" id="qMinus" aria-label="Fewer passengers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
             <div class="qtyval" id="qVal">1</div>
@@ -86,16 +98,24 @@
           </div>
         </div>
       </div>
-      <div class="bill">
-        <h3>Amount due</h3>
-        <div id="quoteEmpty" style="color:var(--b-ink-faint);font-size:13.5px">Choose a product and destination.</div>
-        <div id="quoteRows" style="display:none">
-          <div class="brow taxrow"><span>Taxable value</span><b id="bTaxable">—</b></div>
-          <div class="brow taxrow"><span>CGST @ 9.00%</span><b id="bCgst">—</b></div>
-          <div class="brow taxrow"><span>SGST @ 9.00%</span><b id="bSgst">—</b></div>
-          <div class="totalband"><span>Total</span><span class="amt" id="bTotal">₹0.00</span></div>
-          <div class="paystack" style="margin-top:18px">
-            <button class="paybtn hero" id="takeCash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/></svg>Take cash</button>
+      <div class="card paycard">
+        <div class="payhead">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14v18l-2.5-1.6L14 21l-2-1.4L10 21l-2.5-1.6L5 21z"/><path d="M9 8h6M9 12h6"/></svg>
+          <span>Payment Summary</span>
+        </div>
+        <div class="paybody">
+          <div id="quoteEmpty" style="color:var(--muted-fg);font-size:13.5px">Choose a product and destination.</div>
+          <div id="quoteRows" style="display:none">
+            <div class="brow"><span>Taxable Value</span><b id="bTaxable">—</b></div>
+            <div class="brow"><span>CGST @ 9.00%</span><b id="bCgst">—</b></div>
+            <div class="brow"><span>SGST @ 9.00%</span><b id="bSgst">—</b></div>
+            <div class="dashsep"></div>
+            <div class="totalrow"><span>Total Amount</span><b id="bTotal">₹0.00</b></div>
+            <div class="secure">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 4.5 5.5v5c0 4.6 3.1 8.4 7.5 10 4.4-1.6 7.5-5.4 7.5-10v-5z"/><path d="M9 11.5l2 2 4-4.5"/></svg>
+              <div><b>Secure &amp; trusted payment</b><span>Please verify details before collecting payment.</span></div>
+            </div>
+            <button class="paybtn hero" id="takeCash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/></svg>Take Cash</button>
           </div>
         </div>
       </div>
@@ -105,22 +125,26 @@
 
 <!-- ═══ ISSUED ═══ -->
 <section class="view" id="v-issued">
-  <div class="wsbody" style="padding-top:20px">
-    <div class="card sale-grid">
-      <div class="sale-left">
+  <div class="wsbody" style="padding-top:26px">
+    <div class="salewrap">
+      <div class="card sale-left">
         <div id="isNotice"></div>
         <div class="tickets" id="isTickets"></div>
       </div>
-      <div class="bill">
-        <h3>Sale complete</h3>
-        <div class="brow taxrow"><span>Taxable value</span><b id="isTaxable">—</b></div>
-        <div class="brow taxrow"><span>CGST @ 9.00%</span><b id="isCgst">—</b></div>
-        <div class="brow taxrow"><span>SGST @ 9.00%</span><b id="isSgst">—</b></div>
-        <div class="totalband"><span>Paid</span><span class="amt" id="isPaid">₹0.00</span></div>
-        <div class="gst mono" id="isSaleRef" style="text-align:left;user-select:text;margin-top:10px">—</div>
-        <div class="paystack" style="margin-top:18px">
+      <div class="card paycard">
+        <div class="payhead">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 7"/></svg>
+          <span>Sale Complete</span>
+        </div>
+        <div class="paybody">
+          <div class="brow"><span>Taxable Value</span><b id="isTaxable">—</b></div>
+          <div class="brow"><span>CGST @ 9.00%</span><b id="isCgst">—</b></div>
+          <div class="brow"><span>SGST @ 9.00%</span><b id="isSgst">—</b></div>
+          <div class="dashsep"></div>
+          <div class="totalrow"><span>Paid</span><b id="isPaid">₹0.00</b></div>
+          <div class="gst mono" id="isSaleRef" style="user-select:text;margin:10px 0 14px">—</div>
           <button class="paybtn hero" id="isNext">Next passenger</button>
-          <button class="paybtn" id="isReprint">Print again</button>
+          <button class="paybtn" id="isReprint" style="margin-top:9px">Print again</button>
         </div>
       </div>
     </div>
