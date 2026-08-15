@@ -1,0 +1,78 @@
+/* ============================================================
+   Varanasi Ropeway AFC — UI prototype design tokens
+   ------------------------------------------------------------
+   Two palettes, one system:
+     · warm  — passenger-facing surfaces (kiosk, gate, app, portal)
+     · navy  — staff surfaces (back office, counter, excess fare)
+   Derived from the client's own material: the saffron/orange of the
+   passenger mockups (via the FlowFest study, darkened to AA) and the
+   navy/gold of the architecture decks (already in the console).
+   Every foreground/background pair below is verified ≥4.5:1 for text
+   and ≥3:1 for UI components on its intended ground.  GIGW 3.0 /
+   WCAG 2.1 AA / RPwD Act 2016 apply to this project.
+   ============================================================ */
+
+:root {
+  /* ---- warm (passenger) ------------------------------------ */
+  --w-paper:      #faf6ec;  /* ground                           */
+  --w-cream:      #f3ecd2;  /* wells, secondary surface         */
+  --w-card:       #fffdf8;  /* raised cards                     */
+  --w-ink:        #1a1712;  /* 16.6:1 on paper                  */
+  --w-ink-soft:   #4a4238;  /*  9.2:1 on paper                  */
+  --w-ink-faint:  #6e6353;  /*  5.5:1 on paper                  */
+  --w-primary:    #a8410a;  /* terracotta — 5.7:1 on paper, 6.1:1 under white */
+  --w-primary-deep:#8a3508; /* pressed — 8.1:1 under white      */
+  --w-flame:      #f97028;  /* large fills & dark-ground accents only — never body text on paper */
+  --w-mango:      #f3a20f;  /* decorative on light; 8.5:1 as text on ink */
+  --w-line:       #e4d9c3;  /* hairlines, non-interactive       */
+  --w-line-strong:#c9bda1;  /* decorative borders only          */
+  --w-line-interactive:#8a7d69; /* 3.7:1+ — boundaries of touch targets (WCAG 1.4.11) */
+  --w-step-idle:  #8a7d69;  /* 3.7:1 — UI components only, never text */
+
+  /* ---- dark ground (attract / out-of-service) --------------- */
+  --w-night:      #1a1712;
+  --w-night-2:    #2b2015;
+
+  /* ---- navy (staff) — carried from the existing console ----- */
+  --n-navy-900:   #0d1930;
+  --n-navy-800:   #142547;
+  --n-navy-700:   #1b3160;
+  --n-navy-500:   #2d4a86;
+  --n-navy-100:   #d6e0f0;
+  --n-navy-50:    #eef2f9;
+  --n-amber:      #c98a12;
+  --n-canvas:     #f5f7fa;
+  --n-surface:    #ffffff;
+  --n-ink:        #16202e;
+  --n-ink-muted:  #4a5768;
+  --n-line:       #d8dee7;
+
+  /* ---- status — safety semantics, identical on both palettes.
+         Rule 23: green = pass, red = refuse at the gate.  The warm
+         accent must NEVER be used for status.  ------------------ */
+  --ok:        #17663d;  --ok-bg:     #e7f2e4;
+  --warn:      #8a5a00;  --warn-bg:   #fdf3e0;
+  --danger:    #a1211f;  --danger-bg: #fbe9e2;
+  --info:      #1b4f80;  --info-bg:   #e8f1fa;
+
+  /* ---- type ------------------------------------------------- */
+  /* Baloo 2 + Mukta: rounded-geometric warmth with full Devanagari.
+     Both SIL OFL; self-host before production. */
+  --font-display: 'Baloo 2', 'Mukta', system-ui, sans-serif;
+  --font-body:    'Mukta', system-ui, sans-serif;
+  --font-mono:    ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* ---- kiosk metrics (1080 × 1920 portrait) ----------------- */
+  --k-header-h:   128px;
+  --k-footer-h:   148px;
+  --k-pad:        56px;
+  --k-radius:     22px;
+  --k-radius-lg:  32px;
+  --k-btn-h:      104px;
+  --k-touch-min:  88px;
+
+  /* ---- motion ----------------------------------------------- */
+  --ease: cubic-bezier(.33,.9,.25,1);
+  --t-fast: 160ms;
+  --t-med: 280ms;
+}

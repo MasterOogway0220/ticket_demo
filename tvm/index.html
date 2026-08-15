@@ -1,0 +1,832 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TVM — Ticket Vending Machine · Varanasi Ropeway AFC UI Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/tokens.css">
+<link rel="stylesheet" href="../assets/css/rail.css">
+<link rel="stylesheet" href="../assets/css/kiosk.css">
+<style>
+  /* page-specific wiring: footer cancel visibility + route map */
+  .kf .js-cancel { display: none; }
+  /* upi and card-tap carry their own Cancel in the action bar — no duplicate in the footer */
+  body:is([data-screen="product"],[data-screen="destination"],[data-screen="passengers"],
+          [data-screen="summary"],[data-screen="topup-amount"],[data-screen="balance"]) .kf .js-cancel { display: inline-flex; }
+  /* Help navigation would clear the payment window / print run (a fresh QR
+     reference would void one already scanned) — hide it there; the UPI screen
+     carries its own 3-step instructions */
+  body:is([data-screen="upi"],[data-screen="printing"]) #helpBtn { display: none; }
+  #routeMap .rm-cable { stroke: var(--w-line-strong); stroke-width: 8; }
+  #routeMap .rm-node circle { fill: var(--w-card); stroke: var(--w-step-idle); stroke-width: 6; }
+  #routeMap .rm-node.origin circle { fill: var(--w-primary); stroke: var(--w-primary); }
+  #routeMap .rm-node text.n-en { font: 600 23px var(--font-body); fill: var(--w-ink); }
+  #routeMap .rm-node text.n-hi { font: 500 19px var(--font-body); fill: var(--w-ink-faint); }
+  #routeMap .rm-pill rect { fill: var(--w-primary); }
+  #routeMap .rm-pill text { font: 600 22px var(--font-body); fill: #fff; }
+  #routeMap .rm-pill line { stroke: var(--w-primary); stroke-width: 4; stroke-dasharray: 2 8; stroke-linecap: round; }
+</style>
+</head>
+<body data-screen="attract">
+
+<!-- ═══════════════ review rail (not part of the product UI) ═══════════════ -->
+<aside class="rail" aria-label="Prototype review controls">
+  <h1>TVM · Ticket Vending Machine
+    <small>Varanasi Ropeway AFC — UI prototype · 1080×1920 touch kiosk</small>
+  </h1>
+
+  <div class="grp">
+    <h2>Purchase flow</h2>
+    <button data-jump="attract">Attract / idle</button>
+    <button data-jump="language">Language</button>
+    <button data-jump="menu">Main menu</button>
+    <button data-jump="product">Product</button>
+    <button data-jump="destination">Destination</button>
+    <button data-jump="passengers">Passengers</button>
+    <button data-jump="summary">Order summary</button>
+    <button data-jump="upi">UPI payment</button>
+    <button data-jump="printing">Printing</button>
+    <button data-jump="success">Success</button>
+    <button data-jump="pay-timeout">Payment timeout</button>
+    <button data-jump="print-fail">Paid, not printed</button>
+  </div>
+
+  <div class="grp">
+    <h2>Card services (NCMC)</h2>
+    <button data-jump="card-tap">Present card</button>
+    <button data-jump="balance">Balance</button>
+    <button data-jump="topup-amount">Recharge amount</button>
+    <button data-jump="topup-success">Recharge done</button>
+    <button data-jump="card-blocked">Card refused</button>
+  </div>
+
+  <div class="grp">
+    <h2>System states</h2>
+    <button data-jump="help">Help &amp; support</button>
+    <button data-jump="offline">Offline</button>
+    <button data-jump="oos">Out of service</button>
+  </div>
+
+  <div class="grp" id="simCtx">
+    <h2>Simulate hardware</h2>
+    <div class="simrow">
+      <button id="simPay">✓ Payment succeeds</button>
+      <button id="simTo">✕ Payment times out</button>
+      <button id="simJam">⚠ Printer jam</button>
+      <button id="simHot">✕ Card refused</button>
+      <button id="simReset">↺ Reset session</button>
+    </div>
+  </div>
+
+  <div class="grp">
+    <h2>View</h2>
+    <div class="simrow">
+      <button data-zoom="fit" class="on">Fit</button>
+      <button data-zoom="50">50%</button>
+      <button data-zoom="100">100%</button>
+      <button data-setlang="hi">हिन्दी</button>
+      <button data-setlang="en">English</button>
+    </div>
+  </div>
+
+  <p class="note">
+    <b>Placeholders:</b> fares (₹60/90/120 from VCT), GST 5%, group max 6,
+    payment window 2:00, helpline number. All configurable values per
+    System&nbsp;Flow §33. Attract-screen ad slot (BOS-scheduled, rule&nbsp;14)
+    is reserved but not simulated; offline state is entered via the jump
+    list rather than a live connectivity flag.<br><br>
+    <b>Rules honoured:</b> UPI only (r17) · SJT/RJT adult fare only (r3) ·
+    no reprint (r26) · no refunds line (r25) · RJT = 2 tickets (r19) ·
+    NCMC never a payment method (r20) · single payment mode (r27) ·
+    booking-code redemption excluded (Phase&nbsp;2).
+  </p>
+</aside>
+<button class="rail-toggle" id="railToggle">☰ Screens</button>
+
+<!-- ═══════════════ the kiosk ═══════════════ -->
+<div class="viewport" id="viewport">
+<div class="stage at-attract" id="stage">
+
+  <!-- shared scenic ground: every screen floats over this (mockup treatment) -->
+  <div class="sky" aria-hidden="true"></div>
+  <div class="scene" aria-hidden="true">
+    <svg viewBox="0 0 1080 1920" preserveAspectRatio="xMidYMid slice">
+      <path d="M-20 470 L1100 210" stroke="#3a1c0a" stroke-width="7" opacity=".85"/>
+      <g opacity=".95">
+        <path d="M300 402 v52" stroke="#3a1c0a" stroke-width="9" stroke-linecap="round"/>
+        <rect x="248" y="452" width="104" height="82" rx="20" fill="#3a1c0a"/>
+        <rect x="262" y="468" width="76" height="30" rx="10" fill="#ffb648" opacity=".9"/>
+      </g>
+      <g opacity=".95">
+        <path d="M820 280 v46" stroke="#3a1c0a" stroke-width="8" stroke-linecap="round"/>
+        <rect x="774" y="324" width="92" height="72" rx="18" fill="#3a1c0a"/>
+        <rect x="786" y="338" width="68" height="26" rx="9" fill="#ffb648" opacity=".9"/>
+      </g>
+      <g stroke="#3a1c0a" stroke-width="4" fill="none" stroke-linecap="round" opacity=".6">
+        <path d="M180 340 q14 -14 28 0 M208 336 q12 -12 24 0"/>
+        <path d="M640 220 q12 -12 24 0 M666 216 q10 -10 20 0"/>
+      </g>
+      <circle cx="540" cy="1080" r="150" fill="#ffedb0" opacity=".95"/>
+      <circle cx="540" cy="1080" r="220" fill="#ffdf8a" opacity=".35"/>
+      <path fill="#8a3410" opacity=".6" d="M0 1250 h60 v-70 l30-40 30 40 v70 h70 v-40 h60 v40 h50 v-95 l35-50 35 50 v95 h80 v-55 h70 v55 h60 v-80 l28-36 28 36 v80 h75 v-45 h65 v45 h55 v-105 l38-55 38 55 v105 h73 v-60 h70 v60 h30 v260 H0 Z"/>
+      <path fill="#4a220c" opacity=".9" d="M0 1330 h90 v-55 h55 v55 h65 v-85 l32-44 32 44 v85 h85 v-40 h70 v40 h75 v-70 l30-38 30 38 v70 h90 v-50 h65 v50 h80 v-95 l36-50 36 50 v95 h84 v-45 h55 v45 h20 v220 H0 Z"/>
+      <g fill="#4a220c" opacity=".65">
+        <rect x="0" y="1440" width="1080" height="16"/>
+        <rect x="0" y="1472" width="1080" height="16"/>
+        <rect x="0" y="1504" width="1080" height="16"/>
+      </g>
+      <rect x="0" y="1530" width="1080" height="390" fill="#33180a" opacity=".92"/>
+      <ellipse cx="540" cy="1620" rx="170" ry="22" fill="#ffcf5e" opacity=".28"/>
+      <ellipse cx="540" cy="1680" rx="100" ry="13" fill="#ffcf5e" opacity=".18"/>
+      <g fill="#2b1408" opacity=".85">
+        <path d="M240 1600 q40 26 110 0 l-12 -16 h-86 z"/>
+        <path d="M760 1660 q36 22 96 0 l-10 -14 h-76 z"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ─── header ─── -->
+  <header class="kh">
+    <div class="brand">
+      <img class="brandimg" src="../assets/img/logo.png" alt="Varanasi Ropeway">
+      <div class="bt">
+        <span data-t="brand.machine"></span>
+      </div>
+    </div>
+    <div class="hspace"></div>
+    <div class="station">
+      <b>Varanasi Cantt · वाराणसी कैंट</b>
+      <span>VCT-TVM-02 &nbsp;·&nbsp; <span class="live">UPI</span></span>
+    </div>
+    <div class="clockbox">
+      <div class="time js-time">–:–</div>
+      <div class="date js-date"></div>
+    </div>
+  </header>
+
+  <!-- ─── screens ─── -->
+  <div class="kbody">
+
+    <!-- ═══ ATTRACT ═══ -->
+    <section class="scr active" data-screen="attract" aria-label="Welcome">
+      <div class="attract-content">
+        <div class="attract-brand" aria-hidden="true"><span class="brandplate"><img src="../assets/img/logo.png" alt=""></span></div>
+        <h1 class="attract-title">
+          वाराणसी रोपवे
+          <span class="hi">Varanasi Ropeway</span>
+        </h1>
+        <p class="attract-tag" data-t="brand.tag"></p>
+        <div class="attract-spacer"></div>
+        <div class="attract-cta">
+          <div class="touch"><span data-t="touch"></span><br>
+            <small data-t2 class="js-touch-alt"></small>
+          </div>
+          <div class="attract-strip">
+            <span class="pill js-strip" data-key="strip.fares"></span>
+            <span class="pill js-strip" data-key="strip.upi"></span>
+            <span class="pill js-strip" data-key="strip.hours"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ LANGUAGE ═══ -->
+    <section class="scr" data-screen="language" aria-label="Language selection">
+      <div class="lang-wrap">
+        <h2 class="lang-title">
+          <span>अपनी भाषा चुनें</span>
+          <span class="en">Select your language</span>
+        </h2>
+        <div class="lang-cards">
+          <button class="lang-card" data-lang="hi">
+            <span><span class="lname">हिन्दी</span><br><span class="lsub">Hindi</span></span>
+            <span class="go" aria-hidden="true">→</span>
+          </button>
+          <button class="lang-card" data-lang="en">
+            <span><span class="lname">English</span><br><span class="lsub">अंग्रेज़ी</span></span>
+            <span class="go" aria-hidden="true">→</span>
+          </button>
+        </div>
+        <p class="lang-note">
+          यह मशीन केवल UPI भुगतान स्वीकार करती है। नकद और डेबिट/क्रेडिट कार्ड टिकट काउंटर पर स्वीकार किए जाते हैं।<br>
+          This machine accepts UPI payment only. Cash and debit/credit cards are accepted at the ticket counter.
+        </p>
+      </div>
+    </section>
+
+    <!-- ═══ MENU ═══ -->
+    <section class="scr" data-screen="menu" aria-label="Main menu">
+      <h2 class="q menu-greet"><span class="bl" data-bl="menu.greet"></span></h2>
+      <p class="qhint" data-t="menu.q"></p>
+      <div class="menu-tiles">
+        <button class="tile tile-hero" id="tileBuy">
+          <span class="ticon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4z"/>
+              <path d="M14 7v10" stroke-dasharray="2 3"/>
+            </svg>
+          </span>
+          <span class="tt"><span class="bl" data-bl="tile.buy"></span><span class="tsub" data-t="tile.buy.sub"></span></span>
+          <span class="arr" aria-hidden="true">→</span>
+        </button>
+        <button class="tile tile-std" id="tileBalance">
+          <span class="ticon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+              <rect x="2.5" y="5" width="19" height="14" rx="2.5"/>
+              <path d="M2.5 10h19"/><path d="M6.5 15h5"/>
+            </svg>
+          </span>
+          <span class="tt"><span class="bl" data-bl="tile.balance"></span><span class="tsub" data-t="tile.balance.sub"></span></span>
+          <span class="arr" aria-hidden="true">→</span>
+        </button>
+        <button class="tile tile-std" id="tileRecharge">
+          <span class="ticon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+              <rect x="2.5" y="6" width="15" height="12" rx="2.5"/>
+              <path d="M2.5 10.5h15"/>
+              <circle cx="19" cy="16" r="4.4" fill="var(--w-card)" stroke="currentColor"/>
+              <path d="M19 13.8v4.4M16.8 16h4.4"/>
+            </svg>
+          </span>
+          <span class="tt"><span class="bl" data-bl="tile.recharge"></span><span class="tsub" data-t="tile.recharge.sub"></span></span>
+          <span class="arr" aria-hidden="true">→</span>
+        </button>
+      </div>
+      <div class="menu-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9.2"/><path d="M12 10.6v6"/><circle cx="12" cy="7.6" r="0.4" fill="currentColor"/>
+        </svg>
+        <span data-t="menu.upionly"></span>
+      </div>
+      <p class="menu-hours" data-t="menu.hours"></p>
+    </section>
+
+    <!-- ═══ PRODUCT ═══ -->
+    <section class="scr" data-screen="product" aria-label="Choose ticket">
+      <div class="steps" aria-hidden="true">
+        <span class="st now"><span data-t="step.ticket"></span></span>
+        <span class="st"><span data-t="step.station"></span></span>
+        <span class="st"><span data-t="step.pax"></span></span>
+        <span class="st"><span data-t="step.pay"></span></span>
+      </div>
+      <h2 class="q"><span class="bl" data-bl="prod.q"></span></h2>
+      <div class="prod-cards">
+        <button class="prod-card" data-product="sjt">
+          <span class="pc-badge" data-t="popular"></span>
+          <span class="pc-top">
+            <span class="picon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12h16"/><path d="M13 6l6 6-6 6"/>
+              </svg>
+            </span>
+            <span class="pc-name"><span class="bl" data-bl="sjt"></span></span>
+          </span>
+          <span class="pc-desc" data-t="sjt.desc"></span>
+          <span class="pc-chips" aria-hidden="true">
+            <span class="pchip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2.5"/></svg>
+              <span data-t="remind.today"></span>
+            </span>
+            <span class="pchip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4z"/></svg>
+              <span data-t="sjt.chip"></span>
+            </span>
+          </span>
+          <span class="pc-fare">
+            <span class="amt" id="sjtFrom">₹60</span>
+            <span class="lbl" data-t="from"></span>
+          </span>
+        </button>
+        <button class="prod-card" data-product="rjt">
+          <span class="pc-top">
+            <span class="picon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 8h13"/><path d="M13 4l4 4-4 4"/>
+                <path d="M20 16H7"/><path d="M11 12l-4 4 4 4"/>
+              </svg>
+            </span>
+            <span class="pc-name"><span class="bl" data-bl="rjt"></span></span>
+          </span>
+          <span class="pc-desc" data-t="rjt.desc"></span>
+          <span class="pc-chips" aria-hidden="true">
+            <span class="pchip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2.5"/></svg>
+              <span data-t="remind.today"></span>
+            </span>
+            <span class="pchip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13"/><path d="M13 4l4 4-4 4"/><path d="M20 16H7"/><path d="M11 12l-4 4 4 4"/></svg>
+              <span data-t="rjt.chip"></span>
+            </span>
+          </span>
+          <span class="pc-fare">
+            <span class="amt" id="rjtFrom">₹120</span>
+            <span class="lbl" data-t="from"></span>
+          </span>
+        </button>
+      </div>
+      <div class="abar">
+        <button class="btn btn-quiet min js-back"><span class="bl" data-bl="back"></span></button>
+      </div>
+    </section>
+
+    <!-- ═══ DESTINATION ═══ -->
+    <section class="scr" data-screen="destination" aria-label="Choose destination">
+      <div class="steps" aria-hidden="true">
+        <span class="st done"><span data-t="step.ticket"></span></span>
+        <span class="st now"><span data-t="step.station"></span></span>
+        <span class="st"><span data-t="step.pax"></span></span>
+        <span class="st"><span data-t="step.pay"></span></span>
+      </div>
+      <h2 class="q"><span class="bl" data-bl="dest.q"></span></h2>
+      <p class="qhint" id="destHint"></p>
+
+      <div class="route-map" aria-hidden="true">
+        <svg id="routeMap" viewBox="0 0 920 250">
+          <line class="rm-cable" x1="40" y1="120" x2="880" y2="120"/>
+          <g class="rm-node" data-code="VCT">
+            <circle cx="80" cy="120" r="22"/>
+            <text class="n-en" x="80" y="180" text-anchor="middle">Varanasi Cantt</text>
+            <text class="n-hi" x="80" y="212" text-anchor="middle">वाराणसी कैंट</text>
+          </g>
+          <g class="rm-node" data-code="VDP">
+            <circle cx="347" cy="120" r="22"/>
+            <text class="n-en" x="347" y="180" text-anchor="middle">Vidyapith</text>
+            <text class="n-hi" x="347" y="212" text-anchor="middle">विद्यापीठ</text>
+          </g>
+          <g class="rm-node" data-code="RYT">
+            <circle cx="613" cy="120" r="22"/>
+            <text class="n-en" x="600" y="180" text-anchor="middle">Rath Yatra</text>
+            <text class="n-hi" x="600" y="210" text-anchor="middle">रथयात्रा</text>
+          </g>
+          <g class="rm-node" data-code="GDC">
+            <circle cx="880" cy="120" r="22"/>
+            <text class="n-en" x="898" y="180" text-anchor="end">Gadoliya Chowk</text>
+            <text class="n-hi" x="898" y="210" text-anchor="end">गदौलिया चौक</text>
+          </g>
+          <g class="rm-pill">
+            <line x1="80" y1="95" x2="80" y2="58"/>
+            <rect x="26" y="12" width="330" height="48" rx="24"/>
+            <text id="youAreHere" x="191" y="44" text-anchor="middle">You are here · आप यहाँ हैं</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="dest-cards" id="destCards"><!-- built by JS --></div>
+
+      <div class="abar">
+        <button class="btn btn-quiet min js-back"><span class="bl" data-bl="back"></span></button>
+      </div>
+    </section>
+
+    <!-- ═══ PASSENGERS ═══ -->
+    <section class="scr" data-screen="passengers" aria-label="Passenger count">
+      <div class="steps" aria-hidden="true">
+        <span class="st done"><span data-t="step.ticket"></span></span>
+        <span class="st done"><span data-t="step.station"></span></span>
+        <span class="st now"><span data-t="step.pax"></span></span>
+        <span class="st"><span data-t="step.pay"></span></span>
+      </div>
+      <h2 class="q"><span class="bl" data-bl="pax.q"></span></h2>
+      <div class="pax-wrap">
+        <div class="pax-stepper">
+          <button class="pax-btn" id="paxMinus" aria-label="Fewer passengers">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>
+          </button>
+          <div class="pax-count" id="paxCount">1</div>
+          <button class="pax-btn" id="paxPlus" aria-label="More passengers">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+        <div class="pax-icons" id="paxIcons" aria-hidden="true"></div>
+        <div class="pax-math" id="paxMath"></div>
+        <p class="pax-note" id="paxNote"></p>
+      </div>
+      <div class="abar">
+        <button class="btn btn-quiet min js-back"><span class="bl" data-bl="back"></span></button>
+        <button class="btn btn-primary" id="paxContinue"><span class="bl" data-bl="continue"></span></button>
+      </div>
+    </section>
+
+    <!-- ═══ SUMMARY ═══ -->
+    <section class="scr" data-screen="summary" aria-label="Order summary">
+      <div class="steps" aria-hidden="true">
+        <span class="st done"><span data-t="step.ticket"></span></span>
+        <span class="st done"><span data-t="step.station"></span></span>
+        <span class="st done"><span data-t="step.pax"></span></span>
+        <span class="st now"><span data-t="step.pay"></span></span>
+      </div>
+      <h2 class="q"><span class="bl" data-bl="sum.q"></span></h2>
+      <div class="sum-mid">
+      <div class="sum-card">
+        <div class="sum-row">
+          <span class="sr-l" data-t="row.ticket"></span>
+          <span class="sr-v" id="sumProduct"></span>
+        </div>
+        <div class="sum-row">
+          <span class="sr-l" data-t="row.journey"></span>
+          <span class="sr-v" id="sumJourney"></span>
+        </div>
+        <div class="sum-row">
+          <span class="sr-l" data-t="row.pax"></span>
+          <span class="sr-v" id="sumPax"></span>
+        </div>
+        <div class="sum-row">
+          <span class="sr-l" data-t="row.fare"></span>
+          <span class="sr-v" id="sumFare"></span>
+        </div>
+        <div class="sum-row">
+          <span class="sr-l" data-t="row.tickets"></span>
+          <span class="sr-v" id="sumTickets"></span>
+        </div>
+        <div class="sum-total">
+          <span class="tl" data-t="total"></span>
+          <span class="amt" id="sumTotal"></span>
+        </div>
+        <div class="sum-gst" id="sumGst"></div>
+      </div>
+      <p class="sum-terms" data-t="sum.terms"></p>
+      </div><!-- /.sum-mid -->
+      <div class="abar">
+        <button class="btn btn-quiet min js-back"><span class="bl" data-bl="back"></span></button>
+        <button class="btn btn-primary btn-xl" id="payBtn"></button>
+      </div>
+    </section>
+
+    <!-- ═══ UPI PAYMENT ═══ -->
+    <section class="scr" data-screen="upi" aria-label="UPI payment">
+      <div class="upi-wrap">
+        <h2 class="q" style="text-align:center"><span class="bl" id="upiTitle"></span></h2>
+        <div class="upi-amt-line">
+          <span class="amt" id="upiAmt">₹0</span>
+        </div>
+        <div class="qr-card"><canvas id="qrCanvas" width="1160" height="1160"></canvas></div>
+        <p class="upi-any" data-t="upi.any"></p>
+        <div class="upi-timer" id="payTimer">
+          <svg viewBox="0 0 108 108" aria-hidden="true">
+            <circle class="ring-bg" cx="54" cy="54" r="46" fill="none" stroke-width="9"/>
+            <circle class="ring-fg" id="payRing" cx="54" cy="54" r="46" fill="none" stroke-width="9"
+              stroke-linecap="round" stroke-dasharray="289" stroke-dashoffset="0"
+              transform="rotate(-90 54 54)"/>
+          </svg>
+          <div class="tt">
+            <div class="mmss" id="payMmss">2:00</div>
+            <div class="tl" data-t="timeleft"></div>
+          </div>
+        </div>
+        <div class="upi-steps">
+          <div class="us"><b>1</b><span data-t="upi.s1"></span></div>
+          <div class="us"><b>2</b><span data-t="upi.s2"></span></div>
+          <div class="us"><b>3</b><span data-t="upi.s3"></span></div>
+        </div>
+        <p class="upi-ref" id="upiRef"></p>
+      </div>
+      <div class="abar">
+        <button class="btn btn-danger-ghost min js-cancel"><span class="bl" data-bl="cancel"></span></button>
+      </div>
+    </section>
+
+    <!-- ═══ PRINTING ═══ -->
+    <section class="scr" data-screen="printing" aria-label="Printing tickets">
+      <div class="print-wrap">
+        <div class="result-badge ok" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 7"/></svg>
+        </div>
+        <h2 class="result-title"><span class="bl" data-bl="paid"></span></h2>
+        <div class="print-slot" aria-hidden="true">
+          <div class="slot-bar"></div>
+          <div class="ticket">
+            <div class="thead">VARANASI ROPEWAY · वाराणसी रोपवे</div>
+            <div class="trow"><span>VCT → RYT</span><span>SJT</span></div>
+            <div class="trow"><span>15-08-2026</span><span>₹90</span></div>
+            <div class="trow"><span>incl. GST 5% · GST सहित</span><span>₹4.29</span></div>
+            <div class="tqr"></div>
+          </div>
+        </div>
+        <div class="print-count" id="printCount"></div>
+        <div class="print-bar"><i id="printBarFill"></i></div>
+        <p class="print-note" data-t="print.wait"></p>
+      </div>
+    </section>
+
+    <!-- ═══ SUCCESS ═══ -->
+    <section class="scr" data-screen="success" aria-label="Tickets ready">
+      <div class="result-wrap">
+        <div class="result-badge ok" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 7"/></svg>
+        </div>
+        <h2 class="result-title"><span class="bl" data-bl="done.q"></span></h2>
+        <p class="result-body" style="margin-top:-14px" data-t="done.sub"></p>
+        <div class="chipline"><span class="chip" id="chipTickets"></span></div>
+        <div class="collect-arrow" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v15"/><path d="M5 11l7 7 7-7"/></svg>
+        </div>
+        <div class="print-slot" aria-hidden="true"><div class="slot-bar"></div></div>
+        <div class="remind-card">
+          <div class="ri">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2.5"/></svg>
+            <span data-t="remind.today"></span>
+          </div>
+          <div class="ri">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h16"/><path d="M13 6l6 6-6 6"/></svg>
+            <span data-t="remind.exit"></span>
+          </div>
+          <div class="ri">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4z"/></svg>
+            <span data-t="remind.keep"></span>
+          </div>
+        </div>
+        <p class="autoreturn js-retline" data-num="retNum"></p>
+      </div>
+      <div class="abar">
+        <button class="btn btn-primary btn-block" id="doneBtn"><span class="bl" data-bl="done"></span></button>
+      </div>
+    </section>
+
+    <!-- ═══ PAYMENT TIMEOUT ═══ -->
+    <section class="scr" data-screen="pay-timeout" aria-label="Payment not received">
+      <div class="result-wrap">
+        <div class="result-badge warn" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2.5"/></svg>
+        </div>
+        <h2 class="result-title"><span class="bl" data-bl="pt.q"></span></h2>
+        <p class="result-body" data-t="pt.body"></p>
+        <div class="ref-card">
+          <div class="rl" data-t="ref"></div>
+          <div class="rv js-ref">—</div>
+        </div>
+      </div>
+      <div class="abar">
+        <button class="btn btn-quiet" id="ptStart"><span class="bl" data-bl="startover"></span></button>
+        <button class="btn btn-primary" id="ptRetry"><span class="bl" data-bl="retry"></span></button>
+      </div>
+    </section>
+
+    <!-- ═══ PAID BUT NOT PRINTED ═══ -->
+    <section class="scr" data-screen="print-fail" aria-label="Tickets could not print">
+      <div class="result-wrap">
+        <div class="result-badge bad" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.5 20h19z"/><path d="M12 10v4.5"/><circle cx="12" cy="17.4" r="0.4" fill="currentColor"/></svg>
+        </div>
+        <h2 class="result-title"><span class="bl" data-bl="pf.q"></span></h2>
+        <p class="result-body" data-t="pf.body"></p>
+        <div class="ref-card">
+          <div class="rl" data-t="ref"></div>
+          <div class="rv js-ref">—</div>
+        </div>
+      </div>
+      <div class="abar">
+        <button class="btn btn-primary btn-block" id="pfDone"><span class="bl" data-bl="done"></span></button>
+      </div>
+    </section>
+
+    <!-- ═══ CARD TAP ═══ -->
+    <section class="scr" data-screen="card-tap" aria-label="Present your card">
+      <div class="tap-wrap">
+        <h2 class="q"><span class="bl" data-bl="tap.q"></span></h2>
+        <p class="qhint" id="tapCtx" style="margin:0"></p>
+        <div class="tap-visual" aria-hidden="true">
+          <div class="card">
+            <div class="cchip"></div>
+            <div class="cnum">6080 •••• •••• 1234</div>
+            <div class="cbrand">NCMC</div>
+          </div>
+          <div class="tap-wave">
+            <svg viewBox="0 0 90 60" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round">
+              <path d="M20 45a26 26 0 0 1 50 0" opacity=".45"/>
+              <path d="M30 50a16 16 0 0 1 30 0" opacity=".7"/>
+              <path d="M40 55a6 6 0 0 1 10 0"/>
+            </svg>
+          </div>
+          <div class="reader"></div>
+        </div>
+        <p class="result-body" data-t="tap.hint"></p>
+      </div>
+      <div class="abar">
+        <button class="btn btn-danger-ghost min js-cancel"><span class="bl" data-bl="cancel"></span></button>
+      </div>
+    </section>
+
+    <!-- ═══ BALANCE ═══ -->
+    <section class="scr" data-screen="balance" aria-label="Card balance">
+      <h2 class="q"><span class="bl" data-bl="bal.q"></span></h2>
+      <div class="tap-wrap" style="justify-content:center">
+        <div class="balance-card">
+          <div class="mini-card" aria-hidden="true">
+            <div class="cchip"></div>
+            <div class="cnum">6080 •••• 1234</div>
+            <div class="cbrand">NCMC</div>
+          </div>
+          <div class="bb">
+            <div class="bl-lbl" data-t="bal.lbl"></div>
+            <div class="bl-amt js-balance">₹0.00</div>
+            <div class="bl-sub" data-t="bal.card"></div>
+          </div>
+        </div>
+        <div class="bal-hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <path d="M6 8a8 8 0 0 1 12 0" opacity=".45"/><path d="M8.5 11a5 5 0 0 1 7 0" opacity=".7"/>
+            <rect x="9" y="14" width="6" height="7" rx="1.6"/>
+          </svg>
+          <span data-t="fact.ncmc"></span>
+        </div>
+      </div>
+      <div class="abar">
+        <button class="btn btn-quiet" id="balDone"><span class="bl" data-bl="done"></span></button>
+        <button class="btn btn-primary" id="balRecharge"><span class="bl" data-bl="bal.recharge"></span></button>
+      </div>
+    </section>
+
+    <!-- ═══ TOP-UP AMOUNT ═══ -->
+    <section class="scr" data-screen="topup-amount" aria-label="Recharge amount">
+      <h2 class="q"><span class="bl" data-bl="amt.q"></span></h2>
+      <div class="amt-grid">
+        <button class="amt-cell" data-amt="100">₹100</button>
+        <button class="amt-cell" data-amt="200">₹200</button>
+        <button class="amt-cell" data-amt="500">₹500</button>
+        <button class="amt-cell" data-amt="1000">₹1,000</button>
+      </div>
+      <div class="abar">
+        <button class="btn btn-quiet min js-back"><span class="bl" data-bl="back"></span></button>
+      </div>
+    </section>
+
+    <!-- ═══ TOP-UP SUCCESS ═══ -->
+    <section class="scr" data-screen="topup-success" aria-label="Recharge successful">
+      <div class="result-wrap">
+        <div class="result-badge ok" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 7"/></svg>
+        </div>
+        <h2 class="result-title"><span class="bl" data-bl="ts.q"></span></h2>
+        <p class="result-body" id="tsBody"></p>
+        <div class="ref-card">
+          <div class="rl" data-t="ts.newbal"></div>
+          <div class="rv" id="newBal">₹0.00</div>
+        </div>
+        <div class="print-slot" aria-hidden="true"><div class="slot-bar"></div></div>
+        <p class="autoreturn js-retline" data-num="retNumT"></p>
+      </div>
+      <div class="abar">
+        <button class="btn btn-primary btn-block" id="tsDone"><span class="bl" data-bl="done"></span></button>
+      </div>
+    </section>
+
+    <!-- ═══ CARD BLOCKED (hotlist) ═══ -->
+    <section class="scr" data-screen="card-blocked" aria-label="Card refused">
+      <div class="result-wrap">
+        <div class="result-badge bad" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M6.5 6.5l11 11"/></svg>
+        </div>
+        <h2 class="result-title"><span class="bl" data-bl="cb.q"></span></h2>
+        <p class="result-body" data-t="cb.body"></p>
+      </div>
+      <div class="abar">
+        <button class="btn btn-primary btn-block" id="cbDone"><span class="bl" data-bl="done"></span></button>
+      </div>
+    </section>
+
+    <!-- ═══ HELP ═══ -->
+    <section class="scr" data-screen="help" aria-label="Help and support">
+      <h2 class="q"><span class="bl" data-bl="help.t"></span></h2>
+      <div class="help-grid">
+        <div class="help-line">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>
+          </svg>
+          <div>
+            <div class="hl-l" data-t="helpline"></div>
+            <div class="hl-n">1800 123 4567</div>
+          </div>
+        </div>
+        <div class="help-cols">
+          <div class="help-card">
+            <h3 data-t="help.how"></h3>
+            <div class="hi-row"><b class="num">1</b><span data-t="help.s1"></span></div>
+            <div class="hi-row"><b class="num">2</b><span data-t="help.s2"></span></div>
+            <div class="hi-row"><b class="num">3</b><span data-t="help.s3"></span></div>
+          </div>
+          <div class="help-card">
+            <h3 data-t="help.facts"></h3>
+            <div class="hi-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 7.5h8M8 11.5h8M8 15.5h4"/></svg>
+              <span data-t="fact.upi"></span>
+            </div>
+            <div class="hi-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M6.5 6.5l11 11"/></svg>
+              <span data-t="fact.reprint"></span>
+            </div>
+            <div class="hi-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 20a5 5 0 0 1 6.5-4.7"/></svg>
+              <span id="factGroup"></span>
+            </div>
+            <div class="hi-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/></svg>
+              <span data-t="fact.ncmc"></span>
+            </div>
+          </div>
+        </div>
+        <p class="help-foot" data-t="help.staff"></p>
+      </div>
+      <div class="abar">
+        <button class="btn btn-primary btn-block" id="helpBack"><span class="bl" data-bl="back"></span></button>
+      </div>
+    </section>
+
+    <!-- ═══ OFFLINE ═══ -->
+    <section class="scr" data-screen="offline" aria-label="UPI unavailable">
+      <div class="notice-dark">
+        <div class="nb" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <path d="M2 3l20 18"/>
+            <path d="M5 10a12 12 0 0 1 6.5-3.4M15.5 7.6A12 12 0 0 1 22 11" opacity=".55"/>
+            <path d="M8.5 13.5a7 7 0 0 1 3-1.6M14.8 12.6a7 7 0 0 1 2.7 1.9" opacity=".75"/>
+            <circle cx="12" cy="18" r="1.4" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+        <h2>UPI भुगतान अभी उपलब्ध नहीं है<small>UPI is temporarily unavailable</small></h2>
+        <p>यह मशीन अभी टिकट नहीं बेच सकती। कृपया टिकट काउंटर का उपयोग करें — वहाँ नकद, UPI और डेबिट/क्रेडिट कार्ड स्वीकार किए जाते हैं।<br><br>
+        This machine cannot sell tickets right now. Please use the ticket counter — cash, UPI and debit/credit cards are accepted there.</p>
+        <div class="ndev">VCT-TVM-02 · Varanasi Cantt<br><b>हेल्पलाइन / Helpline</b> 1800 123 4567</div>
+      </div>
+    </section>
+
+    <!-- ═══ OUT OF SERVICE ═══ -->
+    <section class="scr" data-screen="oos" aria-label="Out of service">
+      <div class="notice-dark">
+        <div class="nb" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a4.5 4.5 0 0 0-6 5.6L3 17.6V21h3.4l5.7-5.7a4.5 4.5 0 0 0 5.6-6l-3 3-2.4-.6-.6-2.4z"/>
+          </svg>
+        </div>
+        <h2>सेवा में नहीं<small>Out of Service</small></h2>
+        <p>कृपया दूसरी मशीन या टिकट काउंटर का उपयोग करें। असुविधा के लिए खेद है।<br><br>
+        Please use another machine or the ticket counter. We apologise for the inconvenience.</p>
+        <div class="ndev">VCT-TVM-02 · Varanasi Cantt<br><b>हेल्पलाइन / Helpline</b> 1800 123 4567</div>
+      </div>
+    </section>
+
+  </div><!-- /.kbody -->
+
+  <!-- ─── footer ─── -->
+  <footer class="kf">
+    <button class="btn btn-quiet" id="helpBtn" style="min-height:88px">
+      <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 0 1 4.8 1c0 1.6-2.4 2-2.4 3.4"/><circle cx="12" cy="17" r="0.4" fill="currentColor"/>
+      </svg>
+      <span class="bl" data-bl="help.f"></span>
+    </button>
+    <button class="btn btn-danger-ghost js-cancel" style="min-height:88px">
+      <span class="bl" data-bl="cancel"></span>
+    </button>
+    <div class="fspace"></div>
+    <div class="devid">VCT-TVM-02<br><b data-t="upionly.chip"></b></div>
+    <div class="lang-seg" role="group" aria-label="Language">
+      <button data-lang="hi">हिं</button>
+      <button data-lang="en">EN</button>
+    </div>
+  </footer>
+
+  <!-- ─── idle modal ─── -->
+  <div class="kmodal" id="idleModal" role="alertdialog" aria-label="Session timeout">
+    <div class="mcard">
+      <div class="mring" aria-hidden="true">
+        <svg viewBox="0 0 200 200">
+          <circle class="ring-bg" cx="100" cy="100" r="88" fill="none" stroke-width="12"/>
+          <circle class="ring-fg" id="idleRing" cx="100" cy="100" r="88" fill="none" stroke-width="12"
+            stroke-linecap="round" stroke-dasharray="553" stroke-dashoffset="0"
+            transform="rotate(-90 100 100)"/>
+        </svg>
+        <div class="mnum" id="idleNum">15</div>
+      </div>
+      <h2><span class="bl" data-bl="idle.q"></span></h2>
+      <p data-t="idle.body"></p>
+      <button class="btn btn-primary btn-xl btn-block" id="idleYes"><span class="bl" data-bl="idle.yes"></span></button>
+    </div>
+  </div>
+
+</div><!-- /.stage -->
+</div><!-- /.viewport -->
+
+<script src="../assets/js/i18n.js"></script>
+<script src="../assets/js/kiosk.js"></script>
+<script>
+  /* attract strip + touch-alt lines carry both languages at once
+     (language not yet chosen), so they refresh outside applyI18n */
+  document.addEventListener('DOMContentLoaded', () => {
+    const minFare = Math.min(...Object.values(FARES));
+    document.querySelectorAll('.js-strip').forEach(el => {
+      const k = el.dataset.key;
+      el.innerHTML = tf(k, 'hi', minFare) + ' · ' + tf(k, 'en', minFare);
+    });
+    const alt = document.querySelector('.js-touch-alt');
+    const touch = document.querySelector('[data-t="touch"]');
+    /* primary shows current lang via data-t; alt line shows the other */
+    const paint = () => { alt.textContent = STR['touch'][otherLang(state.lang)]; };
+    paint();
+    new MutationObserver(paint).observe(touch, { childList: true });
+  });
+</script>
+</body>
+</html>

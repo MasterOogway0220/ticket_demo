@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EFO — Excess Fare Office · Varanasi Ropeway AFC · UI Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/bos.css">
+<link rel="stylesheet" href="../assets/css/tom.css">
+<style>
+  /* EFO specifics on the terminal chassis */
+  .case-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 12px; }
+  .case-tile {
+    text-align: left; background: #fbf6ea; border: 2px solid var(--b-line-mid);
+    border-radius: 14px; padding: 14px 16px; transition: border-color .12s, background .12s;
+  }
+  .case-tile:hover { border-color: var(--b-orange); }
+  .case-tile.on { background: var(--b-card-warm); border-color: var(--b-orange-deep); }
+  .case-tile b { display: block; font-family: var(--font-display); font-weight: 600; font-size: 14px; }
+  .case-tile span { font-size: 11.5px; color: var(--b-ink-faint); line-height: 1.45; display: block; margin-top: 3px; }
+  .case-tile .fee { float: right; font-family: var(--font-display); font-weight: 600; font-size: 12px; color: var(--b-orange-deep); }
+  .case-form { margin-top: 20px; }
+  .case-form .field { max-width: 420px; }
+  .released {
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    padding: 26px 0 8px; text-align: center;
+  }
+  .released .rbadge {
+    width: 84px; height: 84px; border-radius: 50%;
+    background: var(--ok-bg); color: var(--ok); border: 3px solid var(--ok);
+    display: grid; place-items: center;
+  }
+  .released .rbadge svg { width: 40px; height: 40px; }
+  .released h3 { font-size: 19px; }
+  .released .mono { font-family: var(--font-mono); font-size: 12px; color: var(--b-ink-soft); }
+  .fee-split { display: flex; gap: 10px; margin: 6px 0 2px; }
+  .fee-split .fs {
+    flex: 1; background: #fff; border: 1.5px solid var(--b-line-mid); border-radius: 12px;
+    padding: 10px 14px;
+  }
+  .fee-split .fs span { font-size: 11px; color: var(--b-ink-faint); display: block; }
+  .fee-split .fs b { font-family: var(--font-display); font-size: 18px; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<header class="th-bar">
+  <div class="brand">
+    <img class="brandimg" src="../assets/img/logo.png" alt="Varanasi Ropeway">
+  </div>
+  <div class="th-title">
+    <h1>Excess Fare Office (EFO)</h1>
+    <div class="sub">Gadoliya Chowk · गदौलिया चौक — GDC-EFO-01 · serves the paid and non-paid area</div>
+  </div>
+  <div class="th-cardlet">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/></svg>
+    <div><b id="thClock">–:–</b><span id="thDate">—</span></div>
+  </div>
+  <button class="th-cardlet" id="linkChip" title="Demo: click to toggle the Back Office link">
+    <span class="okdot" id="linkDot">linked</span>
+  </button>
+  <div class="th-cardlet" id="queueChip" style="display:none"><div><b id="queueN">queue 0</b><span>cases awaiting sync</span></div></div>
+  <div class="th-cardlet" id="thOp" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></svg>
+    <div><b id="thOpName">—</b><span id="thOpId">—</span></div>
+  </div>
+  <button class="btn btn-quiet" id="thLogout" style="display:none;height:42px">Sign out</button>
+</header>
+
+<!-- ═══ LOGIN ═══ -->
+<section class="view on tlogin" id="v-login">
+  <form class="tlogin-card" id="tLoginForm" autocomplete="off">
+    <h2>Officer Login</h2>
+    <p class="lsub">The officer cannot release a passenger without recording a case and a reason.</p>
+    <div class="login-err" id="tLoginErr">—</div>
+    <div class="field">
+      <label for="tUser">Officer ID</label>
+      <div class="fwrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+        <input id="tUser" placeholder="e.g. excess.dev">
+      </div>
+    </div>
+    <div class="field">
+      <label for="tPass">Password</label>
+      <div class="fwrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2.5"/><path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/></svg>
+        <input id="tPass" type="password" placeholder="any value — demo">
+      </div>
+    </div>
+    <button class="btn btn-primary btn-lg" type="submit">Login</button>
+    <div class="demo-row">
+      <p><b>Just press Login — the fields are pre-filled.</b> This terminal is GDC: an officer assigned elsewhere is refused.</p>
+      <div class="demo-chips">
+        <button type="button" data-demo="excess.dev">excess.dev · GDC officer</button>
+        <button type="button" data-demo="admin.dev">admin.dev · works anywhere</button>
+      </div>
+    </div>
+  </form>
+</section>
+
+<!-- ═══ SHIFT OPEN ═══ -->
+<section class="view" id="v-float">
+  <div class="shift-wrap">
+    <div class="card">
+      <header><h2>Declare opening float</h2><div class="hspace"></div>
+        <span class="chip warn">Cases are blocked until the float is declared</span>
+        <div class="sub">The office takes fares and fines, so it carries a drawer like the counter. Everything collected here reconciles into the excess fare report.</div>
+      </header>
+      <div class="pad">
+        <div class="denoms" id="denoms"></div>
+        <div class="float-total">
+          <span style="font-weight:600">Opening float · प्रारंभिक राशि</span>
+          <b id="floatTotal">₹0</b>
+        </div>
+      </div>
+      <div class="pad" style="border-top:1px solid var(--b-line);display:flex;justify-content:flex-end">
+        <button class="btn btn-primary" id="openShift" style="height:50px;padding:0 30px">Open shift &amp; start handling cases</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ WORKSPACE ═══ -->
+<section class="view" id="v-ws">
+  <div class="tabs" id="tabs">
+    <button data-tab="case" class="on">New Case</button>
+    <button data-tab="log">Case Log</button>
+    <button data-tab="shift">Shift</button>
+  </div>
+  <div class="wsbody">
+
+    <!-- NEW CASE -->
+    <div class="card tabpane" data-pane="case">
+      <div class="sale-grid">
+        <div class="sale-left">
+          <h3>Case type · System Flow §10</h3>
+          <div class="case-grid" id="caseTypes"></div>
+          <div class="case-form" id="caseForm"></div>
+        </div>
+        <div class="bill" id="caseBill">
+          <h3>Case</h3>
+          <div id="cbBody"><p style="color:var(--b-ink-faint);font-size:13px">Choose a case type. The system computes what is due; you record the reason and authorise the release.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CASE LOG -->
+    <div class="card tabpane" data-pane="log" style="display:none">
+      <header><h2>Cases this terminal</h2><div class="hspace"></div><span class="chip dim" id="logCount">0 cases</span></header>
+      <div class="tscroll"><table class="grid">
+        <thead><tr><th>Ref</th><th>Time</th><th>Case</th><th>Medium</th><th class="num">Fare</th><th class="num">Fine</th><th>Mode</th><th>Officer</th></tr></thead>
+        <tbody id="logRows"></tbody>
+      </table></div>
+    </div>
+
+    <!-- SHIFT -->
+    <div class="card tabpane" data-pane="shift" style="display:none">
+      <header><h2>Shift position</h2><div class="hspace"></div><span class="chip ok">Open</span></header>
+      <div class="shift-cols">
+        <div>
+          <div class="kv"><span>Officer</span><b id="svOp">—</b></div>
+          <div class="kv"><span>Terminal</span><b>GDC-EFO-01 · Gadoliya Chowk</b></div>
+          <div class="kv"><span>Shift opened</span><b id="svOpened">—</b></div>
+          <div class="kv"><span>Opening float</span><b id="svFloat">—</b></div>
+          <div class="kv"><span>Cases handled</span><b id="svCases">0</b></div>
+          <div class="kv"><span>Releases without charge</span><b id="svFree">0</b></div>
+        </div>
+        <div>
+          <div class="kv"><span>Fares recovered</span><b id="svFares">₹0</b></div>
+          <div class="kv"><span>Fines collected</span><b id="svFines">₹0</b></div>
+          <div class="kv big"><span>Total collected</span><b id="svTotal">₹0</b></div>
+          <div class="kv big"><span>Expected cash in drawer</span><b id="svExpect">₹0</b></div>
+          <div class="kv"><span style="font-size:11.5px">Fare and fine are recorded as separate amounts so revenue and penalty report apart (rule 14).</span></div>
+        </div>
+      </div>
+      <div class="pad" style="border-top:1px solid var(--b-line);display:flex;justify-content:flex-end">
+        <button class="btn btn-danger" id="closeShiftBtn" style="height:48px;padding:0 26px">Close shift — declare cash</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- payment modal (same chassis as the counter) -->
+<div class="paymodal" id="payModal">
+  <div class="pcard">
+    <h3 id="pmTitle">Payment</h3>
+    <p class="psub" id="pmSub">—</p>
+    <div id="pmBody"></div>
+    <div class="pm-actions">
+      <button class="btn btn-quiet" id="pmCancel">Cancel</button>
+      <button class="btn btn-primary" id="pmConfirm">Confirm &amp; release</button>
+    </div>
+  </div>
+</div>
+
+<!-- close-shift modal -->
+<div class="paymodal" id="closeModal">
+  <div class="pcard">
+    <h3>Close shift — declare cash</h3>
+    <p class="psub">Variance is computed against the expected position and routed to the supervisor and finance queue.</p>
+    <div class="field">
+      <label for="declareIn">Declared cash in drawer (₹)</label>
+      <input id="declareIn" type="number" min="0" step="1" style="padding-left:16px;height:50px;width:100%;border-radius:11px;border:1.5px solid var(--b-line-mid)">
+    </div>
+    <div id="varLine" style="margin-bottom:16px"></div>
+    <div class="pm-actions">
+      <button class="btn btn-quiet" id="closeCancel">Cancel</button>
+      <button class="btn btn-danger" id="closeConfirm">Close shift</button>
+    </div>
+  </div>
+</div>
+
+<div class="flash" id="flash">
+  <div class="fcard">
+    <div class="fbadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 7"/></svg></div>
+    <h3 id="flashT">Released</h3>
+    <p id="flashP">—</p>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 7"/></svg>
+  <span id="toastMsg">OK</span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="../assets/js/motion.js"></script>
+<script src="../assets/js/bos-data.js"></script>
+<script src="../assets/js/efo.js"></script>
+</body>
+</html>

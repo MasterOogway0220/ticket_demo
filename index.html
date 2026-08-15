@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Varanasi Ropeway AFC — UI Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Mukta:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--w-paper); color: var(--w-ink);
+    font-family: var(--font-body); font-size: 17px; line-height: 1.55;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 28px 80px; }
+  header.hero {
+    border-bottom: 3px solid var(--w-primary);
+    background: var(--w-card);
+  }
+  .hero-in { max-width: 1060px; margin: 0 auto; padding: 52px 28px 40px; display: flex; gap: 28px; align-items: center; }
+  .hero-in .brandimg { height: 80px; width: auto; flex: 0 0 auto; }
+  .hero h1 {
+    margin: 0; font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(26px, 4vw, 38px); line-height: 1.15;
+  }
+  .hero h1 small { display: block; font-size: .52em; font-weight: 600; color: var(--w-ink-faint); margin-top: 6px; }
+  .meta { font-size: 14px; color: var(--w-ink-faint); margin-top: 40px; display: flex; gap: 8px 26px; flex-wrap: wrap; }
+  h2 {
+    font-family: var(--font-display); font-weight: 700; font-size: 22px;
+    margin: 44px 0 18px;
+  }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+  .mod {
+    background: var(--w-card); border: 2px solid var(--w-line);
+    border-radius: 18px; padding: 24px 26px 22px; text-decoration: none; color: inherit;
+    display: flex; flex-direction: column; gap: 8px; position: relative;
+    transition: border-color .15s, transform .15s var(--ease);
+  }
+  a.mod:hover { border-color: var(--w-primary); transform: translateY(-2px); }
+  .mod .mc {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: .06em; color: var(--w-primary);
+  }
+  .mod h3 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 20px; }
+  .mod p { margin: 0; font-size: 14.5px; color: var(--w-ink-soft); }
+  .mod .st {
+    position: absolute; top: 22px; right: 22px;
+    font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 999px;
+  }
+  .st.live { background: var(--ok-bg); color: var(--ok); }
+  .st.next { background: var(--w-cream); color: var(--w-ink-faint); }
+  .note {
+    margin-top: 40px; background: var(--w-cream); border: 2px solid var(--w-line-strong);
+    border-radius: 16px; padding: 20px 26px; font-size: 14.5px; color: var(--w-ink-soft);
+  }
+  .note b { color: var(--w-ink); }
+  :where(a):focus-visible { outline: 3px solid var(--w-primary); outline-offset: 3px; border-radius: 6px; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-in">
+    <img class="brandimg" src="assets/img/logo.png" alt="Varanasi Ropeway">
+    <h1>Varanasi Ropeway AFC — UI Prototype
+      <small>वाराणसी रोपवे · स्वचालित किराया संग्रह प्रणाली</small>
+    </h1>
+  </div>
+</header>
+
+<div class="wrap">
+  <h2>Modules</h2>
+  <div class="grid">
+    <a class="mod" href="tvm/index.html">
+      <span class="st live">Live</span>
+      <span class="mc">TVM</span>
+      <h3>Ticket Vending Machine</h3>
+      <p>Self-service kiosk · 1080×1920 touch · UPI only · 21 screens with working flow, Hindi/English</p>
+    </a>
+    <a class="mod" href="tom/index.html">
+      <span class="st live">Live</span>
+      <span class="mc">ToM</span>
+      <h3>Ticket Office Machine</h3>
+      <p>Operator login with PIN pad · opening float · working sale (cash/UPI/card with change) · NCMC services · shift close with variance — sales land in the BOS ledger live</p>
+    </a>
+    <a class="mod" href="efo/index.html">
+      <span class="st live">Live</span>
+      <span class="mc">EFO</span>
+      <h3>Excess Fare Office</h3>
+      <p>All 7 case types working — over-travel with fare-difference + fine, Over-Travel Ticket, releases, disputes · fare and fine reported apart · shares the BOS ledger</p>
+    </a>
+    <a class="mod" href="bos/index.html">
+      <span class="st live">Live</span>
+      <span class="mc">BOS</span>
+      <h3>Back Office Console</h3>
+      <p>Login + 10 working pages · add / edit / delete persisted in this browser · role-aware (auditor is read-only) · every change lands in the audit trail</p>
+    </a>
+    <div class="mod">
+      <span class="st next">Queued</span>
+      <span class="mc">ECU</span>
+      <h3>Gate Lane Display</h3>
+      <p>Full-bleed lane states · pass / refuse · 24 refusal reasons</p>
+    </div>
+    <div class="mod">
+      <span class="st next">Queued</span>
+      <span class="mc">WP · APP</span>
+      <h3>Web Portal &amp; Mobile App</h3>
+      <p>Phase 2 · advance booking · booking codes</p>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Ground rules for every module:</b> the revised System Flow (KIS-VRAFC-FLOW-001) governs scope;
+    fares, GST rate, group size and timers are placeholders held as configuration;
+    Hindi and English are designed together from the first screen; green/red are reserved
+    for gate pass/refuse semantics and are never used as brand colour.
+  </div>
+
+  <div class="meta">
+    <span>One design system: warm mist · deep brown · amber</span>
+    <span>Type: Poppins + Noto Sans (full Devanagari)</span>
+    <span>Static HTML/CSS/JS — no build, no backend</span>
+  </div>
+</div>
+
+</body>
+</html>
