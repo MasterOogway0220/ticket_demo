@@ -241,17 +241,6 @@ form.pinmode .pm-cred { display: inline; }
 }
 .tp-issued { border-radius: 18px; }
 
-.tsteps { display: flex; align-items: center; gap: 10px; margin: 2px 4px 20px; }
-.tsteps i { flex: 1; border-top: 2px dashed #ecdcc4; }
-.tstep { display: flex; align-items: center; gap: 9px; font-size: 13.5px; font-weight: 600; color: #a1907d; }
-.tstep em { font-style: normal; }
-.tstep span {
-  width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
-  background: #fff; border: 2px solid #e3d5c2; color: #a1907d; font-weight: 700;
-}
-.tstep.on { color: var(--t-deep); }
-.tstep.on span { background: var(--t-grad); border-color: transparent; color: #fff; box-shadow: 0 4px 12px rgba(234, 88, 12, .35); }
-
 .salewrap { display: grid; grid-template-columns: 1.55fr 1fr; gap: 18px; align-items: start; }
 .sale-left { min-width: 0; }
 .flabel { margin: 18px 0 8px; font-size: 14px; font-weight: 700; color: var(--t-ink); }
@@ -418,8 +407,6 @@ form.pinmode .pm-cred { display: inline; }
   .th-status { margin-left: auto; min-width: 0; }
   .salewrap { grid-template-columns: 1fr; }
   .pickrow.dests { grid-template-columns: 1fr 1fr; }
-  .tsteps { flex-wrap: wrap; }
-  .tsteps i { display: none; }
   .tquick { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 560px) {
@@ -457,8 +444,6 @@ form.pinmode .pm-cred { display: inline; }
   .tfoot { padding: 8px 24px; }
   .tframe { margin: 14px auto 12px; }
   .ttab { height: 52px; }
-  .tsteps { margin-bottom: 14px; }
-  .tstep span { width: 30px; height: 30px; }
 }
 /* small laptops (short inner heights): everything, including the demo
    chip, must fit with zero scroll — decoration yields to fit */
