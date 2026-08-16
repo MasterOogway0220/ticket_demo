@@ -57,7 +57,19 @@ function buildDevices() {
     dev(s, `${s}-EFO-01`, 'EXCESS_FARE');
     dev(s, `${s}-SRV-01`, 'STATION_SERVER');
   }
-  /* the one device that has reported: VCT-TOM-01 */
+  /* the estate is commissioned and reporting — the ops feed shows every
+     station selling, so the devices behind it are active with heartbeats */
+  const hex = (str) => { let h = 0; for (const c of str) h = ((h << 5) - h + c.charCodeAt(0)) | 0; return (h >>> 0).toString(16).padStart(8, '0'); };
+  d.forEach((x, i) => {
+    x.status = 'active';
+    x.cert = hex(x.code) + hex(x.code + ':crt') + hex(':crt' + x.code);
+    x.fareV = 1; x.hotlistV = 1;
+    x.lastSeen = Date.now() - (((i * 37) % 280) + 5) * 1000;
+  });
+  const mt = d.find(x => x.code === 'VDP-TVM-02'); mt.status = 'maintenance'; mt.lastSeen = Date.now() - 26 * 3600e3;
+  const ft = d.find(x => x.code === 'RYT-ECU-X02'); ft.status = 'faulty'; ft.lastSeen = Date.now() - 3 * 3600e3;
+
+  /* the freshest heartbeat: VCT-TOM-01 */
   const t = d.find(x => x.code === 'VCT-TOM-01');
   t.fareV = 1; t.lastSeen = Date.now() - 4 * 60000; t.appVersion = '0.1.0'; t.clockSkewMs = -2;
   return d;
@@ -182,10 +194,47 @@ const CONFIG = [
 ];
 
 /* ---------- seed DB ---------- */
+
+/* ---------- PLACEHOLDER daily operations series (35 days) ----------
+   Deterministic per (date, station) so every browser sees the same
+   figures. The demo stand-in for the reporting plane; amounts in
+   paise, GST-inclusive. Today is a part-day (05:00 to now). */
+function buildOps() {
+  const BASE = { VCT: { t: 1900, f: 11800 }, VDP: { t: 310, f: 7900 }, RYT: { t: 540, f: 9900 }, GDC: { t: 1650, f: 11400 } };
+  const rnd = (seed) => {
+    let h = 0; for (const c of seed) h = ((h << 5) - h + c.charCodeAt(0)) | 0;
+    h ^= h << 13; h ^= h >>> 17; h ^= h << 5;
+    return ((h >>> 0) % 1000) / 1000;
+  };
+  const key = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const frac = Math.min(1, Math.max(0.05, (now.getHours() + now.getMinutes() / 60 - 5) / 16));
+  const out = [];
+  for (let i = 34; i >= 0; i--) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const k = key(d), dow = d.getDay();
+    const wk = (dow === 0 || dow === 6) ? 1.38 : dow === 1 ? 0.88 : 1;
+    const part = i === 0 ? frac : 1;
+    for (const code of ['VCT', 'VDP', 'RYT', 'GDC']) {
+      const b = BASE[code];
+      const n1 = rnd(k + code), n2 = rnd(code + k);
+      const total = Math.round(b.t * wk * (0.88 + n1 * 0.24) * part);
+      const tomT = Math.round(total * (0.68 + n2 * 0.1)), tvmT = total - tomT;
+      const fare = Math.round(b.f * (0.94 + n2 * 0.12));
+      out.push({ date: k, code,
+        tom: { tickets: tomT, grossPaise: tomT * fare },
+        tvm: { tickets: tvmT, grossPaise: tvmT * Math.round(fare * 0.93) },
+        ncmcTaps: Math.round(total * (0.09 + n1 * 0.05)) });
+    }
+  }
+  return out;
+}
+
 function seedDB() {
   const now = Date.now();
   return {
-    v: 3,
+    v: 7,
     stations: STN.map(s => ({ ...s })),
     devices: buildDevices(),
     products: PRODUCTS.map(p => ({ ...p })),
@@ -208,6 +257,43 @@ function seedDB() {
     ],
     users: USERS.map(u => ({ ...u })),
     approvals: [
+      { id: 'ap8', requestRef: 'APR-2026-000008', operation: 'fare_version.publish', entityType: 'fare_version',
+        summary: 'Publish fare version 4 ("UI parity demo revision") with 24 rules, effective 2026-09-01T00:00:00+05:30',
+        payload: { effectiveFrom: '2026-09-01T00:00:00+05:30', fareVersionId: 'fv4' },
+        amountPaise: null, risk: 'critical', status: 'pending',
+        maker: 'checker.dev', makerDisplay: 'Dev Checker',
+        makerReason: 'Fare revision agreed at the January fare committee; publishing for the new quarter',
+        madeAt: now - 9 * 3600e3, expiresAt: now + 6.6 * 86400e3, checker: null, checkerDisplay: null, checkerReason: null, decidedAt: null },
+      { id: 'ap6', requestRef: 'APR-2026-000006', operation: 'user.role_grant', entityType: 'staff_user',
+        summary: 'Grant EXCESS_FARE_OFFICER at RYT to tom.ryt.dev',
+        payload: { username: 'tom.ryt.dev', role: 'EXCESS_FARE_OFFICER', station: 'RYT' },
+        amountPaise: null, risk: 'high', status: 'pending',
+        maker: 'finance.dev', makerDisplay: 'Dev Finance Officer',
+        makerReason: 'Rath Yatra needs excess-fare cover on the evening shift; operator already works that counter',
+        madeAt: now - 26 * 3600e3, expiresAt: now + 5.9 * 86400e3, checker: null, checkerDisplay: null, checkerReason: null, decidedAt: null },
+      { id: 'ap5', requestRef: 'APR-2026-000005', operation: 'hotlist.whitelist_override', entityType: 'hotlist_entry',
+        summary: 'Take NCMC-TOKEN-91ac04 off the hotlist',
+        payload: { cardReference: 'NCMC-TOKEN-91ac04' },
+        amountPaise: null, risk: 'critical', status: 'applied',
+        maker: 'checker.dev', makerDisplay: 'Dev Checker',
+        makerReason: 'Card was blocked on a mistaken report; the passenger produced the card and ID at the counter',
+        madeAt: now - 3 * 86400e3, expiresAt: now - 2 * 86400e3, checker: 'admin.dev', checkerDisplay: 'Dev Administrator',
+        checkerReason: 'Verified with the counter log for that shift', decidedAt: now - 2.7 * 86400e3 },
+      { id: 'ap4', requestRef: 'APR-2026-000004', operation: 'device.decommission', entityType: 'device',
+        summary: 'Decommission VDP-TVM-02 (kiosk, Vidyapith)',
+        payload: { deviceCode: 'VDP-TVM-02' },
+        amountPaise: null, risk: 'high', status: 'rejected',
+        maker: 'station.dev', makerDisplay: 'Dev Station Controller',
+        makerReason: 'Kiosk repeatedly jams on printing; proposing removal until the vendor replaces the cutter',
+        madeAt: now - 6 * 86400e3, expiresAt: now - 5 * 86400e3, checker: 'admin.dev', checkerDisplay: 'Dev Administrator',
+        checkerReason: 'Repair visit is booked; keep it registered and set it to maintenance instead', decidedAt: now - 5.6 * 86400e3 },
+      { id: 'ap3', requestRef: 'APR-2026-000003', operation: 'promotion.publish', entityType: 'promotion',
+        summary: 'Publish "Kartik Purnima weekend" 10% promotion on SINGLE_JOURNEY',
+        payload: { promotionCode: 'KARTIK10' },
+        amountPaise: null, risk: 'high', status: 'expired',
+        maker: 'finance.dev', makerDisplay: 'Dev Finance Officer',
+        makerReason: 'Festival footfall promotion agreed with the operator',
+        madeAt: now - 9 * 86400e3, expiresAt: now - 2 * 86400e3, checker: null, checkerDisplay: null, checkerReason: null, decidedAt: null },
       { id: 'ap7', requestRef: 'APR-2026-000007', operation: 'fare_version.publish', entityType: 'fare_version',
         summary: 'Publish fare version 4 ("UI parity demo revision") with 24 rules, effective 2026-09-01T00:00:00+05:30',
         payload: { effectiveFrom: '2026-09-01T00:00:00+05:30', fareVersionId: 'fv4' },
@@ -224,6 +310,7 @@ function seedDB() {
     incidents: [],
     hotlist: [],
     efCases: [],
+    opsDaily: buildOps(),
     labels: buildLabels(),
     config: CONFIG.map(c => ({ ...c })),
     audit: [
@@ -241,7 +328,7 @@ const store = {
   load() {
     try {
       const raw = localStorage.getItem(DB_KEY);
-      if (raw) { this.db = JSON.parse(raw); if (this.db.v === 3) return; }
+      if (raw) { this.db = JSON.parse(raw); if (this.db.v === 7) return; }
     } catch (e) { /* fall through to reseed */ }
     this.db = seedDB(); this.save();
   },
@@ -291,4 +378,273 @@ function fareQuote(product, from, to, qty) {
     taxable: per.taxable * qty, cgst: per.cgst * qty, sgst: per.sgst * qty, gross: per.gross * qty,
     perGross: per.gross, rule: r, version: v,
   };
+}
+
+/* ============================================================ REPORTS
+   BOS-RP-01. The catalogue mirrors the Back Office report registry — same
+   ids, categories, permissions, parameters and columns — so a report added
+   there shows up here without this screen learning anything about it.
+
+   Rows are read from opsDaily — the same 35-day feed the dashboard totals —
+   rather than seeded again here, so a figure in a report and the same figure
+   on the dashboard cannot disagree. What the demo has no table for at all
+   (shifts, journeys) is derived from that feed with a fixed per-date factor:
+   stable across re-runs, and consistent between reports. The variance rows
+   are the settlement rows that did not balance, and the tax documents total
+   back to the takings they were raised against. */
+
+const REPORTS = [
+  { id: 'daily-takings', title: 'Daily takings by station', category: 'revenue', permission: 'reconciliation.read',
+    description: 'What each station took on each day, split by how passengers paid, net of refunds authorised against those sales.',
+    requirements: ['BOS-RP-01'],
+    parameters: [{ name: 'from', label: 'From', kind: 'date', required: true }, { name: 'to', label: 'To', kind: 'date', required: true }, { name: 'stationId', label: 'Station', kind: 'station', required: false }],
+    columns: [{ key: 'business_date', label: 'Business date' }, { key: 'station_code', label: 'Station' }, { key: 'sales_count', label: 'Sales' }, { key: 'cash_paise', label: 'Cash (paise)' }, { key: 'non_cash_paise', label: 'Non-cash (paise)' }, { key: 'refunded_paise', label: 'Refunded (paise)' }, { key: 'net_paise', label: 'Net (paise)' }] },
+
+  { id: 'shift-settlement', title: 'Shift settlement', category: 'reconciliation', permission: 'reconciliation.read',
+    description: 'Every shift, what its drawer should have held and what was counted. The variance column is signed: negative is short.',
+    requirements: ['BOS-RP-01'],
+    parameters: [{ name: 'from', label: 'From', kind: 'date', required: true }, { name: 'to', label: 'To', kind: 'date', required: true }, { name: 'stationId', label: 'Station', kind: 'station', required: false }],
+    columns: [{ key: 'business_date', label: 'Business date' }, { key: 'shift_ref', label: 'Shift' }, { key: 'station_code', label: 'Station' }, { key: 'operator', label: 'Operator' }, { key: 'opening_float_paise', label: 'Float (paise)' }, { key: 'expected_paise', label: 'Expected (paise)' }, { key: 'declared_paise', label: 'Declared (paise)' }, { key: 'variance_paise', label: 'Variance (paise)' }] },
+
+  { id: 'cash-variances', title: 'Cash variances and how they were settled', category: 'reconciliation', permission: 'reconciliation.read',
+    description: 'Drawers that did not balance, what was said about them, and whether the money came back or was written off.',
+    requirements: ['BOS-RP-01', 'BOS-RP-06'],
+    parameters: [{ name: 'from', label: 'From', kind: 'date', required: true }, { name: 'to', label: 'To', kind: 'date', required: true }, { name: 'stationId', label: 'Station', kind: 'station', required: false }],
+    columns: [{ key: 'case_ref', label: 'Case' }, { key: 'business_date', label: 'Business date' }, { key: 'station_code', label: 'Station' }, { key: 'variance_paise', label: 'Variance (paise)' }, { key: 'status', label: 'Status' }, { key: 'explanation', label: 'Explanation' }, { key: 'resolution_note', label: 'Resolution' }, { key: 'resolved_by', label: 'Resolved by' }] },
+
+  { id: 'gst-documents', title: 'Tax invoices and credit notes', category: 'statutory', permission: 'reconciliation.read',
+    description: 'The GST series in order, for a financial year. The sequence column should have no gaps; one would mean an invoice was issued and is missing.',
+    requirements: ['BOS-RP-06'],
+    parameters: [{ name: 'financialYear', label: 'Financial year', kind: 'financial_year', required: true }, { name: 'stationId', label: 'Station', kind: 'station', required: false }],
+    columns: [{ key: 'sequence_no', label: 'No.' }, { key: 'document_number', label: 'Document' }, { key: 'kind', label: 'Kind' }, { key: 'business_date', label: 'Business date' }, { key: 'station_code', label: 'Station' }, { key: 'taxable_paise', label: 'Taxable (paise)' }, { key: 'cgst_paise', label: 'CGST (paise)' }, { key: 'sgst_paise', label: 'SGST (paise)' }, { key: 'total_paise', label: 'Total (paise)' }] },
+
+  { id: 'incomplete-journeys', title: 'Journeys nobody finished', category: 'operations', permission: 'reconciliation.read',
+    description: 'Tickets that entered a gate and never left one, past the validity they were sold with.',
+    requirements: ['BOS-RP-01'],
+    parameters: [{ name: 'from', label: 'From', kind: 'date', required: true }, { name: 'to', label: 'To', kind: 'date', required: true }],
+    columns: [{ key: 'ticket_ref', label: 'Ticket' }, { key: 'sale_ref', label: 'Sale' }, { key: 'sold_on', label: 'Sold on' }, { key: 'entry_station', label: 'Entered at' }, { key: 'entered_at', label: 'Entry time' }, { key: 'ticket_state', label: 'State' }] },
+
+  { id: 'device-availability', title: 'Device availability', category: 'operations', permission: 'device.read',
+    description: 'Every device, when it was last heard from, and how far its clock has drifted. The ones that have never been heard from at all are listed first.',
+    requirements: ['BOS-RP-01'],
+    parameters: [{ name: 'stationId', label: 'Station', kind: 'station', required: false }],
+    columns: [{ key: 'device_code', label: 'Device' }, { key: 'device_type', label: 'Type' }, { key: 'station_code', label: 'Station' }, { key: 'status', label: 'Status' }, { key: 'last_seen_at', label: 'Last seen' }, { key: 'clock_skew_ms', label: 'Clock skew (ms)' }, { key: 'app_version', label: 'App version' }] },
+
+  { id: 'approval-decisions', title: 'Approvals and who decided them', category: 'audit', permission: 'audit.read',
+    description: 'Every maker-checker request in the period, what was asked for, who asked and who decided. The refused ones are the evidence the control does anything.',
+    requirements: ['BOS-RP-06'],
+    parameters: [{ name: 'from', label: 'From', kind: 'date', required: true }, { name: 'to', label: 'To', kind: 'date', required: true }],
+    columns: [{ key: 'request_ref', label: 'Request' }, { key: 'operation', label: 'Operation' }, { key: 'summary', label: 'Summary' }, { key: 'amount_paise', label: 'Amount (paise)' }, { key: 'status', label: 'Status' }, { key: 'maker', label: 'Raised by' }, { key: 'checker', label: 'Decided by' }, { key: 'decided_at', label: 'Decided' }] },
+];
+
+/* An ISO business date (yyyy-mm-dd) in IST, and the inclusive list between two. */
+const isoDate = (ts) => new Date(ts + 5.5 * 3600e3).toISOString().slice(0, 10);
+function datesBetween(from, to) {
+  const out = [];
+  const a = Date.parse(from + 'T00:00:00+05:30'), b = Date.parse(to + 'T00:00:00+05:30');
+  if (!Number.isFinite(a) || !Number.isFinite(b) || b < a) return out;
+  /* A range nobody would run interactively is capped rather than refused. */
+  for (let t = a, n = 0; t <= b && n < 120; t += 86400e3, n++) out.push(isoDate(t));
+  return out;
+}
+
+/* Stable 0..1 from a string. The same date and station always give the same
+   day, so re-running a report without changing anything does not change it. */
+function seedOf(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return ((h >>> 0) % 10000) / 10000;
+}
+
+/* One day's trading for one station, straight off the opsDaily feed. Days
+   outside the feed have no row, which is why a range beyond it reports
+   nothing rather than inventing a quiet day. */
+function dayTakings(date, code) {
+  const o = (store.db.opsDaily || []).find(x => x.date === date && x.code === code);
+  if (!o) return null;
+  const sales = o.tom.tickets + o.tvm.tickets;
+  const gross = o.tom.grossPaise + o.tvm.grossPaise;
+  /* The counter takes mostly cash and the kiosk mostly card and UPI, which
+     is what makes the shift settlement below worth looking at. */
+  const cash = Math.round(o.tom.grossPaise * 0.82) + Math.round(o.tvm.grossPaise * 0.15);
+  const refunded = seedOf('r' + date + code) < 0.25 ? Math.round(gross * 0.004) : 0;
+  return { date, code, sales, gross, cash, nonCash: gross - cash, refunded, net: gross - refunded };
+}
+
+const SHIFT_OPERATORS = ['tom.dev', 'tom.ryt.dev', 'station.dev'];
+
+/* Two shifts a day per station, derived from that day's takings so the
+   settlement and the takings agree with each other. */
+function dayShifts(date, code) {
+  const t = dayTakings(date, code);
+  if (!t) return [];
+  return [0, 1].map(i => {
+    const expected = Math.round(t.cash * (i === 0 ? 0.58 : 0.42));
+    const float = 200000;
+    const s = seedOf(date + code + i);
+    /* Most drawers balance. The ones that do not are the variance report. */
+    const variance = s < 0.78 ? 0 : Math.round((s - 0.78) * 40000) * (s < 0.9 ? -1 : 1);
+    return {
+      date, code, seq: i,
+      ref: 'SH-' + date.replace(/-/g, '') + '-' + code + '-' + (i + 1),
+      operator: SHIFT_OPERATORS[Math.floor(seedOf('o' + date + code + i) * SHIFT_OPERATORS.length)],
+      float, expected: expected + float, declared: expected + float + variance, variance,
+    };
+  });
+}
+
+const VARIANCE_EXPLANATIONS = [
+  'Change given from the operator’s own pocket during a card-terminal outage',
+  'Miscount at handover — counted twice, the second count stood',
+  'Note rejected by the deposit machine and re-counted the next morning',
+];
+const VARIANCE_RESOLUTIONS = [
+  'Recovered from the operator and banked',
+  'Written off under the counter-cash tolerance',
+  'Still open — awaiting the station controller',
+];
+
+/* Financial year 'yyyy-yy' to the dates it spans (1 April to 31 March). */
+function fyRange(fy) {
+  const m = /^(\d{4})-(\d{2})$/.exec(String(fy || '').trim());
+  if (!m) return null;
+  const start = Number(m[1]);
+  return { from: start + '-04-01', to: (start + 1) + '-03-31' };
+}
+
+/**
+ * Run one report.
+ *
+ * Returns { columns, rows, scope, truncated }, or null for an id that is not
+ * in the catalogue. Missing parameters yield no rows rather than an error —
+ * the screen decides what to say about that.
+ */
+function runReport(id, params) {
+  const def = REPORTS.find(r => r.id === id);
+  if (!def) return null;
+  const p = params || {};
+  const code = p.stationId || null;
+  const stations = (store.db.stations || STN).filter(s => !code || s.code === code);
+  const scope = code ? [code] : ['all'];
+  const rows = [];
+
+  if (id === 'device-availability') {
+    const never = [], seen = [];
+    for (const d of store.db.devices) {
+      if (code && d.station !== code) continue;
+      (d.lastSeen ? seen : never).push({
+        device_code: d.code, device_type: d.type, station_code: d.station, status: d.status,
+        last_seen_at: d.lastSeen ? fmtDT(d.lastSeen) : null,
+        clock_skew_ms: d.clockSkewMs == null ? null : d.clockSkewMs,
+        app_version: d.appVersion == null ? null : d.appVersion,
+      });
+    }
+    const byCode = (a, b) => String(a.device_code).localeCompare(String(b.device_code));
+    never.sort(byCode); seen.sort(byCode);
+    rows.push(...never, ...seen);        /* never heard from first, as the description promises */
+    return { columns: def.columns, rows, scope, truncated: false };
+  }
+
+  if (id === 'approval-decisions') {
+    const a0 = Date.parse(p.from + 'T00:00:00+05:30'), b0 = Date.parse(p.to + 'T23:59:59+05:30');
+    for (const a of store.db.approvals) {
+      const at = a.decidedAt || a.madeAt;
+      if (!(at >= a0 && at <= b0)) continue;
+      rows.push({
+        request_ref: a.requestRef, operation: a.operation, summary: a.summary,
+        amount_paise: a.amountPaise, status: a.status,
+        maker: a.makerDisplay || a.maker, checker: a.checkerDisplay || a.checker,
+        decided_at: a.decidedAt ? fmtDT(a.decidedAt) : null,
+      });
+    }
+    return { columns: def.columns, rows, scope, truncated: false };
+  }
+
+  if (id === 'gst-documents') {
+    const r = fyRange(p.financialYear);
+    if (!r) return { columns: def.columns, rows, scope, truncated: false };
+    const today = isoDate(Date.now());
+    const to = r.to < today ? r.to : today;      /* only the part of the year that has traded */
+    let seq = 0;
+    for (const date of datesBetween(r.from, to)) {
+      for (const s of stations) {
+        const t = dayTakings(date, s.code);
+        if (!t || t.sales === 0) continue;
+        const taxable = Math.round(t.gross / 1.18);
+        const cgst = Math.round((t.gross - taxable) / 2);
+        seq += 1;
+        rows.push({
+          sequence_no: seq, document_number: 'VRAFC/' + p.financialYear + '/' + String(seq).padStart(5, '0'),
+          kind: 'tax_invoice', business_date: date, station_code: s.code,
+          taxable_paise: taxable, cgst_paise: cgst, sgst_paise: t.gross - taxable - cgst, total_paise: t.gross,
+        });
+        if (t.refunded > 0) {
+          const cTax = Math.round(t.refunded / 1.18);
+          const cCgst = Math.round((t.refunded - cTax) / 2);
+          seq += 1;
+          rows.push({
+            sequence_no: seq, document_number: 'VRAFC/' + p.financialYear + '/' + String(seq).padStart(5, '0'),
+            kind: 'credit_note', business_date: date, station_code: s.code,
+            taxable_paise: cTax, cgst_paise: cCgst, sgst_paise: t.refunded - cTax - cCgst, total_paise: t.refunded,
+          });
+        }
+      }
+    }
+    return { columns: def.columns, rows, scope, truncated: rows.length > 500 };
+  }
+
+  const dates = datesBetween(p.from, p.to);
+
+  if (id === 'daily-takings') {
+    for (const date of dates) for (const s of stations) {
+      const t = dayTakings(date, s.code);
+      if (!t) continue;
+      rows.push({ business_date: date, station_code: s.code, sales_count: t.sales, cash_paise: t.cash, non_cash_paise: t.nonCash, refunded_paise: t.refunded, net_paise: t.net });
+    }
+  }
+
+  if (id === 'shift-settlement') {
+    for (const date of dates) for (const s of stations) for (const sh of dayShifts(date, s.code)) {
+      rows.push({ business_date: date, shift_ref: sh.ref, station_code: s.code, operator: sh.operator, opening_float_paise: sh.float, expected_paise: sh.expected, declared_paise: sh.declared, variance_paise: sh.variance });
+    }
+  }
+
+  if (id === 'cash-variances') {
+    let n = 0;
+    for (const date of dates) for (const s of stations) for (const sh of dayShifts(date, s.code)) {
+      if (sh.variance === 0) continue;
+      const pick = Math.floor(seedOf(sh.ref) * 3);
+      const open = pick === 2;
+      n += 1;
+      rows.push({
+        case_ref: 'CV-' + date.slice(0, 4) + '-' + String(n).padStart(6, '0'), business_date: date, station_code: s.code,
+        variance_paise: sh.variance, status: open ? 'pending' : 'approved',
+        explanation: VARIANCE_EXPLANATIONS[pick], resolution_note: open ? null : VARIANCE_RESOLUTIONS[pick],
+        resolved_by: open ? null : 'Dev Finance Officer',
+      });
+    }
+  }
+
+  if (id === 'incomplete-journeys') {
+    let n = 0;
+    for (const date of dates) for (const s of stations) {
+      const t = dayTakings(date, s.code);
+      if (!t) continue;
+      const count = Math.floor(t.sales * 0.0018 + seedOf('j' + date + s.code) * 2);   /* a few per thousand */
+      for (let i = 0; i < count; i++) {
+        n += 1;
+        const enteredAt = Date.parse(date + 'T00:00:00+05:30') + (7 + Math.floor(seedOf(date + s.code + i) * 12)) * 3600e3;
+        rows.push({
+          ticket_ref: 'TK-' + date.replace(/-/g, '') + '-' + String(n).padStart(5, '0'),
+          sale_ref: 'SL-' + date.replace(/-/g, '') + '-' + String(n).padStart(5, '0'),
+          sold_on: date, entry_station: s.code, entered_at: fmtDT(enteredAt), ticket_state: 'expired',
+        });
+      }
+    }
+  }
+
+  /* The real report caps its result set and says so rather than paging. */
+  const LIMIT = 500;
+  const truncated = rows.length > LIMIT;
+  return { columns: def.columns, rows: truncated ? rows.slice(0, LIMIT) : rows, scope, truncated };
 }

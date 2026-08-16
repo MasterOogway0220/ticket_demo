@@ -55,15 +55,31 @@ const NAV = [
   { label: 'Products',    id: 'products',  perm: 'product.read' },
   { label: 'Fares',       id: 'fares',     perm: 'fare.read' },
   { label: 'Excess fare', id: 'excess-fare', perm: 'excess_fare.read' },
+  { label: 'Reports',     id: 'reports',   perm: 'report.read' },
   { label: 'Alarms',      id: 'alarms',    perm: 'alarm.read' },
   { label: 'Hotlist',     id: 'hotlist',   perm: 'hotlist.read' },
-  { label: 'Labels',      id: 'labels',    perm: 'label.read' },
   { label: 'Approvals',   id: 'approvals', perm: 'approval.read' },
   { label: 'Users',       id: 'users',     perm: 'user.read' },
   { label: 'Audit trail', id: 'audit',     perm: 'audit.read' },
 ];
 
 /* ---------- shell ---------- */
+const KI = {
+  ticket: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4z"/><path d="M13 7v10" stroke-dasharray="2 3"/></svg>',
+  rupee: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12M6 8.5h12M6 4c4 0 7 2 7 6l-7 9.5"/><path d="M13 10H6"/></svg>',
+  station: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/></svg>',
+  tom: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="12" rx="2"/><path d="M7 7V5h10v2M3 12h18"/></svg>',
+  tvm: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><path d="M8.5 6.5h7v5h-7z"/><path d="M9 16h6"/></svg>',
+  srv: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>',
+  gate: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h6v6H9z"/></svg>',
+  entry: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3"/><path d="M14 8l4 4-4 4M18 12H9"/></svg>',
+  exit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/><path d="M10 8l-4 4 4 4M6 12h9"/></svg>',
+  appr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg>',
+  fare: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h4"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 4.5 5.5v5c0 4.6 3.1 8.4 7.5 10 4.4-1.6 7.5-5.4 7.5-10v-5z"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>',
+  done: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>',
+};
 const NAV_ICONS = {
   dashboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg>',
   stations: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/></svg>',
@@ -71,6 +87,7 @@ const NAV_ICONS = {
   products: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-7-7A2 2 0 0 1 3 12.2V5a2 2 0 0 1 2-2h7.2a2 2 0 0 1 1.4.6l7 7a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1" fill="currentColor" stroke="none"/></svg>',
   fares: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12M6 8.5h12M6 4c4 0 7 2 7 6l-7 9.5"/><path d="M13 10H6"/></svg>',
   'excess-fare': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4z"/></svg>',
+  reports: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 17v-3M12 17v-6M15 17v-4"/></svg>',
   alarms: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
   hotlist: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M5.5 5.5l13 13"/></svg>',
   labels: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3.5 12h17M12 3a14.5 14.5 0 0 1 0 18M12 3a14.5 14.5 0 0 0 0 18"/></svg>',
@@ -82,7 +99,8 @@ const NAV_GROUPS = [
   ['Overview', ['dashboard']],
   ['Network', ['stations', 'devices']],
   ['Commercial', ['products', 'fares', 'excess-fare']],
-  ['Operations', ['alarms', 'hotlist', 'labels']],
+  ['Reporting', ['reports']],
+  ['Operations', ['alarms', 'hotlist']],
   ['Governance', ['approvals', 'users', 'audit']],
 ];
 function renderNav(current) {
@@ -96,6 +114,7 @@ function renderNav(current) {
 }
 function setHeader(title, desc) {
   $('#pageTitle').textContent = title;
+  if ($('#pageSub')) $('#pageSub').textContent = '';
   const d = $('#pageDesc');
   if (d) { d.textContent = desc || ''; d.style.display = desc ? '' : 'none'; }
 }
@@ -103,6 +122,14 @@ function renderUserBox() {
   $('#topUserName').textContent = session.user.name;
   $('#topUserRoles').textContent = session.user.role;
   $('#roBadge').style.display = session.isReadOnly() ? '' : 'none';
+  const av = $('#tbAv');
+  if (av) av.textContent = session.user.name.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  const n = $('#tbBellN');
+  if (n) {
+    const open = store.db.approvals.filter(a => a.status === 'pending' && a.maker !== session.user.username).length
+      + store.db.alarms.filter(a => !a.acknowledgedAt).length;
+    n.textContent = open; n.style.display = open ? '' : 'none';
+  }
 }
 
 /* ---------- router ---------- */
@@ -134,41 +161,290 @@ window.addEventListener('hashchange', route);
 /* ============================================================ PAGES */
 const PAGES = {};
 
-/* ---------- Dashboard ---------- */
+/* ---------- Dashboard — role-aware numeric analysis with a period filter ---------- */
+const DASH = { range: 'today', date: null, station: 'all' };
+const dayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+function dashRange() {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const days = [];
+  const push = (from, to) => { for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) days.push(dayKey(d)); };
+  const fmt = (d) => d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  let label = 'today';
+  switch (DASH.range) {
+    case 'yesterday': { const y = new Date(today); y.setDate(y.getDate() - 1); push(y, y); label = `yesterday, ${fmt(y)}`; break; }
+    case 'week': { const s = new Date(today); s.setDate(s.getDate() - ((s.getDay() + 6) % 7)); push(s, today); label = `this week, ${fmt(s)} to ${fmt(today)}`; break; }
+    case '7d': { const s = new Date(today); s.setDate(s.getDate() - 6); push(s, today); label = `last 7 days, ${fmt(s)} to ${fmt(today)}`; break; }
+    case 'month': { const s = new Date(today.getFullYear(), today.getMonth(), 1); push(s, today); label = `${today.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}, to date`; break; }
+    case '30d': { const s = new Date(today); s.setDate(s.getDate() - 29); push(s, today); label = `last 30 days, ${fmt(s)} to ${fmt(today)}`; break; }
+    case 'date': { const d = DASH.date ? new Date(DASH.date + 'T00:00:00') : today; push(d, d); label = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); break; }
+    default: push(today, today); label = 'today, 05:00 to now';
+  }
+  return { days: new Set(days), label };
+}
+
 PAGES.dashboard = () => {
-  setHeader('Operational overview', 'Live position across the four stations. Everything shown here is read from the Back Office in real time.');
+  setHeader('Operational overview');
+  if ($('#pageSub')) $('#pageSub').textContent = "Real-time summary of today's operations";
   const db = store.db;
-  const gates = db.devices.filter(d => d.type === 'ECU');
-  const online = gates.filter(g => g.status === 'active').length;
-  const actionable = db.approvals.filter(a => a.status === 'pending' && a.maker !== session.user.username && session.can('approval.decide'));
+  const me = session.user;
+  const num = (n) => n.toLocaleString('en-IN');
+  const stat = (v, l) => `<div class="st"><b>${v}</b><span>${l}</span></div>`;
+  const { days, label } = dashRange();
+
+  /* period aggregation of the seeded reporting feed */
+  const rows = (db.opsDaily || []).filter(r => days.has(r.date));
+  const agg = {};
+  for (const r of rows) {
+    const a = agg[r.code] || (agg[r.code] = { code: r.code, tomT: 0, tomG: 0, tvmT: 0, tvmG: 0, taps: 0 });
+    a.tomT += r.tom.tickets; a.tomG += r.tom.grossPaise;
+    a.tvmT += r.tvm.tickets; a.tvmG += r.tvm.grossPaise;
+    a.taps += r.ncmcTaps;
+  }
+  const stAgg = db.stations.slice().sort((a, b) => a.seq - b.seq).map(s => agg[s.code]).filter(Boolean);
+  const sum = (f) => stAgg.reduce((a, o) => a + f(o), 0);
+  const tomT = sum(o => o.tomT), tvmT = sum(o => o.tvmT);
+  const tomG = sum(o => o.tomG), tvmG = sum(o => o.tvmG);
+  const tickets = tomT + tvmT, gross = tomG + tvmG, taps = sum(o => o.taps);
+  const taxable = Math.round(gross / 1.18);
+  const cgst = Math.round((gross - taxable) / 2), sgst = gross - taxable - cgst;
+
+  /* excess-fare cases within the period */
+  const dayList = [...days].sort();
+  const startMs = new Date(dayList[0] + 'T00:00:00').getTime();
+  const endMs = new Date(dayList[dayList.length - 1] + 'T23:59:59').getTime();
+  const efIn = db.efCases.filter(c => c.openedAt >= startMs && c.openedAt <= endMs);
+  const efFare = efIn.reduce((a, c) => a + (c.farePaise || 0), 0);
+  const efFine = efIn.reduce((a, c) => a + (c.finePaise || 0), 0);
+  const efWaived = efIn.filter(c => c.outcome === 'waived').length;
+
+  /* point-in-time facts */
+  const byType = (t, st) => db.devices.filter(d => d.type === t && (!st || d.station === st)).length;
+  const online = (st) => db.devices.filter(d => (!st || d.station === st) && d.lastSeen && Date.now() - d.lastSeen < 300e3).length;
+  const devTotal = (st) => db.devices.filter(d => !st || d.station === st).length;
+  const actionable = db.approvals.filter(a => a.status === 'pending' && a.maker !== me.username && session.can('approval.decide'));
+  const pendingAll = db.approvals.filter(a => a.status === 'pending').length;
+  const uBy = (s) => db.users.filter(u => u.status === s).length;
+  const alarmsOpen = (st) => db.alarms.filter(a => !a.acknowledgedAt && (!st || a.stationCode === st)).length;
   const canAudit = session.can('audit.verify');
   const fares = db.fareVersions.slice().sort((a, b) => b.versionNo - a.versionNo).slice(0, 5);
+  const stName = (c) => (db.stations.find(s => s.code === c) || { en: c }).en;
 
-  $('#content').innerHTML = `
+  /* ── section builders ─────────────────────────────────────── */
+  const filterBar = () => `
+    <div class="dashfilter">
+      <span>Showing</span>
+      <select id="dashRange">
+        <option value="today" ${DASH.range === 'today' ? 'selected' : ''}>Today</option>
+        <option value="yesterday" ${DASH.range === 'yesterday' ? 'selected' : ''}>Yesterday</option>
+        <option value="week" ${DASH.range === 'week' ? 'selected' : ''}>This week</option>
+        <option value="7d" ${DASH.range === '7d' ? 'selected' : ''}>Last 7 days</option>
+        <option value="month" ${DASH.range === 'month' ? 'selected' : ''}>This month</option>
+        <option value="30d" ${DASH.range === '30d' ? 'selected' : ''}>Last 30 days</option>
+        <option value="date" ${DASH.range === 'date' ? 'selected' : ''}>On a date…</option>
+      </select>
+      <input type="date" id="dashDate" value="${DASH.date || dayKey(new Date())}" ${DASH.range === 'date' ? '' : 'style="display:none"'}>
+      ${session.can('report.read') ? `<select id="dashStation">
+        <option value="all" ${DASH.station === 'all' ? 'selected' : ''}>All stations</option>
+        ${db.stations.slice().sort((a, b) => a.seq - b.seq).map(s => `<option value="${s.code}" ${DASH.station === s.code ? 'selected' : ''}>${s.code} — ${esc(s.en)}</option>`).join('')}
+      </select>` : ''}
+      <span class="hspace"></span>
+      <span class="df-pill">${KI.clock}${esc(label)}</span>
+      <button class="df-refresh" id="dashRefresh" aria-label="Refresh figures">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-.6 4"/><path d="M20 4.5V11h-6"/></svg>
+      </button>
+    </div>`;
+
+  const opsRow = (o) => `<tr><td>${esc(stName(o.code))} ${mono(o.code)}</td>
+      <td class="num">${num(o.tomT)}</td><td class="num">${fmtP(o.tomG)}</td>
+      <td class="num">${num(o.tvmT)}</td><td class="num">${fmtP(o.tvmG)}</td>
+      <td class="num">${num(o.taps)}</td>
+      <td class="num">${num(o.tomT + o.tvmT)}</td>
+      <td class="num">${fmtP(o.tomG + o.tvmG)}</td></tr>`;
+  const opsTable = () => stAgg.length === 0
+    ? `<div class="card"><header><h2>Operations by station</h2></header><div class="empty">No operations data is seeded for this period.</div></div>`
+    : `<div class="card">
+      <header><h2>Operations by station</h2><div class="hspace"></div><span class="chip dim">${esc(label)}</span></header>
+      <div class="tscroll"><table class="grid">
+        <thead><tr><th>Station</th><th class="num">ToM tickets</th><th class="num">ToM collected</th><th class="num">TVM tickets</th><th class="num">TVM collected</th><th class="num">NCMC taps</th><th class="num">Total tickets</th><th class="num">Total collected</th></tr></thead>
+        <tbody>${stAgg.map(opsRow).join('')}</tbody>
+        <tfoot><tr><td>All stations</td><td class="num">${num(tomT)}</td><td class="num">${fmtP(tomG)}</td><td class="num">${num(tvmT)}</td><td class="num">${fmtP(tvmG)}</td><td class="num">${num(taps)}</td><td class="num">${num(tickets)}</td><td class="num">${fmtP(gross)}</td></tr></tfoot>
+      </table></div>
+    </div>`;
+
+  const revenueGrid = () => `
+    <div class="card">
+      <header><h2>Revenue analysis</h2><div class="hspace"></div><span class="chip dim">${esc(label)}</span></header>
+      <div class="statgrid">
+        ${stat(fmtP(gross), 'Gross collected')}
+        ${stat(fmtP(taxable), 'Taxable value')}
+        ${stat(fmtP(cgst), 'CGST @ 9.00%')}
+        ${stat(fmtP(sgst), 'SGST @ 9.00%')}
+        ${stat(fmtP(tickets ? Math.round(gross / tickets) : 0), 'Average fare per ticket')}
+        ${stat(tickets ? (tomT * 100 / tickets).toFixed(1) + '%' : '—', 'Sold at the counter (ToM)')}
+        ${stat(tickets ? (tvmT * 100 / tickets).toFixed(1) + '%' : '—', 'Sold at kiosks (TVM)')}
+        ${stat(fmtP(efFare), 'Excess fare collected')}
+        ${stat(fmtP(efFine), 'Fines collected')}
+        ${stat(num(efWaived), 'Cases waived')}
+      </div>
+    </div>`;
+
+  const estateRow = (s) => `<tr><td>${esc(s.en)} ${mono(s.code)}</td>
+      <td class="num">${byType('ECU', s.code)}</td><td class="num">${byType('TOM', s.code)}</td><td class="num">${byType('TVM', s.code)}</td>
+      <td class="num">${byType('EXCESS_FARE', s.code)}</td><td class="num">${byType('STATION_SERVER', s.code)}</td><td class="num">${byType('HANDHELD', s.code)}</td>
+      <td class="num">${devTotal(s.code)}</td><td class="num">${online(s.code)}</td>
+      ${session.can('user.read') ? `<td class="num">${db.users.filter(u => u.station === s.code).length}</td>` : ''}</tr>`;
+  const estateTable = () => `
+    <div class="card">
+      <header><h2>Network estate</h2><div class="hspace"></div><span class="chip dim">${num(db.devices.length)} devices · ${num(db.stations.length)} stations</span></header>
+      <div class="tscroll"><table class="grid">
+        <thead><tr><th>Station</th><th class="num">Gates</th><th class="num">Counters</th><th class="num">Kiosks</th><th class="num">EFO</th><th class="num">Servers</th><th class="num">Handhelds</th><th class="num">Total</th><th class="num">Reporting</th>${session.can('user.read') ? '<th class="num">Staff</th>' : ''}</tr></thead>
+        <tbody>${db.stations.slice().sort((a, b) => a.seq - b.seq).map(estateRow).join('')}</tbody>
+        <tfoot><tr><td>All stations</td><td class="num">${byType('ECU')}</td><td class="num">${byType('TOM')}</td><td class="num">${byType('TVM')}</td><td class="num">${byType('EXCESS_FARE')}</td><td class="num">${byType('STATION_SERVER')}</td><td class="num">${byType('HANDHELD')}</td><td class="num">${num(db.devices.length)}</td><td class="num">${online()}</td>${session.can('user.read') ? `<td class="num">${num(db.users.length)}</td>` : ''}</tr></tfoot>
+      </table></div>
+    </div>`;
+
+  const smartGrid = () => {
+    const scope = DASH.station === 'all' ? null : DASH.station;
+    const dIn = db.devices.filter(d => !scope || d.station === scope);
+    const act = (t) => { const l = dIn.filter(d => d.type === t); return { on: l.filter(x => x.status === 'active').length, total: l.length }; };
+    const tom = act('TOM'), tvm = act('TVM'), srv = act('STATION_SERVER'), ecu = act('ECU');
+    const entry = dIn.filter(d => d.type === 'ECU' && d.dir === 'entry').length;
+    const exit = dIn.filter(d => d.type === 'ECU' && d.dir === 'exit').length;
+    const o = scope ? (agg[scope] || { tomT: 0, tomG: 0, tvmT: 0, tvmG: 0, taps: 0 }) : { tomT, tomG, tvmT, tvmG, taps };
+    const t = o.tomT + o.tvmT, g = o.tomG + o.tvmG;
+    const stIn = db.stations.filter(s => !scope || s.code === scope);
+    const stOn = stIn.filter(s => s.status === 'active').length;
+    /* same window, shifted back by its own length — a like-for-like comparison */
+    const prevDays = new Set(dayList.map(k => { const d = new Date(k + 'T00:00:00'); d.setDate(d.getDate() - dayList.length); return dayKey(d); }));
+    const pRows = (db.opsDaily || []).filter(r => prevDays.has(r.date) && (!scope || r.code === scope));
+    /* today is a part-day, so the day before is scaled to the same elapsed slice */
+    const nowH = new Date().getHours() + new Date().getMinutes() / 60;
+    const frac = DASH.range === 'today' ? Math.min(1, Math.max(0.05, (nowH - 5) / 16)) : 1;
+    const pT = pRows.reduce((a, r) => a + r.tom.tickets + r.tvm.tickets, 0) * frac;
+    const pG = pRows.reduce((a, r) => a + r.tom.grossPaise + r.tvm.grossPaise, 0) * frac;
+    const vsWhat = DASH.range === 'today' ? 'vs same time yesterday' : 'vs previous period';
+    const trend = (now, before) => {
+      if (!before) return '';
+      const d = (now - before) / before * 100;
+      const up = d >= 0;
+      return `<span class="kpi-m ${up ? 'up' : 'down'}">${up ? '↗' : '↘'} ${Math.abs(d).toFixed(1)}% ${vsWhat}</span>`;
+    };
+    const dot = (on, total) => total - on
+      ? `<span class="kpi-m warn">${total - on} inactive</span>`
+      : `<span class="kpi-m ok">100% operational</span>`;
+    const live = `<span class="kpi-m ok">Live</span>`;
+    const kpi = (i, icon, value, label, meta) => `<div class="kpi k${i}">
+      <span class="kpi-ic">${icon}</span><b>${value}</b><span class="kpi-l">${label}</span>${meta || ''}</div>`;
+    return `
+    <div class="kpigrid">
+      ${kpi(1, KI.ticket, num(t), 'Tickets issued', trend(t, pT))}
+      ${kpi(2, KI.rupee, fmtP(g), 'Amount collected', trend(g, pG))}
+      ${kpi(3, KI.station, `${stOn} / ${stIn.length}`, 'Stations active', dot(stOn, stIn.length))}
+      ${kpi(4, KI.tom, `${tom.on} / ${tom.total}`, 'ToM counters active', dot(tom.on, tom.total))}
+      ${kpi(5, KI.tvm, `${tvm.on} / ${tvm.total}`, 'TVM kiosks active', dot(tvm.on, tvm.total))}
+      ${kpi(6, KI.srv, `${srv.on} / ${srv.total}`, 'Station servers active', dot(srv.on, srv.total))}
+      ${kpi(7, KI.entry, num(entry), 'Entry gates', live)}
+      ${kpi(8, KI.exit, num(exit), 'Exit gates', live)}
+    </div>`;
+  };
+
+  const governanceGrid = (title) => `
+    <div class="card">
+      <header><h2>${title || 'Governance &amp; integrity'}</h2></header>
+      <div class="statgrid">
+        ${session.can('approval.read') ? stat(num(pendingAll), 'Approvals pending') + stat(num(actionable.length), 'For your decision') : ''}
+        ${session.can('user.read') ? stat(num(uBy('active')), 'Active staff accounts') + stat(num(uBy('invited')), 'Invited, not yet signed in') + stat(num(uBy('suspended')), 'Suspended accounts') : ''}
+        ${session.can('fare.read') ? stat(num(db.fareVersions.filter(v => v.status === 'published').length), 'Fare versions published') + stat(num(db.fareVersions.filter(v => v.status === 'pending_approval').length), 'Fare versions awaiting approval') : ''}
+        ${session.can('alarm.read') ? stat(num(alarmsOpen()), 'Alarms unacknowledged') : ''}
+        ${session.can('hotlist.read') ? stat(num(db.hotlist.length), 'Hotlist entries') : ''}
+        ${session.can('audit.read') ? stat(num(db.audit.length), 'Audit entries' + (canAudit ? ' — chain intact' : '')) : ''}
+      </div>
+    </div>`;
+
+  const stationScope = (code) => {
+    const o = agg[code] || { tomT: 0, tomG: 0, tvmT: 0, tvmG: 0, taps: 0 };
+    const t = o.tomT + o.tvmT, g = o.tomG + o.tvmG;
+    return `
     <div class="tiles-b">
-      <div class="tile-b"><div class="ic">${I.device}</div><div class="tv"><b>${gates.length}</b><span>Gate ECUs — Registered across all stations</span></div></div>
-      <div class="tile-b"><div class="ic">${I.station}</div><div class="tv"><b>${gates.length ? `${online} / ${gates.length}` : '—'}</b><span>Gates active — Commissioned and reporting</span></div></div>
-      <div class="tile-b"><div class="ic">${I.appr}</div><div class="tv"><b>${session.can('approval.read') ? actionable.length : '—'}</b><span>Awaiting your decision — Approvals you may act on</span></div></div>
-      <div class="tile-b"><div class="ic">${I.audit}</div><div class="tv"><b>${canAudit ? 'Intact' : '—'}</b><span>Audit chain — ${canAudit ? `${db.audit.length} entries verified in 4 ms` : 'Requires audit.verify'}</span></div></div>
+      <div class="tile-b"><div class="ic">${I.rupee}</div><div class="tv"><b>${num(t)}</b><span>Tickets at ${esc(stName(code))} — ${esc(label)}</span></div></div>
+      <div class="tile-b"><div class="ic">${I.rupee}</div><div class="tv"><b>${fmtP(g)}</b><span>Collected at this station — Gross, GST-inclusive</span></div></div>
+      ${session.can('device.read') ? `<div class="tile-b"><div class="ic">${I.device}</div><div class="tv"><b>${online(code)} / ${devTotal(code)}</b><span>Devices reporting — Heartbeat within 5 minutes</span></div></div>` : ''}
+      ${session.can('alarm.read') ? `<div class="tile-b"><div class="ic">${I.appr}</div><div class="tv"><b>${num(alarmsOpen(code))}</b><span>Alarms unacknowledged — At this station</span></div></div>` : ''}
     </div>
+    <div class="card">
+      <header><h2>${esc(stName(code))} — sales analysis</h2><div class="hspace"></div><span class="chip dim">${esc(label)}</span></header>
+      <div class="statgrid">
+        ${stat(num(o.tomT), 'Counter tickets (ToM)')}
+        ${stat(fmtP(o.tomG), 'Counter collected')}
+        ${stat(num(o.tvmT), 'Kiosk tickets (TVM)')}
+        ${stat(fmtP(o.tvmG), 'Kiosk collected')}
+        ${stat(num(o.taps), 'NCMC taps at the gates')}
+        ${stat(fmtP(t ? Math.round(g / t) : 0), 'Average fare per ticket')}
+        ${stat(t ? (o.tomT * 100 / t).toFixed(1) + '%' : '—', 'Counter share')}
+      </div>
+    </div>
+    ${session.can('device.read') ? `
+    <div class="card">
+      <header><h2>${esc(stName(code))} — equipment</h2></header>
+      <div class="statgrid">
+        ${stat(num(byType('ECU', code)), 'Gate controllers')}
+        ${stat(num(byType('TOM', code)), 'Ticket counters')}
+        ${stat(num(byType('TVM', code)), 'Kiosks')}
+        ${stat(num(byType('EXCESS_FARE', code)), 'Excess fare terminals')}
+        ${stat(num(byType('STATION_SERVER', code)), 'Station servers')}
+        ${stat(num(online(code)) + ' / ' + num(devTotal(code)), 'Reporting now')}
+        ${session.can('user.read') ? stat(num(db.users.filter(u => u.station === code).length), 'Staff assigned here') : ''}
+      </div>
+    </div>` : ''}`;
+  };
+
+  const efScope = (code) => {
+    const open = db.efCases.filter(c => !c.outcome).length;
+    return `
+    <div class="tiles-b">
+      <div class="tile-b"><div class="ic">${I.appr}</div><div class="tv"><b>${num(efIn.length)}</b><span>Excess fare cases — ${esc(label)}</span></div></div>
+      <div class="tile-b"><div class="ic">${I.rupee}</div><div class="tv"><b>${fmtP(efFare)}</b><span>Fare collected — Revenue</span></div></div>
+      <div class="tile-b"><div class="ic">${I.rupee}</div><div class="tv"><b>${fmtP(efFine)}</b><span>Fines collected — Penalty, not revenue</span></div></div>
+      <div class="tile-b"><div class="ic">${I.audit}</div><div class="tv"><b>${num(efWaived)}</b><span>Waived — Closed without charge</span></div></div>
+    </div>
+    <div class="card">
+      <header><h2>Case analysis</h2><div class="hspace"></div><a class="btn btn-ghost" style="height:34px" href="#/excess-fare">Open the case desk</a></header>
+      <div class="statgrid">
+        ${stat(num(efIn.length), 'Cases in the period')}
+        ${stat(num(open), 'Cases still open')}
+        ${stat(num(db.efCases.length), 'Cases all time, this browser')}
+        ${stat(fmtP(efFare + efFine), 'Total taken at the office')}
+      </div>
+    </div>
+    ${stationScope(code)}`;
+  };
+
+  const twoCol = () => `
     <div class="two-col">
       ${session.can('approval.read') ? `
       <div class="card">
-        <header><h2>Awaiting your decision</h2><div class="hspace"></div><a class="btn btn-ghost" style="height:38px" href="#/approvals">View all</a></header>
-        <div class="pad" style="padding-top:4px;color:var(--b-ink-faint);font-size:12.5px">Requests raised by someone else. You cannot decide your own.</div>
-        ${actionable.length === 0 ? `<div class="empty">Nothing awaiting your decision.</div>` : `
+        <header class="hd"><span class="hd-ic">${KI.appr}</span>
+          <div class="hd-t"><h2>Awaiting your decision</h2><p>Requests raised by someone else. You cannot decide your own.</p></div>
+          <div class="hspace"></div><a class="btn btn-ghost" href="#/approvals">View all</a></header>
+        ${actionable.length === 0 ? `<div class="allcaught"><span class="ac-ic">${KI.done}</span><b>All caught up!</b><span>No items are waiting on your decision.</span></div>` : `
         <div class="tscroll"><table class="grid">
           <thead><tr><th>Reference</th><th>Change</th><th>Raised by</th><th>Expires</th></tr></thead>
-          <tbody>${actionable.slice(0, 5).map(a => `<tr>
+          <tbody>${actionable.slice(0, 5).map(a => {
+            const left = Math.max(0, Math.ceil((a.expiresAt - Date.now()) / 86400e3));
+            const ini = (a.makerDisplay || '?').split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+            return `<tr>
             <td><a class="mono" href="#/approvals" style="text-decoration:underline">${esc(a.requestRef)}</a></td>
-            <td>${esc(a.summary)}</td><td style="color:var(--b-ink-faint)">${esc(a.makerDisplay || '—')}</td>
-            <td style="color:var(--b-ink-faint)">${fmtDT(a.expiresAt)}</td></tr>`).join('')}</tbody>
+            <td>${esc(a.summary)}</td>
+            <td><span class="rowwho"><span class="rw-av">${esc(ini)}</span>${esc(a.makerDisplay || '—')}</span></td>
+            <td style="color:var(--b-ink-faint)">${fmtDT(a.expiresAt)}<div class="expchip ${left <= 2 ? 'soon' : ''}">${left}d left</div></td></tr>`;
+          }).join('')}</tbody>
         </table></div>`}
       </div>` : ''}
       ${session.can('fare.read') ? `
       <div class="card">
-        <header><h2>Fare versions</h2><div class="hspace"></div><a class="btn btn-ghost" style="height:38px" href="#/fares">View all</a></header>
-        <div class="pad" style="padding-top:4px;color:var(--b-ink-faint);font-size:12.5px">A published version is immutable. Changes are published forward, never edited.</div>
+        <header class="hd"><span class="hd-ic">${KI.fare}</span>
+          <div class="hd-t"><h2>Fare versions</h2><p>A published version is immutable. Changes are published forward, never edited.</p></div>
+          <div class="hspace"></div><a class="btn btn-ghost" href="#/fares">View all</a></header>
         <div class="tscroll"><table class="grid">
           <thead><tr><th class="num">Version</th><th>Title</th><th>Status</th><th>Effective from</th></tr></thead>
           <tbody>${fares.map(v => `<tr>
@@ -176,8 +452,69 @@ PAGES.dashboard = () => {
             <td><a href="#/fares/${v.id}" style="text-decoration:underline;color:inherit">${esc(v.title)}</a></td>
             <td>${badge(v.status)}</td><td style="color:var(--b-ink-faint)">${fmtDT(v.effectiveFrom)}</td></tr>`).join('')}</tbody>
         </table></div>
+        ${(() => {
+          const pub = db.fareVersions.filter(v => v.status === 'published');
+          const pend = db.fareVersions.filter(v => v.status === 'pending_approval').length;
+          const last = pub.slice().sort((a, b) => (b.effectiveFrom || 0) - (a.effectiveFrom || 0))[0];
+          return `<div class="cardfoot">
+            <div class="cf-cell"><span class="cf-ic">${KI.shield}</span><div><b>${db.fareVersions.length} versions total</b><span>${pub.length} published · ${pend} pending</span></div></div>
+            <div class="cf-cell"><span class="cf-ic">${KI.clock}</span><div><b>Last published</b><span>${last ? fmtDT(last.effectiveFrom) : '—'}</span></div></div>
+          </div>`;
+        })()}
       </div>` : ''}
     </div>`;
+
+  /* ── role compositions — each sign-in reads a different desk ── */
+  let body;
+  const role = me.role;
+  if (role === 'FINANCE_OFFICER') {
+    setHeader('Revenue & reconciliation');
+    body = `
+      <div class="tiles-b">
+        <div class="tile-b"><div class="ic">${I.rupee}</div><div class="tv"><b>${fmtP(gross)}</b><span>Gross collected — ${esc(label)}</span></div></div>
+        <div class="tile-b"><div class="ic">${I.rupee}</div><div class="tv"><b>${fmtP(gross - taxable)}</b><span>GST within it — CGST + SGST</span></div></div>
+        <div class="tile-b"><div class="ic">${I.appr}</div><div class="tv"><b>${num(tickets)}</b><span>Tickets behind the money — ToM ${num(tomT)} · TVM ${num(tvmT)}</span></div></div>
+        <div class="tile-b"><div class="ic">${I.audit}</div><div class="tv"><b>${num(actionable.length)}</b><span>Awaiting your decision — Fare and refund approvals</span></div></div>
+      </div>
+      ${revenueGrid()}
+      ${opsTable()}
+      ${governanceGrid('Approvals &amp; fare governance')}
+      ${twoCol()}`;
+  } else if (role === 'AUDITOR') {
+    setHeader('Audit & integrity');
+    body = `
+      <div class="tiles-b">
+        <div class="tile-b"><div class="ic">${I.audit}</div><div class="tv"><b>${canAudit ? 'Intact' : '—'}</b><span>Audit chain — ${num(db.audit.length)} entries, hash-linked</span></div></div>
+        <div class="tile-b"><div class="ic">${I.appr}</div><div class="tv"><b>${num(pendingAll)}</b><span>Approvals pending — Across all makers</span></div></div>
+        <div class="tile-b"><div class="ic">${I.station}</div><div class="tv"><b>${num(db.fareVersions.filter(v => v.status === 'published').length)}</b><span>Fare versions in force — Published, immutable</span></div></div>
+        <div class="tile-b"><div class="ic">${I.device}</div><div class="tv"><b>${num(db.users.filter(u => u.status === 'active').length)}</b><span>Active staff accounts — Of ${num(db.users.length)} on record</span></div></div>
+      </div>
+      ${governanceGrid()}
+      ${opsTable()}
+      ${estateTable()}
+      ${twoCol()}`;
+  } else if (role === 'STATION_CONTROLLER' || role === 'TOM_OPERATOR') {
+    setHeader(`${stName(me.station)} — station overview`);
+    body = stationScope(me.station);
+  } else if (role === 'EXCESS_FARE_OFFICER') {
+    setHeader('Excess fare desk');
+    body = efScope(me.station);
+  } else {
+    /* SYSTEM_ADMIN and anything unrecognised: the full estate */
+    body = `
+      ${smartGrid()}
+      ${twoCol()}`;
+  }
+
+  $('#content').innerHTML = filterBar() + body;
+
+  $('#dashRange')?.addEventListener('change', () => {
+    DASH.range = $('#dashRange').value;
+    if (DASH.range === 'date' && !DASH.date) DASH.date = dayKey(new Date());
+    PAGES.dashboard();
+  });
+  $('#dashDate')?.addEventListener('change', () => { DASH.date = $('#dashDate').value; PAGES.dashboard(); });
+  $('#dashStation')?.addEventListener('change', () => { DASH.station = $('#dashStation').value; PAGES.dashboard(); });
 };
 
 /* ---------- Stations ---------- */
@@ -267,6 +604,7 @@ function stationEdit(code) { PAGES.stations(); stationForm(code); }
 
 /* ---------- Devices ---------- */
 const DEVICE_TYPES = ['ECU', 'TOM', 'TVM', 'HANDHELD', 'STATION_SERVER', 'EXCESS_FARE'];
+const DEVICE_TYPE_SHORT = { ECU: 'Gates', TOM: 'Counters', TVM: 'Kiosks', HANDHELD: 'Handhelds', STATION_SERVER: 'Servers', EXCESS_FARE: 'EFO' };
 const DEVICE_TYPE_LABELS = { ECU: 'Gate controller (ECU)', TOM: 'Counter (ToM)', TVM: 'Kiosk (TVM)', EXCESS_FARE: 'Excess Fare Office terminal', STATION_SERVER: 'Station server', HANDHELD: 'Handheld' };
 PAGES.devices = (param) => {
   if (!session.can('device.read')) { setHeader('Devices'); $('#content').innerHTML = accessDenied('device.read'); return; }
@@ -283,14 +621,14 @@ PAGES.devices = (param) => {
     return `${badge(state)}<div style="font-size:11.5px;color:var(--b-ink-faint)">${fmtDT(d.lastSeen)}</div>`;
   };
   $('#content').innerHTML = `
-    <nav aria-label="Filter by device type" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">
-      <a class="chip ${!filter ? 'info' : 'dim'}" href="#/devices" style="text-decoration:none">All (${all.length})</a>
-      ${DEVICE_TYPES.map(t => `<a class="chip ${filter === t ? 'info' : 'dim'}" href="#/devices/${t}" style="text-decoration:none">${t} (${all.filter(d => d.type === t).length})</a>`).join('')}
+    <nav class="typebar" aria-label="Filter by device type">
+      <a class="${!filter ? 'on' : ''}" href="#/devices">All <i>${all.length}</i></a>
+      ${DEVICE_TYPES.map(t => `<a class="${filter === t ? 'on' : ''}" href="#/devices/${t}">${DEVICE_TYPE_SHORT[t]} <i>${all.filter(d => d.type === t).length}</i></a>`).join('')}
     </nav>
     <div class="card">
-      <header><h2>${filter ? `${rows.length} of ${all.length} devices` : `${all.length} devices`}</h2><div class="hspace"></div>${w ? `<button class="btn btn-primary" id="regDevice">Register device</button>` : ''}</header>
+      <header><h2>${filter ? `${rows.length} ${DEVICE_TYPE_SHORT[filter].toLowerCase()}` : `${all.length} devices`}</h2><span class="chip dim">${all.filter(d => d.lastSeen).length} have reported</span><div class="hspace"></div>${w ? `<button class="btn btn-primary" id="regDevice">Register device</button>` : ''}</header>
       <div class="tscroll"><table class="grid">
-        <thead><tr><th>Device</th><th>Station</th><th>Lane</th><th>Status</th><th>Certificate</th><th class="num">Fare / hotlist</th><th>Connectivity</th></tr></thead>
+        <thead><tr><th>Device</th><th>Station</th><th>Lane</th><th>Status</th><th>Certificate</th><th class="num">Fare / hotlist</th><th>Connectivity</th>${w ? '<th></th>' : ''}</tr></thead>
         <tbody>${rows.map(d => `<tr>
           <td>${mono(d.code)}<div style="font-size:11.5px;color:var(--b-ink-faint)">${d.type}</div></td>
           <td>${d.station}</td>
@@ -298,10 +636,61 @@ PAGES.devices = (param) => {
           <td>${badge(d.status)}</td>
           <td>${d.cert ? mono(d.cert.slice(0, 12) + '…') : '<span style="color:var(--b-ink-faint)">not issued</span>'}</td>
           <td class="num">${d.fareV ?? '—'} / ${d.hotlistV ?? '—'}</td>
-          <td>${conn(d)}</td></tr>`).join('')}</tbody>
+          <td>${conn(d)}</td>
+          ${w ? `<td style="text-align:right"><button class="btn-linklike" data-dev="${d.id}" style="text-decoration:underline">Manage</button></td>` : ''}</tr>`).join('')}</tbody>
       </table></div>
       <div class="pad" style="font-size:12.5px;color:var(--b-ink-faint)">Connectivity is worked out from the last heartbeat each time this page is read, so a device that stops reporting becomes late and then offline on its own. Certificate issue and configuration distribution still arrive with the rest of the device plane.</div>
     </div>`;
+  const devManage = (d) => {
+    if (!d) return;
+    openDrawer(`Manage ${d.code}`, `${DEVICE_TYPE_LABELS[d.type] || d.type} at ${d.station}. Every change is recorded against your identity.`, `
+      <div class="field"><label>Device code</label><input value="${esc(d.code)}" disabled><div class="hint">The code cannot be changed — it appears in clearing files and reports.</div></div>
+      <div class="field"><label>Status <i class="req">*</i></label><select id="dvStatus">
+        <option value="registered" ${d.status === 'registered' ? 'selected' : ''}>Registered — awaiting provisioning</option>
+        <option value="active" ${d.status === 'active' ? 'selected' : ''}>Active — in service</option>
+        <option value="maintenance" ${d.status === 'maintenance' ? 'selected' : ''}>Maintenance — out of service, kept registered</option>
+        <option value="faulty" ${d.status === 'faulty' ? 'selected' : ''}>Faulty</option></select>
+        <div class="hint">Maintenance takes the device out of service without giving up its registration or its lane.</div></div>
+      ${d.type === 'ECU' ? `<label class="chk"><input type="checkbox" id="dvAcc" ${d.accessible ? 'checked' : ''}> Accessible lane</label>` : ''}
+      <div class="drawer-actions"><button class="btn btn-primary" id="dvSave">Save changes</button><button class="btn btn-quiet" id="dvCancel">Cancel</button></div>
+      <div class="dsec" style="margin-top:20px">Remove this device</div>
+      ${!d.lastSeen && d.status === 'registered'
+        ? `<p style="font-size:12.5px;color:var(--b-ink-faint);margin:0 0 10px">Registered in error and never heard from — it can be removed outright.</p><button class="btn btn-danger" id="dvDelete">Delete device</button>`
+        : `<p style="font-size:12.5px;color:var(--b-ink-faint);margin:0 0 10px">This device has been provisioned or has reported, so its records are referenced. Decommissioning is dual-authorised.</p>
+           <div class="field"><label>Why it should be decommissioned <i class="req">*</i></label><textarea id="dvWhy" rows="2" maxlength="500"></textarea></div>
+           <div id="dvOut"></div>
+           <button class="btn btn-danger" id="dvDecom">Propose decommission</button>`}`);
+    $('#dvCancel').addEventListener('click', closeDrawer);
+    $('#dvSave').addEventListener('click', () => {
+      d.status = $('#dvStatus').value;
+      if (d.type === 'ECU' && $('#dvAcc')) d.accessible = $('#dvAcc').checked;
+      store.logAudit('device.update', 'device', null, session.user.name); store.save();
+      toast(`${d.code} has been updated.`); closeDrawer(); route();
+    });
+    $('#dvDelete')?.addEventListener('click', () => {
+      if (d.lastSeen) return toast(`${d.code} has reported a heartbeat. Propose decommission instead.`);
+      if (!confirm(`Delete ${d.code}? This cannot be undone. Registration only — nothing has ever been accepted from it.`)) return;
+      store.db.devices = store.db.devices.filter(x => x.id !== d.id);
+      store.logAudit('device.delete', 'device', 'Registered in error — removed before provisioning', session.user.name); store.save();
+      toast(`${d.code} has been removed.`); closeDrawer(); route();
+    });
+    $('#dvDecom')?.addEventListener('click', () => {
+      const why = ($('#dvWhy').value || '').trim();
+      if (why.length < 10) return toast('Say why, in enough words to mean something to whoever reads this later.');
+      const ref = `APR-2026-${String(store.nextRef('approval')).padStart(6, '0')}`;
+      store.db.approvals.unshift({ id: 'ap' + Date.now(), requestRef: ref, operation: 'device.decommission', entityType: 'device',
+        summary: `Decommission ${d.code} (${(DEVICE_TYPE_LABELS[d.type] || d.type).toLowerCase()}, ${d.station})`,
+        payload: { deviceCode: d.code }, amountPaise: null, risk: 'high', status: 'pending',
+        maker: session.user.username, makerDisplay: session.user.name, makerReason: why,
+        madeAt: Date.now(), expiresAt: Date.now() + 7 * 86400e3, checker: null, checkerDisplay: null, checkerReason: null, decidedAt: null });
+      store.logAudit('device.decommission', 'device', why, session.user.name); store.save();
+      $('#dvOut').innerHTML = approvalBanner(ref, 'SYSTEM_ADMIN, STATION_CONTROLLER');
+    });
+  };
+  $('#content').addEventListener('click', e => {
+    const b = e.target.closest('[data-dev]');
+    if (b) devManage(store.db.devices.find(x => x.id === b.dataset.dev));
+  });
   $('#regDevice')?.addEventListener('click', () => {
     openDrawer('Register a device', 'BOS-DM-02. Registration only — the client certificate is issued during provisioning, and nothing is accepted from a device whose certificate does not match its registration.', `
       <div class="field"><label>Device type <i class="req">*</i></label><select id="dType"><option value="">Select a type</option>
@@ -378,8 +767,21 @@ PAGES.products = () => {
         <option value="withdrawn" ${p.status === 'withdrawn' ? 'selected' : ''}>Withdrawn</option></select>
         <div class="hint">Withdrawing a product stops it being sold. Fare versions already priced for it are unaffected — they are a record of what was charged.</div></div>`
       : `<div class="notice-stale" style="margin-top:8px">A new product is created as a <b>draft</b>. It cannot be sold until a fare version priced for it is published.</div>`}
-      <div class="drawer-actions"><button class="btn btn-primary" id="pSave">${p ? 'Save changes' : 'Create product'}</button><button class="btn btn-quiet" id="pCancel">Cancel</button></div>`);
+      <div class="drawer-actions"><button class="btn btn-primary" id="pSave">${p ? 'Save changes' : 'Create product'}</button><button class="btn btn-quiet" id="pCancel">Cancel</button></div>
+      ${p ? `<div class="dsec" style="margin-top:20px">Delete this product</div>
+        ${p.status === 'draft'
+          ? `<p style="font-size:12.5px;color:var(--b-ink-faint);margin:0 0 10px">A draft has never been sellable, so it can be removed outright.</p><button class="btn btn-danger" id="pDelete">Delete product</button>`
+          : `<p style="font-size:12.5px;color:var(--b-ink-faint);margin:0">This product has been sellable — tickets and fare rules reference its code. Set it to <b>Withdrawn</b> instead; the record stays so reports keep resolving.</p>`}` : ''}`);
     $('#pCancel').addEventListener('click', closeDrawer);
+    $('#pDelete')?.addEventListener('click', () => {
+      const ruled = store.db.fareVersions.some(v => v.rules.some(r => r.product === p.code));
+      if (ruled) return toast(`${p.code} is priced in a fare version. Remove those rules first, or withdraw the product instead.`);
+      if (!confirm(`Delete ${p.code} — ${p.en}? This cannot be undone.`)) return;
+      store.db.products = store.db.products.filter(x => x.code !== p.code);
+      store.logAudit('product.delete', 'product', 'Draft removed before ever being sellable', session.user.name); store.save();
+      toast(`${p.en} has been removed.`);
+      closeDrawer(); route();
+    });
     $('#pSave').addEventListener('click', () => {
       const en = $('#pEn').value.trim(); if (!en) return toast('One field needs correcting — see the message below it.');
       if (p) {
@@ -431,17 +833,22 @@ PAGES.fares = (param) => {
       <header><h2>Reinstate an earlier version</h2></header>
       <div class="pad">
         <div style="font-size:12.5px;color:var(--b-ink-faint);margin-bottom:12px">BOS-FP-08. Publishes forward rather than reviving the old version, so history stays intact.</div>
-        <div class="field"><label>Reinstate the contents of <i class="req">*</i></label><select id="rbSrc"><option value="">Select a published version</option>
-          ${rbSources.map(v => `<option value="${v.id}">Version ${v.versionNo} — ${esc(v.title)}</option>`).join('')}</select></div>
-        <div class="field"><label>Takes effect on <i class="req">*</i></label><input id="rbDate" type="date"></div>
-        <div class="field"><label>Reason <i class="req">*</i></label><textarea id="rbReason" rows="2" maxlength="1000"></textarea></div>
-        <div class="notice-stale">This publishes a <b>new</b> version carrying the earlier contents, recording where they came from. Nothing is rewritten, so a transaction settled under the intervening version still resolves the fare that applied to it. It needs approval like any other publication.</div>
-        <div id="rbOut"></div>
-        <button class="btn btn-primary" id="rbGo">Submit rollback for approval</button>
+        <button class="btn btn-ghost" id="rbOpen">Reinstate an earlier version</button>
+        <div id="rbForm" style="display:none;margin-top:16px">
+          <div class="field"><label>Reinstate the contents of <i class="req">*</i></label><select id="rbSrc"><option value="">Select a published version</option>
+            ${rbSources.map(v => `<option value="${v.id}">Version ${v.versionNo} — ${esc(v.title)}</option>`).join('')}</select></div>
+          <div class="field"><label>Takes effect on <i class="req">*</i></label><input id="rbDate" type="date"></div>
+          <div class="field"><label>Reason <i class="req">*</i></label><textarea id="rbReason" rows="2" maxlength="1000"></textarea></div>
+          <div class="notice-stale" style="margin: 14px 0 18px">This publishes a <b>new</b> version carrying the earlier contents, recording where they came from. Nothing is rewritten, so a transaction settled under the intervening version still resolves the fare that applied to it. It needs approval like any other publication.</div>
+          <div id="rbOut"></div>
+          <div style="display:flex;gap:10px"><button class="btn btn-primary" id="rbGo">Submit rollback for approval</button><button class="btn btn-quiet" id="rbCancel">Cancel</button></div>
+        </div>
       </div>
     </div>` : ''}`;
   const t = new Date(Date.now() + 86400e3); if ($('#rbDate')) $('#rbDate').value = t.toISOString().slice(0, 10);
   $('#draftV')?.addEventListener('click', () => fareDraftForm());
+  $('#rbOpen')?.addEventListener('click', () => { $('#rbForm').style.display = ''; $('#rbOpen').style.display = 'none'; });
+  $('#rbCancel')?.addEventListener('click', () => { $('#rbForm').style.display = 'none'; $('#rbOpen').style.display = ''; });
   $('#rbGo')?.addEventListener('click', () => {
     const src = db.fareVersions.find(v => v.id === $('#rbSrc').value);
     if (!src || !$('#rbReason').value.trim()) return toast('One field needs correcting — see the message below it.');
@@ -778,6 +1185,165 @@ function efDetail(id) {
 }
 
 /* ---------- Alarms ---------- */
+/* ---------- Reports ---------- */
+const REPORT_CATEGORY_ORDER = ['revenue', 'reconciliation', 'statutory', 'operations', 'audit'];
+const REPORT_CATEGORY_LABEL = { revenue: 'Revenue', reconciliation: 'Reconciliation', statutory: 'Statutory', operations: 'Operations', audit: 'Audit' };
+
+/* What each report was last run with, kept per report so going back to one
+   returns to the period you were looking at rather than to the default. */
+const REPORT_PARAMS = {};
+
+const isMoneyKey = (k) => /(_paise|Paise)$/.test(k);
+
+/* A cell, rendered from whatever the report put there. Amounts are paise and
+   are shown in rupees; everything else is printed as it came. This screen
+   deliberately knows nothing about any particular report. */
+function reportCell(key, value) {
+  if (value === null || value === undefined || value === '') return '—';
+  if (isMoneyKey(key)) {
+    const n = Number(value);
+    /* Signed, because a short drawer and a long one are not the same event. */
+    if (Number.isFinite(n)) return (n < 0 ? '−' : '') + fmtP(Math.abs(n));
+  }
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  return esc(String(value));
+}
+
+/* The financial year an ISO date falls in, as 'yyyy-yy'. */
+function fyOf(iso) {
+  const y = Number(iso.slice(0, 4)), m = Number(iso.slice(5, 7));
+  const start = m >= 4 ? y : y - 1;
+  return start + '-' + String((start + 1) % 100).padStart(2, '0');
+}
+
+function reportDefaults(def) {
+  const today = isoDate(Date.now());
+  const d = {};
+  for (const x of def.parameters) {
+    if (x.name === 'from') d.from = isoDate(Date.now() - 6 * 86400e3);
+    else if (x.name === 'to') d.to = today;
+    else if (x.kind === 'financial_year') d.financialYear = fyOf(today);
+    else d[x.name] = '';
+  }
+  return d;
+}
+
+PAGES.reports = (param) => {
+  if (!session.can('report.read')) { setHeader('Reports'); $('#content').innerHTML = accessDenied('report.read'); return; }
+  if (param) return reportDetail(param);
+
+  setHeader('Reports', 'BOS-RP-01. Every figure is computed when the report is run and states the stations it covers — two people running the same report can legitimately get different totals, and a number that does not say what it covers will eventually be compared with one that covers something else.');
+
+  const groups = REPORT_CATEGORY_ORDER
+    .map(c => ({ c, list: REPORTS.filter(r => r.category === c) }))
+    .filter(g => g.list.length);
+
+  /* Named rather than hidden. A report that is simply absent reads
+     as one that does not exist, and somebody then asks for it. */
+  $('#content').innerHTML = groups.map(g => `
+    <div>
+      <h3 class="repcat">${esc(REPORT_CATEGORY_LABEL[g.c])}</h3>
+      <div class="repgrid">${g.list.map(r => `
+        <div class="repcard">
+          <b>${esc(r.title)}</b>
+          <p>${esc(r.description)}</p>
+          <div class="rc-foot">
+            ${r.requirements.map(q => `<span class="chip dim">${esc(q)}</span>`).join('')}
+            <span class="hsp"></span>
+            ${session.can(r.permission)
+              ? `<a class="btn btn-primary rc-run" href="#/reports/${esc(r.id)}">Run</a>`
+              : `<span style="color:var(--b-ink-faint);font-size:12px">Needs ${mono(r.permission)}</span>`}
+          </div>
+        </div>`).join('')}</div>
+    </div>`).join('');
+};
+
+function reportDetail(id) {
+  const def = REPORTS.find(r => r.id === id);
+  if (!def) { location.hash = '#/reports'; return; }
+  setHeader(def.title, def.description);
+
+  const back = '<p style="margin-bottom:14px"><a href="#/reports">← All reports</a></p>';
+  if (!session.can(def.permission)) { $('#content').innerHTML = back + accessDenied(def.permission); return; }
+
+  const p = REPORT_PARAMS[id] || (REPORT_PARAMS[id] = reportDefaults(def));
+  const missing = def.parameters.filter(x => x.required && !p[x.name]);
+  const res = missing.length ? null : runReport(id, p);
+  const stations = store.db.stations || STN;
+
+  const field = (x) => {
+    const v = p[x.name] == null ? '' : p[x.name];
+    if (x.kind === 'station') {
+      return `<select id="rp-${x.name}">
+        <option value="">Everything I may see</option>
+        ${stations.map(s => `<option value="${esc(s.code)}"${v === s.code ? ' selected' : ''}>${esc(s.code)} — ${esc(s.en)}</option>`).join('')}
+      </select>`;
+    }
+    if (x.kind === 'date') return `<input id="rp-${x.name}" type="date" value="${esc(v)}">`;
+    return `<input id="rp-${x.name}" value="${esc(v)}" placeholder="${x.kind === 'financial_year' ? '2026-27' : ''}">`;
+  };
+
+  let results = '';
+  if (missing.length) {
+    results = `<div class="card"><div class="empty"><b>This report needs a period before it can be run.</b>
+      <div class="hint">Fill in ${esc(missing.map(x => x.label).join(', '))} and run it.</div></div></div>`;
+  } else if (res && res.rows.length === 0) {
+    results = `<div class="card"><div class="empty"><b>Nothing in that period.</b>
+      <div class="hint">That is an answer, not a failure — there were no matching records.</div></div></div>`;
+  } else if (res) {
+    results = `<div class="card">
+      <header>
+        <h2>${res.rows.length.toLocaleString('en-IN')} row${res.rows.length === 1 ? '' : 's'}</h2>
+        <div style="font-size:12.5px;color:var(--b-ink-faint);margin-top:3px">Covering ${
+          esc(res.scope[0] === 'all' ? 'every station' : res.scope.join(', '))} · generated ${esc(fmtDT(Date.now()))}</div>
+      </header>
+      <div class="pad" style="padding-bottom:0">
+        <button class="btn btn-quiet" id="rpCsv">Download CSV</button>
+        ${res.truncated ? '<span class="chip warn" style="margin-left:10px">Truncated</span><span style="font-size:12.5px;color:var(--b-ink-faint);margin-left:8px">Only the first rows are shown. Narrow the period, or take the CSV.</span>' : ''}
+      </div>
+      <div class="tscroll"><table class="grid">
+        <thead><tr>${res.columns.map(c => `<th${isMoneyKey(c.key) ? ' class="num"' : ''}>${esc(c.label)}</th>`).join('')}</tr></thead>
+        <tbody>${res.rows.map(r => `<tr>${res.columns.map(c =>
+          `<td${isMoneyKey(c.key) ? ' class="num"' : ''}>${reportCell(c.key, r[c.key])}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table></div>
+    </div>`;
+  }
+
+  $('#content').innerHTML = back + `
+    <div class="card">
+      <header><h2>Parameters</h2></header>
+      <div class="pad">
+        ${def.parameters.length === 0
+          ? '<p style="color:var(--b-ink-faint);font-size:13.5px">This report takes no parameters. It covers everything you are allowed to see.</p>'
+          : `<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+              ${def.parameters.map(x => `<div class="field" style="margin:0">
+                <label>${esc(x.label)}${x.required ? ' <i class="req">*</i>' : ''}</label>${field(x)}
+              </div>`).join('')}
+              <button class="btn btn-primary" id="rpRun">Run</button>
+            </div>`}
+      </div>
+    </div>` + results;
+
+  $('#rpRun')?.addEventListener('click', () => {
+    for (const x of def.parameters) REPORT_PARAMS[id][x.name] = $('#rp-' + x.name).value;
+    reportDetail(id);
+  });
+
+  $('#rpCsv')?.addEventListener('click', () => {
+    const line = (cols) => cols.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',');
+    const body = [line(res.columns.map(c => c.label))]
+      .concat(res.rows.map(r => line(res.columns.map(c => r[c.key]))))
+      .join('\r\n');
+    /* BOM, or Excel opens the Devanagari in the station names as mojibake. */
+    const url = URL.createObjectURL(new Blob(['﻿' + body], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = def.id + '.csv'; a.click();
+    URL.revokeObjectURL(url);
+    toast('CSV downloaded');
+  });
+}
+
+/* ---------- Alarms ---------- */
 const ALARM_LABELS = { device_offline: 'Device offline', device_late: 'Device late', printer_paper_low: 'Paper low', printer_paper_out: 'Paper out', printer_fault: 'Printer fault', printer_absent: 'Printer absent', reader_fault: 'Reader fault', reader_absent: 'Reader absent', clock_drift: 'Clock drift', queue_backlog: 'Queue backlog', device_reported: 'Reported by device' };
 PAGES.alarms = () => {
   if (!session.can('alarm.read')) { setHeader('Alarms', 'Operational alarms across the estate.'); $('#content').innerHTML = accessDenied('alarm.read'); return; }
@@ -870,7 +1436,7 @@ PAGES.hotlist = () => {
     </div></div>` : ''}
     ${ovr ? `<div class="card"><header><h2>Take a card off</h2></header><div class="pad" style="max-width:560px">
       <div style="font-size:12.5px;color:var(--b-ink-faint);margin-bottom:10px">Dual authorised — a second administrator decides (BOS-BL-03).</div>
-      <button class="btn-linklike" id="hlOpenOff" style="text-decoration:underline">Propose taking a card off the hotlist</button>
+      <button class="btn btn-ghost" id="hlOpenOff">Propose taking a card off the hotlist</button>
       <div id="hlOffForm" style="display:none;margin-top:12px">
         <p style="font-size:13px;margin-bottom:10px">This does not lift the block. A second person holding SYSTEM_ADMIN must approve it, within 24 hours, before the card is accepted at a gate again.</p>
         <div class="field"><label>Card reference <i class="req">*</i></label><input id="hlOffRef" placeholder="NCMC-TOKEN-4f9a2c"></div>
@@ -977,11 +1543,11 @@ const APPROVAL_CHECKERS = {
 PAGES.approvals = (param) => {
   if (!session.can('approval.read')) { setHeader('Approvals'); $('#content').innerHTML = accessDenied('approval.read'); return; }
   setHeader('Approval queue', 'BOS-SC-04. Privileged changes are proposals until a second person decides on them. You cannot decide a request you raised.');
-  const filter = ['pending', 'applied', 'rejected', 'expired'].includes(param) ? param : 'pending';
+  const filter = ['pending', 'applied', 'rejected', 'expired', 'withdrawn'].includes(param) ? param : 'pending';
   const rows = store.db.approvals.filter(a => a.status === filter);
   $('#content').innerHTML = `
     <nav style="display:flex;gap:8px;margin-bottom:4px">
-      ${['pending', 'applied', 'rejected', 'expired'].map(f => `<a class="chip ${f === filter ? 'info' : 'dim'}" style="text-decoration:none;text-transform:capitalize" href="#/approvals/${f}">${f}</a>`).join('')}
+      ${['pending', 'applied', 'rejected', 'expired', 'withdrawn'].map(f => `<a class="chip ${f === filter ? 'info' : 'dim'}" style="text-decoration:none;text-transform:capitalize" href="#/approvals/${f}">${f}</a>`).join('')}
     </nav>
     ${rows.length === 0 ? `<div class="card"><div class="empty">No ${filter} requests.</div></div>` : rows.map((a, i) => {
       const mayDecide = session.can('approval.decide') && (APPROVAL_CHECKERS[a.operation] || []).includes(session.user.role);
@@ -1078,7 +1644,7 @@ PAGES.users = (param) => {
   $('#content').innerHTML = `
     <div class="notice-stale"><b>Role grants are dual-authorised</b><br>Granting a role hands someone authority over fares, money or gates, so it goes through the approval queue like any other privileged change. Revocation takes effect immediately — permissions are read from the database on every request, not from the access token.</div>
     <div class="card">
-      <header><h2>${rows.length} staff accounts</h2></header>
+      <header><h2>${rows.length} staff accounts</h2><div class="hspace"></div>${w ? '<button class="btn btn-primary" id="newUser">Invite user</button>' : ''}</header>
       <div class="tscroll"><table class="grid">
         <thead><tr><th>Username</th><th>Name</th><th>Employee code</th><th>Roles</th><th>Status</th><th>Last sign-in</th>${w ? '<th></th>' : ''}</tr></thead>
         <tbody>${rows.map(u => `<tr>
@@ -1088,6 +1654,42 @@ PAGES.users = (param) => {
           ${w ? `<td style="text-align:right"><a href="#/users/${u.username}" style="text-decoration:underline">Manage</a></td>` : ''}</tr>`).join('')}</tbody>
       </table></div>
     </div>`;
+  $('#newUser')?.addEventListener('click', () => {
+    openDrawer('Invite a member of staff', 'BOS-UM-01. This creates the authorisation record. The person signs in through the identity provider; their password and MFA never live here.', `
+      <div class="field"><label>Username <i class="req">*</i></label><input id="nuUser" maxlength="64" placeholder="asha.verma" spellcheck="false" autocapitalize="off"><div class="hint">Lower case, digits and dots. Bound to their identity-provider account.</div></div>
+      <div class="field"><label>Full name <i class="req">*</i></label><input id="nuName"></div>
+      <div class="field"><label>Employee code</label><input id="nuEmp" maxlength="32" placeholder="VR-STN-002"></div>
+      <div class="field"><label>Role <i class="req">*</i></label><select id="nuRole"><option value="">Select a role</option>
+        <option value="SYSTEM_ADMIN">System Administrator</option><option value="FINANCE_OFFICER">Finance Officer</option>
+        <option value="STATION_CONTROLLER">Station Controller — one station</option><option value="TOM_OPERATOR">Counter Operator — one station</option>
+        <option value="EXCESS_FARE_OFFICER">Excess Fare Officer — one station</option><option value="AUDITOR">Auditor — read only</option></select></div>
+      <div class="field"><label>Station</label><select id="nuStation" disabled><option value="">Not applicable — system-wide</option></select>
+        <div class="hint">Required for station-bound roles.</div></div>
+      <div class="notice-stale">The account is created as <b>invited</b> and holds its role from the first sign-in. Further role changes go through the approval queue.</div>
+      <div class="drawer-actions"><button class="btn btn-primary" id="nuGo">Invite</button><button class="btn btn-quiet" id="nuCancel">Cancel</button></div>`);
+    $('#nuCancel').addEventListener('click', closeDrawer);
+    $('#nuRole').addEventListener('change', () => {
+      const scoped = ['STATION_CONTROLLER', 'TOM_OPERATOR', 'EXCESS_FARE_OFFICER'].includes($('#nuRole').value);
+      const sel = $('#nuStation'); sel.disabled = !scoped;
+      sel.innerHTML = scoped
+        ? '<option value="">Select a station</option>' + store.db.stations.map(s => `<option value="${s.code}">${s.code} — ${esc(s.en)}</option>`).join('')
+        : '<option value="">Not applicable — system-wide</option>';
+    });
+    $('#nuGo').addEventListener('click', () => {
+      const un = ($('#nuUser').value || '').trim().toLowerCase();
+      const name = ($('#nuName').value || '').trim();
+      const role = $('#nuRole').value;
+      if (!/^[a-z0-9.]{3,64}$/.test(un)) return toast('Username: lower case, digits and dots, at least three characters.');
+      if (!name || !role) return toast('One field needs correcting — see the message below it.');
+      if (store.db.users.some(x => x.username === un)) return toast(`"${un}" already exists. Usernames are bound to identities and cannot be reused.`);
+      const scoped = ['STATION_CONTROLLER', 'TOM_OPERATOR', 'EXCESS_FARE_OFFICER'].includes(role);
+      if (scoped && !$('#nuStation').value) return toast('Granted without a station, the authority would apply at every station on the line.');
+      store.db.users.push({ username: un, name, emp: ($('#nuEmp').value || '').trim() || null, role, station: scoped ? $('#nuStation').value : null, status: 'invited', lastSignIn: null });
+      store.logAudit('user.invite', 'staff_user', null, session.user.name); store.save();
+      toast(`${name} is invited. The account activates on their first sign-in.`);
+      closeDrawer(); route();
+    });
+  });
 };
 function userEdit(username) {
   const u = store.db.users.find(x => x.username === username);
@@ -1107,6 +1709,10 @@ function userEdit(username) {
           <div class="hint">Suspending takes effect at once — permissions are checked on every request rather than read from a login token, so the person does not keep working until their session expires.</div></div>
         <div id="uOut"></div>
         <button class="btn btn-primary" id="uSave">Save changes</button>
+        <div class="dsec" style="margin-top:20px">Delete this account</div>
+        ${u.lastSignIn == null && u.username !== session.user.username
+          ? `<p style="font-size:12.5px;color:var(--b-ink-faint);margin:0 0 10px">For an account invited in error, before it has ever signed in. An account that has worked a shift is suspended or deactivated instead — deleting it would orphan the audit trail.</p><button class="btn btn-danger" id="uDelete">Delete account</button>`
+          : `<p style="font-size:12.5px;color:var(--b-ink-faint);margin:0">${u.username === session.user.username ? 'You cannot delete the account you are signed in with.' : 'This account has signed in, so its actions are on the audit trail. Suspend or deactivate it instead — deleting it would leave those records pointing at nobody.'}</p>`}
       </div></div>
       <div>
         <div class="card"><header><h2>Roles held</h2></header><div class="pad">
@@ -1132,6 +1738,13 @@ function userEdit(username) {
         </div></div>
       </div>
     </div>`;
+  $('#uDelete')?.addEventListener('click', () => {
+    if (!confirm(`Delete ${u.username} — ${u.name}? This cannot be undone.`)) return;
+    store.db.users = store.db.users.filter(x => x.username !== u.username);
+    store.logAudit('user.delete', 'staff_user', 'Invited in error — removed before first sign-in', session.user.name); store.save();
+    toast(`${u.name} has been removed.`);
+    location.hash = '#/users';
+  });
   $('#uSave').addEventListener('click', () => {
     u.name = $('#uName').value.trim() || u.name; u.emp = $('#uEmp').value.trim() || null; u.status = $('#uStatus').value;
     store.logAudit('user.update', 'staff_user', null, session.user.name); store.save();
@@ -1229,6 +1842,22 @@ function boot() {
   };
   railBtn?.addEventListener('click', () => setRail(!document.body.classList.contains('rail-collapsed')));
   if (localStorage.getItem('bos.rail') === '1') setRail(true);
+  /* login-header clock */
+  const blTick = () => {
+    const d = new Date();
+    if ($('#blDate')) {
+      $('#blDate').textContent = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      $('#blTime').textContent = d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true }).toUpperCase();
+    }
+  };
+  blTick(); setInterval(blTick, 15000);
+  $('#tbUserBtn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const m = $('#tbMenu'), open = m.classList.toggle('open');
+    $('#tbUserBtn').setAttribute('aria-expanded', String(open));
+  });
+  document.addEventListener('click', () => $('#tbMenu')?.classList.remove('open'));
+  $('#tbBell')?.addEventListener('click', () => { location.hash = '#/approvals'; });
   $('#pwToggle')?.addEventListener('click', () => {
     const p = $('#loginPass'); if (!p) return;
     p.type = p.type === 'password' ? 'text' : 'password';

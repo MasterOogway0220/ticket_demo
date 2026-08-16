@@ -21,78 +21,86 @@
     .drawer-actions { display: flex; gap: 10px; margin-top: 18px; }
   .apr-card + .apr-card { margin-top: 4px; }
   #pageDesc { display: none; }
-  .bos-foot { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; margin-top: auto; padding: 10px 28px; font-size: 12px; background: #3a1608; color: #f6e7d8; }
 
 </style>
 </head>
 <body>
 
-<!-- ═══ LOGIN — split hero ═══ -->
+<!-- ═══ LOGIN — ToM-family full-bleed ═══ -->
 <section id="login" class="blogin">
-  <div class="lg-left">
-    <img class="lgl-logo" src="../assets/img/logo.png" alt="Varanasi Ropeway" width="300" height="67">
-    <div class="lgl-head">
-      <h1>Back Office Portal</h1>
-      <p>Manage. Monitor. Deliver.</p>
-      <div class="lgl-orn" aria-hidden="true"><span></span><i></i><span></span></div>
+  <header class="bl-bar">
+    <a class="brand" href="../index.html" title="Back to all modules">
+      <img src="../assets/img/logo.png" alt="Varanasi Ropeway" width="252" height="56">
+      <span class="tagline">Spiritual Journey, Elevated.</span>
+    </a>
+    <div class="bl-title">
+      <h1>BACK OFFICE PORTAL</h1>
+      <p class="bl-sub"><i></i> Welcome! Please sign in to continue <i></i></p>
     </div>
-    <div class="lgl-spacer"></div>
-    <div class="lgl-stats">
-      <div class="ls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/></svg><div><b>4</b><span>Stations</span></div></div>
-      <div class="ls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4z"/></svg><div><b>10K+</b><span>Tickets / Day</span></div></div>
-      <div class="ls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M16 5.2a3.2 3.2 0 0 1 0 5.9M17.5 14.6a5.5 5.5 0 0 1 3 4.9"/></svg><div><b>120+</b><span>Staff Users</span></div></div>
-      <div class="ls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 4 8-8"/><path d="M14 8h6v6"/></svg><div><b>99.9%</b><span>System Uptime</span></div></div>
-    </div>
-    <div class="lgl-copy">© 2026 Varanasi Ropeway. All rights reserved.</div>
-  </div>
-  <div class="lg-right">
-   <div class="lg-col">
-    <form class="lgc" id="loginForm" autocomplete="off">
-      <div class="lgc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 4.5 5.5v5c0 4.6 3.1 8.4 7.5 10 4.4-1.6 7.5-5.4 7.5-10v-5z"/><circle cx="12" cy="10" r="2.2"/><path d="M8.5 16a4 4 0 0 1 7 0"/></svg></div>
-      <h2>Welcome Back!</h2>
-      <p class="lgc-sub">Sign in to continue to Varanasi Ropeway<br>Back Office Portal</p>
-      <div class="login-err" id="loginErr">—</div>
-      <label class="lgc-label" for="loginUser">Username</label>
-      <div class="lgc-input">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
-        <input id="loginUser" name="username" autocomplete="username" spellcheck="false" autocapitalize="off" placeholder="Enter your username" required>
+    <div class="bl-status">
+      <div class="bls-cell">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>
+        <span class="bls-l">System Date &amp; Time<b><span id="blDate">—</span>  |  <span id="blTime">—</span></b></span>
       </div>
-      <label class="lgc-label" for="loginPass">Password</label>
-      <div class="lgc-input">
+      <span class="bls-div"></span>
+      <div class="bls-cell">
+        <span class="bls-dot"></span>
+        <span class="bls-l">System Status<b class="bls-on">Online</b></span>
+      </div>
+    </div>
+  </header>
+  <div class="bl-mid">
+    <form class="blc" id="loginForm" autocomplete="off">
+      <div class="blc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 4.5 5.5v5c0 4.6 3.1 8.4 7.5 10 4.4-1.6 7.5-5.4 7.5-10v-5z"/><circle cx="12" cy="10" r="2.2"/><path d="M8.5 16a4 4 0 0 1 7 0"/></svg></div>
+      <h2>BACK OFFICE LOGIN</h2>
+      <p class="blc-sub">Please enter your credentials to access the portal</p>
+      <div class="login-err" id="loginErr">—</div>
+      <div class="blc-input">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+        <input id="loginUser" name="username" autocomplete="username" spellcheck="false" autocapitalize="off" placeholder="Username" aria-label="Username" required>
+      </div>
+      <div class="blc-input">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2.5"/><path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/></svg>
-        <input id="loginPass" type="password" placeholder="Enter your password" autocomplete="current-password">
+        <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" aria-label="Password">
         <button type="button" class="eye" id="pwToggle" aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/><path d="M4.5 4.5l15 15"/></svg></button>
       </div>
-      <div class="lgc-row">
-        <label class="lgc-remember"><input type="checkbox" checked> Remember me</label>
-        <a href="#" class="lgc-forgot" id="forgotLink">Forgot Password?</a>
+      <div class="blc-row">
+        <label class="blc-remember"><input type="checkbox" checked> Remember me</label>
+        <a href="#" class="blc-forgot" id="forgotLink">Forgot Password?</a>
       </div>
-      <button class="lgc-btn" type="submit">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="10" width="14" height="10" rx="2.5"/><path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/></svg>
-        Sign In
+      <button class="blc-btn" type="submit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+        <span>SIGN IN</span>
       </button>
-      <div class="lgc-or"><span>OR</span></div>
-      <button class="lgc-google" type="button" id="googleBtn">
+      <div class="blc-or"><span>OR</span></div>
+      <button class="blc-google" type="button" id="googleBtn">
         <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.5 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.2 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z"/><path fill="#FBBC05" d="M10.4 28.7a14.5 14.5 0 0 1 0-9.4l-7.8-6.1a24 24 0 0 0 0 21.6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.5-5.9l-7.6-5.9c-2.1 1.4-4.8 2.3-7.9 2.3-6.3 0-11.7-3.7-13.6-9.8l-7.8 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
         Sign in with Google
       </button>
-      <div class="lgc-help">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13a8 8 0 0 1 16 0"/><path d="M3 15.5A2.5 2.5 0 0 1 5.5 13H6a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-.5A2.5 2.5 0 0 1 3 16.5zM21 15.5a2.5 2.5 0 0 0-2.5-2.5H18a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h.5a2.5 2.5 0 0 0 2.5-2.5z"/></svg>
-        <div>Need help? Contact <b>System Administrator</b><br><span>+91 1800-123-4567&nbsp; | &nbsp;admin@varanasiropeway.in</span></div>
+      <div class="demo-row">
+        <p>Development accounts — any password.</p>
+        <div class="demo-chips" id="devChips">
+          <button type="button" data-demo="admin.dev">admin.dev</button>
+          <button type="button" data-demo="checker.dev">checker.dev</button>
+          <button type="button" data-demo="finance.dev">finance.dev</button>
+          <button type="button" data-demo="auditor.dev">auditor.dev</button>
+          <button type="button" data-demo="station.dev">station.dev</button>
+          <button type="button" data-demo="excess.dev">excess.dev</button>
+        </div>
       </div>
-
     </form>
-    <div class="lgc-dev" id="devChips">
-      <span>Development accounts (any password):</span>
-      <button type="button" data-demo="admin.dev">admin.dev</button>
-      <button type="button" data-demo="checker.dev">checker.dev</button>
-      <button type="button" data-demo="finance.dev">finance.dev</button>
-      <button type="button" data-demo="auditor.dev">auditor.dev</button>
-      <button type="button" data-demo="station.dev">station.dev</button>
-      <button type="button" data-demo="excess.dev">excess.dev</button>
+    <div class="bl-side">
+      <div class="bl-card bl-help">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13a8 8 0 0 1 16 0"/><path d="M3 15.5A2.5 2.5 0 0 1 5.5 13H6a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-.5A2.5 2.5 0 0 1 3 16.5zM21 15.5a2.5 2.5 0 0 0-2.5-2.5H18a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h.5a2.5 2.5 0 0 0 2.5-2.5z"/></svg>
+        <div><b>Need Help?</b><span>Contact System Administrator</span><i>+91 1800-123-4567</i><em>admin@varanasiropeway.in</em></div>
+      </div>
     </div>
-   </div>
   </div>
+  <footer class="bl-foot">
+    <span class="blf-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 4.5 5.5v5c0 4.6 3.1 8.4 7.5 10 4.4-1.6 7.5-5.4 7.5-10v-5z"/></svg> Secure • Reliable • Fast</span>
+    <span class="blf-copy">© 2026 Varanasi Ropeway. All rights reserved.</span>
+    <span class="blf-ver">Ver. 1.0.0  |  Powered by NuPath Sphere</span>
+  </footer>
 </section>
 
 <!-- ═══ APP SHELL ═══ -->
@@ -111,25 +119,33 @@
 
   <div class="main">
     <div class="topbar">
-      <div>
+      <div class="tb-head">
         <h1 id="pageTitle">Dashboard</h1>
+        <p id="pageSub"></p>
         <div id="pageDesc"></div>
       </div>
       <div class="tspace"></div>
-      <div style="text-align:right;line-height:1.35;white-space:nowrap">
-        <div style="font-weight:600;font-size:13.5px" id="topUserName">—</div>
-        <div style="font-size:11.5px;color:var(--b-ink-faint)" id="topUserRoles">—</div>
+      <div class="tb-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+        <input id="tbSearch" placeholder="Search anything…" aria-label="Search">
       </div>
+      <button class="tb-bell" id="tbBell" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+        <i id="tbBellN">0</i>
+      </button>
       <span class="chip info" id="roBadge" style="display:none">Read-only</span>
-      <button class="btn btn-quiet" id="signOut" style="height:40px">Sign out</button>
+      <div class="tb-user">
+        <button class="tb-userbtn" id="tbUserBtn" aria-expanded="false">
+          <span class="tb-av" id="tbAv">—</span>
+          <span class="tb-ut"><b id="topUserName">—</b><span id="topUserRoles">—</span></span>
+          <svg class="tb-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="tb-menu" id="tbMenu"><button class="btn btn-quiet" id="signOut">Sign out</button></div>
+      </div>
     </div>
 
     <div class="content" id="content"></div>
 
-    <div class="bos-foot">
-      <span>All actions are recorded in an append-only audit trail retained for eight financial years (Companies Act 2013, s.128).</span>
-      <span>Times shown in IST.</span>
-    </div>
   </div>
 </div>
 
