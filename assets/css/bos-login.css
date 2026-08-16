@@ -141,6 +141,33 @@
   .lgl-head { margin-top: 20px; }
   .lgl-logo { width: min(320px, 60%); }
 }
+@media (max-height: 800px) {
+  .lg-right { padding: 20px 24px; }
+  .lgc { padding: 20px 30px 16px; border-radius: 20px; }
+  .lgc-badge { width: 54px; height: 54px; margin-bottom: 8px; }
+  .lgc-badge svg { width: 26px; height: 26px; }
+  .lgc h2 { font-size: 21px; }
+  .lgc-sub { margin: 6px 0 12px; font-size: 13px; }
+  .lgc-label { margin-bottom: 5px; font-size: 13px; }
+  .lgc-input { margin-bottom: 10px; }
+  .lgc-input input { height: 40px; }
+  .lgc-row { margin: 2px 0 12px; }
+  .lgc-btn { height: 44px; font-size: 14.5px; }
+  .lgc-or { margin: 12px 0 10px; }
+  .lgc-google { height: 40px; font-size: 14px; }
+  .lgc-help { margin-top: 12px; font-size: 12.5px; }
+  .lgc-help svg { width: 30px; height: 30px; padding: 6px; }
+  .lgc-dev { margin-top: 8px; }
+  .lgl-logo { width: min(230px, 50%); }
+  .lgl-head { margin-top: 12px; }
+  .lgl-head h1 { font-size: 28px; }
+  .lgl-head p { font-size: 15px; margin-top: 5px; }
+  .lgl-orn { margin-top: 12px; }
+  .lgl-stats { padding: 12px 14px; }
+  .lgl-stats b { font-size: 16px; }
+  .lgl-stats svg { width: 20px; height: 20px; }
+  .lgl-copy { margin-top: 10px; }
+}
 @media (max-width: 960px) {
   .blogin { flex-direction: column; }
   .lg-left { flex: none; min-height: 40vh; }

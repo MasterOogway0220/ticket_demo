@@ -46,6 +46,8 @@ body::before {
   width: max-content; max-width: 44vw; text-align: center; pointer-events: none;
 }
 body:not(.authed) .th-title { top: calc(50% + 16px); }
+/* the transparent login header always reserves room for its 3-line title */
+body:not(.authed) .th-bar { min-height: 100px; }
 .th-status { margin-left: auto; }
 .th-title h1 { font-size: clamp(18px, 2.2vw, 26px); font-weight: 800; letter-spacing: .01em; color: #1d2a44; margin: 0; }
 .tsub { margin: 2px 0 0; font-size: 13.5px; color: var(--t-ink); font-weight: 500; }
@@ -412,6 +414,8 @@ body:not(.authed) .tquick .qi { background: transparent; border-color: rgba(255,
   .tquick { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 560px) {
+  .th-status { flex: 1 1 100%; margin-left: 0; }
+  .ts-row { flex-wrap: wrap; row-gap: 4px; }
   .pickrow, .pickrow.dests { grid-template-columns: 1fr; }
   .tquick { grid-template-columns: 1fr; }
   .tfoot { justify-content: center; text-align: center; }
@@ -449,8 +453,44 @@ body:not(.authed) .tquick .qi { background: transparent; border-color: rgba(255,
   .tsteps { margin-bottom: 14px; }
   .tstep span { width: 30px; height: 30px; }
 }
+/* small laptops (short inner heights): everything, including the demo
+   chip, must fit with zero scroll — decoration yields to fit */
+@media (max-height: 870px) {
+  body:not(.authed) .th-title { top: 50%; }
+  body:not(.authed) .th-bar { min-height: 84px; }
+  .th-bar { padding: 6px 18px 4px; }
+  .th-bar .brandimg { height: 38px; }
+  .th-bar .tagline { display: none; }
+  .th-title h1 { font-size: 17px; }
+  .tsub { font-size: 12px; margin-top: 1px; }
+  .tstation { display: none; }
+  .th-status { min-width: 0; padding: 6px 10px; gap: 4px; }
+  .ts-cell > svg { width: 16px; height: 16px; }
+  .tlogin.on { padding: 6px 16px 8px; }
+  .tlogin-card { padding: 10px 26px 8px; }
+  .tl-badge { display: none; }
+  .tlogin-card h2 { font-size: 17px; }
+  .tlogin-card .lsub { display: none; }
+  .tl-input { margin-bottom: 8px; }
+  .tl-input input { height: 36px; font-size: 13.5px; }
+  .tl-or { margin: 4px 0 4px; }
+  .tl-pinlabel { margin-bottom: 4px; font-size: 12.5px; }
+  .tl-pins { gap: 8px; margin-bottom: 6px; }
+  .tl-pins span { width: 34px; height: 34px; font-size: 18px; }
+  .tl-pad { gap: 6px; margin-bottom: 8px; max-width: 260px; }
+  .tl-pad button { height: 32px; font-size: 14px; }
+  .tl-login { height: 38px; font-size: 14px; }
+  .tlogin-card .demo-row { margin-top: 6px; padding-top: 5px; }
+  .tlogin-card .demo-row p { font-size: 10.5px; margin-bottom: 3px; }
+  .demo-chips button { padding: 3px 10px; font-size: 11.5px; }
+  .tquick { margin-bottom: 8px; gap: 8px; }
+  .tquick button { padding: 7px 10px; gap: 9px; }
+  .tquick .qi { width: 30px; height: 30px; }
+  .tquick .qi svg { width: 15px; height: 15px; }
+  .tquick .qt b { font-size: 12px; }
+  .tquick .qt span { display: none; }
+  .tfoot { padding: 6px 18px; font-size: 11.5px; }
+}
 @media (max-height: 800px) {
   .tl-side { display: none; }
-  .tstation { display: none; }
-  .tquick .qt span { display: none; }
 }
