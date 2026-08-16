@@ -24,6 +24,81 @@ const T = {
 
 const TSES = 'vr-afc-v3-tom';
 
+/* ---------- language (rule 16 — bilingual counter UI) ---------- */
+const TLANG_KEY = 'vr-tom-lang';
+let TLANG = localStorage.getItem(TLANG_KEY) === 'hi' ? 'hi' : 'en';
+const TOM_STR = {
+  tag: { en: 'Spiritual Journey, Elevated.', hi: 'आध्यात्मिक यात्रा, नई ऊँचाई पर' },
+  title: { en: 'TICKET OFFICE MACHINE (TOM)', hi: 'टिकट कार्यालय मशीन (TOM)' },
+  welcome: { en: 'Welcome! Please login to continue', hi: 'स्वागत है! जारी रखने के लिए कृपया लॉगिन करें' },
+  salesub: { en: 'Issue Tickets  •  Check Bookings  •  Manage Operations', hi: 'टिकट जारी करें  •  बुकिंग देखें  •  संचालन प्रबंधन' },
+  sysdt: { en: 'System Date & Time', hi: 'सिस्टम दिनांक और समय' },
+  sysstat: { en: 'System Status', hi: 'सिस्टम स्थिति' },
+  operator: { en: 'Operator', hi: 'ऑपरेटर' },
+  device: { en: 'Device', hi: 'डिवाइस' },
+  logout: { en: 'Logout', hi: 'लॉगआउट' },
+  oplogin: { en: 'OPERATOR LOGIN', hi: 'ऑपरेटर लॉगिन' },
+  creds: { en: 'Please enter your credentials to access the system', hi: 'सिस्टम में प्रवेश हेतु कृपया अपनी लॉगिन जानकारी भरें' },
+  opid: { en: 'Operator ID', hi: 'ऑपरेटर आईडी' },
+  pass: { en: 'Password', hi: 'पासवर्ड' },
+  or: { en: 'OR', hi: 'या' },
+  pinlabel: { en: 'Login with PIN', hi: 'PIN से लॉगिन करें' },
+  login: { en: 'LOGIN', hi: 'लॉगिन' },
+  devnote: { en: 'Development accounts — any non-empty password or PIN.', hi: 'डेवलपमेंट खाते — कोई भी पासवर्ड या PIN मान्य है।' },
+  selectlang: { en: 'Select Language', hi: 'भाषा चुनें' },
+  needhelp: { en: 'Need Help?', hi: 'सहायता चाहिए?' },
+  contactadmin: { en: 'Contact System Administrator', hi: 'सिस्टम प्रशासक से संपर्क करें' },
+  tabbook: { en: 'TICKET BOOKING', hi: 'टिकट बुकिंग' },
+  tabncmc: { en: 'NCMC CARD SERVICES', hi: 'NCMC कार्ड सेवाएँ' },
+  step1: { en: 'Journey Details', hi: 'यात्रा विवरण' },
+  step2: { en: 'Passenger Details', hi: 'यात्री विवरण' },
+  step3: { en: 'Review & Pay', hi: 'समीक्षा और भुगतान' },
+  step4: { en: 'Ticket / Receipt', hi: 'टिकट / रसीद' },
+  fromst: { en: 'From Station', hi: 'प्रस्थान स्टेशन' },
+  tost: { en: 'To Station', hi: 'गंतव्य स्टेशन' },
+  numpax: { en: 'Number of Passengers', hi: 'यात्रियों की संख्या' },
+  maxpax: { en: '(Max 10)', hi: '(अधिकतम 10)' },
+  booksum: { en: 'Booking Summary', hi: 'बुकिंग सारांश' },
+  quoteempty: { en: 'Choose a product and destination to see the fare.', hi: 'किराया देखने के लिए टिकट और गंतव्य चुनें।' },
+  taxable: { en: 'Taxable Value', hi: 'कर योग्य राशि' },
+  totalamt: { en: 'Total Amount', hi: 'कुल राशि' },
+  paycash: { en: 'Proceed to Payment — Cash', hi: 'भुगतान करें — नकद' },
+  clearall: { en: 'Clear All', hi: 'सब हटाएँ' },
+  cashonly: { en: 'Cash only at this counter', hi: 'इस काउंटर पर केवल नकद' },
+  verify: { en: 'Verify details before collecting payment.', hi: 'भुगतान लेने से पहले विवरण जाँच लें।' },
+  salecomplete: { en: 'Sale Complete', hi: 'बिक्री पूर्ण' },
+  paid: { en: 'Paid', hi: 'भुगतान हुआ' },
+  nextpax: { en: 'Next passenger', hi: 'अगला यात्री' },
+  printagain: { en: 'Print again', hi: 'फिर से प्रिंट करें' },
+  q1: { en: 'Check Booking', hi: 'बुकिंग देखें' },
+  q1s: { en: 'Search & View Bookings', hi: 'बुकिंग खोजें और देखें' },
+  q2: { en: 'Reprint Ticket', hi: 'टिकट पुनर्मुद्रण' },
+  q2s: { en: 'Reprint Existing Ticket', hi: 'मौजूदा टिकट दोबारा प्रिंट करें' },
+  q3: { en: 'Cancel Booking', hi: 'बुकिंग रद्द करें' },
+  q3s: { en: 'Cancel Existing Booking', hi: 'मौजूदा बुकिंग रद्द करें' },
+  q4: { en: 'Print Receipt', hi: 'रसीद प्रिंट करें' },
+  q4s: { en: 'Print Last Receipt', hi: 'अंतिम रसीद प्रिंट करें' },
+  q5: { en: 'System Info', hi: 'सिस्टम जानकारी' },
+  q5s: { en: 'System Information', hi: 'सिस्टम की जानकारी' },
+  secure: { en: 'Secure • Reliable • Fast', hi: 'सुरक्षित • विश्वसनीय • तेज़' },
+  copy: { en: '© 2026 Varanasi Ropeway. All rights reserved.', hi: '© 2026 वाराणसी रोपवे। सर्वाधिकार सुरक्षित।' },
+  'st.online': { en: 'Online', hi: 'ऑनलाइन' },
+  checking: { en: 'Checking…', hi: 'जाँच हो रही है…' },
+  'st.offline': { en: 'Offline', hi: 'ऑफ़लाइन' },
+  'st.stale': { en: 'Fare table stale', hi: 'किराया तालिका पुरानी' },
+};
+const TT = (key) => (TOM_STR[key] ? (TOM_STR[key][TLANG] ?? TOM_STR[key].en) : key);
+function applyLang(lang) {
+  TLANG = lang === 'hi' ? 'hi' : 'en';
+  localStorage.setItem(TLANG_KEY, TLANG);
+  document.documentElement.lang = TLANG === 'hi' ? 'hi-IN' : 'en-IN';
+  $$('[data-i18n]').forEach(el => { el.textContent = TT(el.dataset.i18n); });
+  $$('[data-i18n-ph]').forEach(el => { el.placeholder = TT(el.dataset.i18nPh); });
+  $$('#langRow button').forEach(b => b.classList.toggle('on', b.dataset.lang === TLANG));
+  renderStatus();
+  if (T.op && document.querySelector('#v-sale.on')) renderSale();
+}
+
 /* ---------- money / formats ---------- */
 const rupees = (paise) => '₹' + (paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -50,10 +125,18 @@ function toast(msg) {
 
 /* ---------- status bar ---------- */
 function renderStatus() {
-  $('#thStation').textContent = `${stationName(ORIGIN)} · ${DEVICE_CODE}`;
+  const st = store.db.stations.find(s => s.code === ORIGIN);
+  const stName = TLANG === 'hi' && st ? st.hi : stationName(ORIGIN);
+  $('#thStation').textContent = `${stName} · ${DEVICE_CODE}`;
+  document.body.classList.toggle('authed', !!T.op);
   const dot = $('#linkDot');
   dot.textContent = T.link === 'offline' ? 'offline' : 'linked';
   dot.classList.toggle('bad', T.link !== 'online');
+  const w = $('#linkWord');
+  if (w) {
+    w.textContent = TT(T.link === 'online' ? 'st.online' : T.link === 'offline' ? 'st.offline' : 'st.stale');
+    w.classList.toggle('bad', T.link !== 'online');
+  }
   const v = publishedVersion();
   const fv = $('#faresVer'), fc = $('#faresChip');
   fv.textContent = v ? `fares v${v.versionNo}${T.link === 'stale' ? ' stale' : ''}` : 'fares v—';
@@ -129,7 +212,7 @@ function renderSale() {
     <button class="pick prod ${o.product === p.code ? 'on' : ''}" data-p="${p.code}" aria-pressed="${o.product === p.code}">
       <span class="pico">${PICONS[p.code] || PICONS.SINGLE_JOURNEY}</span>
       <span class="radio" aria-hidden="true"></span>
-      <span class="ptxt"><b>${esc(p.en)}</b><span lang="hi-IN">${esc(p.hi)}</span></span>
+      <span class="ptxt"><b>${esc(TLANG === 'hi' ? p.hi : p.en)}</b><span lang="${TLANG === 'hi' ? 'en-IN' : 'hi-IN'}">${esc(TLANG === 'hi' ? p.en : p.hi)}</span></span>
     </button>`).join('');
   $$('#pkProduct .pick').forEach(b => b.addEventListener('click', () => {
     T.order.product = b.dataset.p; T.order.dest = null; renderSale();
@@ -143,7 +226,7 @@ function renderSale() {
       return `<button class="pick dest ${o.dest === s.code ? 'on' : ''}" data-d="${s.code}" aria-pressed="${o.dest === s.code}">
         <span class="pico">${DICON}</span>
         <span class="radio" aria-hidden="true"></span>
-        <b>${esc(s.en)}</b><span lang="hi-IN">${esc(s.hi)}</span>
+        <b>${esc(TLANG === 'hi' ? s.hi : s.en)}</b><span lang="${TLANG === 'hi' ? 'en-IN' : 'hi-IN'}">${esc(TLANG === 'hi' ? s.en : s.hi)}</span>
         <span class="pf">${q ? rupees(q.gross) : '—'}</span>
       </button>`;
     }).join('');
@@ -247,18 +330,65 @@ function showIssued(sale) {
 /* ---------- boot ---------- */
 function boot() {
   renderStatus();
-  /* sign-in form: button disabled while either field empty */
-  const upd = () => { $('#tSignIn').disabled = !$('#tUser').value.trim() || !$('#tPass').value; };
+  /* live clock in the status panel */
+  const tick = () => {
+    const d = new Date();
+    const ds = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    const ts = d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true }).toUpperCase();
+    if ($('#sysDate')) { $('#sysDate').textContent = ds; $('#sysTime').textContent = ts; }
+  };
+  tick(); setInterval(tick, 15000);
+  /* PIN pad — dev sign-in: 4 digits act as tom.dev credentials */
+  let PIN = '';
+  const drawPin = () => {
+    $$('#pinBoxes span').forEach((b, i) => { b.textContent = i < PIN.length ? '•' : ''; b.classList.toggle('f', i < PIN.length); });
+    upd();
+  };
+  $('#pinPad')?.addEventListener('click', e => {
+    const k = e.target.closest('button')?.dataset.k; if (!k) return;
+    if (k === 'clear') PIN = '';
+    else if (k === 'back') PIN = PIN.slice(0, -1);
+    else if (PIN.length < 4) PIN += k;
+    drawPin();
+  });
+  /* the button stays enabled; validation happens on submit */
+  const upd = () => { $('#tSignIn').disabled = false; };
   $('#tUser').addEventListener('input', upd); $('#tPass').addEventListener('input', upd);
   $('#tLoginForm').addEventListener('submit', e => {
     e.preventDefault();
-    const b = $('#tSignIn'); b.textContent = 'Checking…'; b.disabled = true;
-    setTimeout(() => { b.textContent = 'Sign in'; upd(); doSignIn($('#tUser').value.trim()); }, 300);
+    const hasCreds = $('#tUser').value.trim() && $('#tPass').value;
+    if (!hasCreds && PIN.length !== 4) {
+      const box = $('#tLoginErr');
+      box.textContent = 'Enter your Operator ID and password, or a 4-digit PIN.';
+      box.classList.add('show');
+      return;
+    }
+    if (!$('#tUser').value.trim()) { $('#tUser').value = 'tom.dev'; $('#tPass').value = PIN; }
+    const b = $('#tSignIn'); const label = b.querySelector('span'); label.textContent = TT('checking'); b.disabled = true;
+    setTimeout(() => { label.textContent = TT('login'); PIN = ''; drawPin(); doSignIn($('#tUser').value.trim()); }, 300);
+  });
+  /* decorative surfaces from the reference design */
+  $('#ncmcTab')?.addEventListener('click', () => toast('NCMC card services arrive in Phase 2.'));
+  $('#quickRow')?.addEventListener('click', e => {
+    const q = e.target.closest('button')?.dataset.q; if (!q) return;
+    if (!T.op) return toast('Sign in first — the counter is locked.');
+    if (q === 'Reprint Ticket' || q === 'Print Receipt') {
+      if (T.current) showIssued(T.current); else toast('No sale has been completed at this counter yet.');
+    } else toast(`${q} is recorded against the Back Office in Phase 1 — use the BOS console.`);
+  });
+  $('#langRow')?.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    applyLang(b.dataset.lang);
+  });
+  if (TLANG === 'hi') applyLang('hi');
+  $('#clearAll')?.addEventListener('click', () => {
+    T.order = { product: null, dest: null, qty: 1 }; T._lastTotal = undefined; renderSale();
   });
   $$('.demo-chips button').forEach(b => b.addEventListener('click', () => {
     $('#tUser').value = b.dataset.demo; $('#tPass').value = 'dev'; upd();
-    const s = $('#tSignIn'); s.textContent = 'Checking…'; s.disabled = true;
-    setTimeout(() => { s.textContent = 'Sign in'; upd(); doSignIn(b.dataset.demo); }, 300);
+    const s = $('#tSignIn'); const label = s.querySelector('span');
+    label.textContent = TT('checking'); s.disabled = true;
+    setTimeout(() => { label.textContent = TT('login'); upd(); doSignIn(b.dataset.demo); }, 300);
   }));
   $('#tEye').addEventListener('click', () => {
     const p = $('#tPass'); p.type = p.type === 'password' ? 'text' : 'password';

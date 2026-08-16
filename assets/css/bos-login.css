@@ -1,0 +1,149 @@
+/* ════════════════════════════════════════════════════════════
+   BOS sign-in — split hero, mock parity v2
+   Left: pale-sky header (dark type) over the ghats photo, stats
+   strip, copyright. Right: cream panel with mandala line art and
+   the Welcome Back! card.
+   ════════════════════════════════════════════════════════════ */
+
+.blogin { display: flex; min-height: 100vh; font-family: 'Geist', 'Noto Sans Devanagari', system-ui, sans-serif; }
+.lg-left {
+  flex: 1.02; position: relative; display: flex; flex-direction: column; align-items: center;
+  padding: 36px 44px 26px; overflow: hidden;
+  background: url('../img/login-hero.png') 93% 24% / cover no-repeat #f6e7d3;
+}
+/* pale sky wash up top so the header reads dark; gentle dusk at the foot */
+.lg-left::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg,
+    rgba(253, 245, 235, .92) 0%, rgba(253, 245, 235, .66) 20%,
+    rgba(253, 245, 235, .22) 38%, rgba(253, 245, 235, 0) 52%,
+    rgba(43, 26, 14, .08) 80%, rgba(43, 26, 14, .26) 100%);
+}
+.lg-left > * { position: relative; z-index: 1; }
+.lgl-logo { width: min(360px, 64%); height: auto; margin-top: 4px; }
+.lgl-head { margin-top: 30px; text-align: center; }
+.lgl-head h1 {
+  color: #5f2d0e; font-size: clamp(32px, 3.1vw, 42px); font-weight: 700;
+  letter-spacing: -.02em; text-shadow: 0 1px 14px rgba(255, 246, 235, .8);
+}
+.lgl-head p { margin: 9px 0 0; font-size: 17px; color: #5d4a3a; font-weight: 500; text-shadow: 0 1px 10px rgba(255, 246, 235, .8); }
+.lgl-orn { display: flex; align-items: center; gap: 12px; margin: 20px auto 0; width: 300px; }
+.lgl-orn span { flex: 1; border-top: 1.5px solid rgba(160, 90, 38, .55); }
+.lgl-orn i { width: 9px; height: 9px; background: #e07020; transform: rotate(45deg); flex: 0 0 auto; }
+.lgl-spacer { flex: 1; }
+.lgl-stats {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  align-self: stretch; color: #fff;
+  background: rgba(32, 19, 8, .66); border: 1px solid rgba(255, 182, 72, .25);
+  border-radius: 18px; padding: 18px 22px;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.lgl-stats .ls { display: flex; align-items: center; gap: 11px; padding: 0 10px; }
+.lgl-stats .ls + .ls { border-left: 1px solid rgba(255, 255, 255, .16); }
+.lgl-stats svg { width: 26px; height: 26px; color: #f3a20f; flex: 0 0 auto; }
+.lgl-stats b { display: block; font-size: 19px; font-weight: 700; line-height: 1.2; letter-spacing: -.01em; }
+.lgl-stats span { font-size: 12px; color: #f3e6d2; }
+.lgl-copy { text-align: center; margin-top: 16px; font-size: 12.5px; color: rgba(255, 244, 228, .9); text-shadow: 0 1px 8px rgba(43, 26, 14, .5); }
+
+.lg-right {
+  flex: 1; display: grid; place-items: center; padding: 40px 32px; position: relative; overflow: hidden;
+  background-color: #fdf6ee;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420' viewBox='0 0 420 420' fill='none' stroke='%23e9c49f'%3E%3Ccircle cx='210' cy='210' r='200' stroke-dasharray='3 7'/%3E%3Ccircle cx='210' cy='210' r='178'/%3E%3Ccircle cx='210' cy='210' r='166' stroke-dasharray='14 10' stroke-width='2'/%3E%3Ccircle cx='210' cy='210' r='132' stroke-dasharray='2 6'/%3E%3Ccircle cx='210' cy='210' r='108'/%3E%3Ccircle cx='210' cy='210' r='96' stroke-dasharray='8 12'/%3E%3Ccircle cx='210' cy='210' r='60' stroke-dasharray='2 5'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='460' height='460' viewBox='0 0 460 460' fill='none' stroke='%23ecccab'%3E%3Ccircle cx='230' cy='230' r='220' stroke-dasharray='3 7'/%3E%3Ccircle cx='230' cy='230' r='188' stroke-dasharray='16 12' stroke-width='2'/%3E%3Ccircle cx='230' cy='230' r='142'/%3E%3Ccircle cx='230' cy='230' r='100' stroke-dasharray='2 6'/%3E%3C/svg%3E"),
+    radial-gradient(700px 480px at 0% 100%, #f8e9d6, transparent 70%);
+  background-repeat: no-repeat;
+  background-position: 34% -230px, right -160px bottom -160px, 0 100%;
+}
+.lg-col { width: min(500px, 100%); position: relative; }
+.lgc {
+  width: 100%; background: #fff; border: none; border-radius: 24px;
+  padding: 40px 44px 30px;
+  box-shadow: 0 4px 10px rgba(124, 45, 18, .05), 0 30px 80px rgba(124, 45, 18, .14);
+}
+.lgc-badge {
+  width: 88px; height: 88px; margin: 0 auto 16px; border-radius: 50%;
+  background: #fbe9d7; color: #c2410c; display: grid; place-items: center;
+}
+.lgc-badge svg { width: 42px; height: 42px; }
+.lgc h2 { text-align: center; font-size: 28px; font-weight: 700; letter-spacing: -.02em; color: #6b1f10; }
+.lgc-sub { text-align: center; font-size: 15px; color: #5d4a3a; line-height: 1.5; margin: 9px 0 24px; }
+.lgc .login-err { margin-bottom: 12px; }
+.lgc-label { display: block; font-size: 14px; font-weight: 600; color: #33251a; margin-bottom: 8px; }
+.lgc-input { position: relative; margin-bottom: 16px; }
+.lgc-input svg { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #a1907d; pointer-events: none; }
+.lgc-input input {
+  width: 100%; height: 50px; border-radius: 12px; border: 1px solid #e8dcc9; background: #fff;
+  padding: 0 46px 0 44px; font: inherit; font-size: 14.5px; color: #33251a;
+}
+.lgc-input input::placeholder { color: #a89681; }
+.lgc-input input:focus { outline: none; border-color: #ea580c; box-shadow: 0 0 0 3px rgba(234, 88, 12, .14); }
+.lgc-input .eye {
+  position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
+  width: 36px; height: 36px; display: grid; place-items: center; border-radius: 9px; color: #a1907d;
+}
+.lgc-input .eye:hover { color: #7c2d12; background: #faf3ea; }
+.lgc-input .eye svg { position: static; transform: none; pointer-events: none; }
+.lgc-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 20px; font-size: 14px; }
+.lgc-remember { display: inline-flex; align-items: center; gap: 9px; color: #33251a; cursor: pointer; }
+.lgc-remember input { width: 17px; height: 17px; accent-color: #ea580c; }
+.lgc-forgot { color: #d3510a; font-weight: 600; text-decoration: none; }
+.lgc-forgot:hover { text-decoration: underline; text-underline-offset: 3px; }
+.lgc-btn {
+  width: 100%; height: 54px; border-radius: 13px; border: none; cursor: pointer;
+  background: linear-gradient(180deg, #f0862a 0%, #e35d0d 70%, #da5407 100%);
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(227, 93, 13, .38), inset 0 1px 0 rgba(255, 255, 255, .3);
+  font: inherit; font-size: 16.5px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: filter .12s, transform .12s;
+}
+.lgc-btn:hover { filter: brightness(1.05); }
+.lgc-btn:active { transform: scale(.985); }
+.lgc-btn svg { width: 19px; height: 19px; }
+.lgc-or { display: flex; align-items: center; gap: 16px; margin: 20px 0 16px; }
+.lgc-or::before, .lgc-or::after { content: ''; flex: 1; border-top: 1px solid #ecdfcd; }
+.lgc-or span { font-size: 13px; font-weight: 600; color: #8a7864; }
+.lgc-google {
+  width: 100%; height: 50px; border-radius: 12px; cursor: pointer;
+  border: 1px solid #e8dcc9; background: #fff; color: #33251a;
+  font: inherit; font-size: 15px; font-weight: 500;
+  display: flex; align-items: center; justify-content: center; gap: 11px;
+  transition: background .12s, border-color .12s;
+}
+.lgc-google:hover { background: #faf5ec; border-color: #d3c2a9; }
+.lgc-google svg { width: 20px; height: 20px; }
+.lgc-help {
+  display: flex; gap: 13px; align-items: center;
+  margin-top: 22px; font-size: 13.5px; color: #5d4a3a; line-height: 1.65;
+}
+.lgc-help svg { width: 36px; height: 36px; color: #c2410c; flex: 0 0 auto; padding: 7px; border: 1.5px solid #eccdb0; border-radius: 50%; }
+.lgc-help b { color: #d3510a; font-weight: 600; }
+.lgc-dev { margin-top: 14px; text-align: center; font-size: 11.5px; color: #a1907d; line-height: 1.9; }
+.lgc-dev span { display: block; }
+.lgc-dev button {
+  font: inherit; font-size: 11.5px; font-family: 'Geist Mono', ui-monospace, monospace;
+  color: #8a5a2b; background: rgba(255, 255, 255, .75); border: 1px solid #eee0cc;
+  border-radius: 6px; padding: 1px 8px; margin: 0 3px 4px; cursor: pointer;
+}
+.lgc-dev button:hover { background: #fdeee0; color: #7c2d12; }
+
+/* fit shorter screens without breaking */
+@media (max-height: 900px) {
+  .lgc { padding: 30px 40px 24px; }
+  .lgc-badge { width: 72px; height: 72px; margin-bottom: 12px; }
+  .lgc-badge svg { width: 34px; height: 34px; }
+  .lgc h2 { font-size: 25px; }
+  .lgc-sub { margin-bottom: 18px; }
+  .lgc-input input { height: 46px; }
+  .lgc-btn { height: 50px; }
+  .lgc-google { height: 46px; }
+  .lgl-head { margin-top: 20px; }
+  .lgl-logo { width: min(320px, 60%); }
+}
+@media (max-width: 960px) {
+  .blogin { flex-direction: column; }
+  .lg-left { flex: none; min-height: 40vh; }
+  .lgl-stats { display: none; }
+  .lgl-spacer { min-height: 20px; }
+}

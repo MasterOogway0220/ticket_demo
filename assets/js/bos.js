@@ -64,9 +64,35 @@ const NAV = [
 ];
 
 /* ---------- shell ---------- */
+const NAV_ICONS = {
+  dashboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg>',
+  stations: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/></svg>',
+  devices: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
+  products: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-7-7A2 2 0 0 1 3 12.2V5a2 2 0 0 1 2-2h7.2a2 2 0 0 1 1.4.6l7 7a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1" fill="currentColor" stroke="none"/></svg>',
+  fares: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12M6 8.5h12M6 4c4 0 7 2 7 6l-7 9.5"/><path d="M13 10H6"/></svg>',
+  'excess-fare': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4z"/></svg>',
+  alarms: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
+  hotlist: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M5.5 5.5l13 13"/></svg>',
+  labels: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3.5 12h17M12 3a14.5 14.5 0 0 1 0 18M12 3a14.5 14.5 0 0 0 0 18"/></svg>',
+  approvals: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>',
+  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M16 5.2a3.2 3.2 0 0 1 0 5.9M17.5 14.6a5.5 5.5 0 0 1 3 4.9"/></svg>',
+  audit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 4.5 5.5v5c0 4.6 3.1 8.4 7.5 10 4.4-1.6 7.5-5.4 7.5-10v-5z"/><path d="M9 11.5l2 2 4-4.5"/></svg>',
+};
+const NAV_GROUPS = [
+  ['Overview', ['dashboard']],
+  ['Network', ['stations', 'devices']],
+  ['Commercial', ['products', 'fares', 'excess-fare']],
+  ['Operations', ['alarms', 'hotlist', 'labels']],
+  ['Governance', ['approvals', 'users', 'audit']],
+];
 function renderNav(current) {
-  $('#nav').innerHTML = NAV.filter(n => !n.perm || session.can(n.perm)).map(n =>
-    `<a href="#/${n.id}" class="${n.id === current ? 'on' : ''}">${esc(n.label)}</a>`).join('');
+  const visible = NAV.filter(n => !n.perm || session.can(n.perm));
+  $('#nav').innerHTML = NAV_GROUPS.map(([title, ids]) => {
+    const items = ids.map(id => visible.find(n => n.id === id)).filter(Boolean);
+    if (!items.length) return '';
+    return `<h6>${title}</h6>` + items.map(n =>
+      `<a href="#/${n.id}" class="${n.id === current ? 'on' : ''}">${NAV_ICONS[n.id] || ''}<span>${esc(n.label)}</span></a>`).join('');
+  }).join('');
 }
 function setHeader(title, desc) {
   $('#pageTitle').textContent = title;
@@ -87,12 +113,21 @@ function route() {
   CURRENT = page; PARAM = param || null;
   const def = NAV.find(n => n.id === page);
   if (!def || !PAGES[page]) { location.hash = '#/dashboard'; return; }
-  renderNav(page);
-  const fresh = $('#content').cloneNode(false);
-  $('#content').replaceWith(fresh);
-  PAGES[page](param);
-  if (window.Motion) Motion.page();
-  window.scrollTo(0, 0);
+  closeDrawer();
+  const render = () => {
+    renderNav(page);
+    const fresh = $('#content').cloneNode(false);
+    $('#content').replaceWith(fresh);
+    PAGES[page](param);
+    window.scrollTo(0, 0);
+  };
+  // buttery page change: the browser morphs the nav pill and slides the
+  // content in (see ::view-transition rules in bos.css); GSAP fallback
+  const vt = route._ran && document.startViewTransition &&
+    !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  route._ran = true;
+  if (vt) document.startViewTransition(render);
+  else { render(); if (window.Motion) Motion.page(); }
 }
 window.addEventListener('hashchange', route);
 
@@ -1186,6 +1221,21 @@ function showApp() {
 }
 function boot() {
   $('#overlay').addEventListener('click', closeDrawer);
+  const railBtn = $('#railToggle');
+  const setRail = (collapsed) => {
+    document.body.classList.toggle('rail-collapsed', collapsed);
+    railBtn?.setAttribute('aria-expanded', String(!collapsed));
+    localStorage.setItem('bos.rail', collapsed ? '1' : '');
+  };
+  railBtn?.addEventListener('click', () => setRail(!document.body.classList.contains('rail-collapsed')));
+  if (localStorage.getItem('bos.rail') === '1') setRail(true);
+  $('#pwToggle')?.addEventListener('click', () => {
+    const p = $('#loginPass'); if (!p) return;
+    p.type = p.type === 'password' ? 'text' : 'password';
+    $('#pwToggle').setAttribute('aria-label', p.type === 'password' ? 'Show password' : 'Hide password');
+  });
+  $('#googleBtn')?.addEventListener('click', () => toast('Single sign-on arrives with the production identity provider.'));
+  $('#forgotLink')?.addEventListener('click', e => { e.preventDefault(); toast('Passwords are managed by the identity provider.'); });
   $('#signOut').addEventListener('click', () => { session.signOut(); location.hash = ''; location.reload(); });
   $('#resetData')?.addEventListener('click', () => { store.reset(); location.reload(); });
   $('#loginForm').addEventListener('submit', e => {
