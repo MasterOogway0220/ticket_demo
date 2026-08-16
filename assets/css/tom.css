@@ -166,17 +166,26 @@ body:not(.authed) .tquick .qi { background: transparent; border-color: rgba(255,
   display: grid; place-items: center; font-size: 22px; color: var(--t-ink);
 }
 .tl-pins span.f { border-color: var(--t-orange); }
-.tl-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 290px; margin: 0 auto 12px; }
-.tl-pad button {
-  height: 42px; border-radius: 9px; background: #fff; border: 1px solid #e3d5c2;
-  box-shadow: 0 2px 0 rgba(58, 22, 8, .06); cursor: pointer;
-  font: inherit; font-size: 17px; font-weight: 600; color: var(--t-ink);
-  display: grid; place-items: center; transition: background .1s, transform .08s;
+.tl-pins { position: relative; margin-bottom: 14px; }
+.tl-pins input {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; border: none; background: none; cursor: pointer; caret-color: transparent;
 }
-.tl-pad button:hover { background: #fdf6ec; }
-.tl-pad button:active { transform: translateY(1px); box-shadow: none; }
-.tl-pad button svg { width: 20px; height: 20px; }
-.tl-pad .pc { color: var(--t-deep); font-weight: 700; }
+.tl-pinwrap { display: none; }
+form.pinmode .tl-input { display: none; }
+form.pinmode .tl-pinwrap { display: block; }
+.tl-pinbtn .pm-cred { display: none; }
+form.pinmode .pm-pin { display: none; }
+form.pinmode .pm-cred { display: inline; }
+.tl-pinbtn {
+  width: 100%; height: 44px; border-radius: 10px; cursor: pointer;
+  border: 1.5px solid #f3c9a8; background: rgba(255, 255, 255, .75); color: var(--t-deep);
+  font: inherit; font-size: 14px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: background .12s;
+}
+.tl-pinbtn:hover { background: #fdeee0; }
+.tl-pinbtn svg { width: 19px; height: 19px; }
 .tl-login {
   width: 100%; height: 48px; border-radius: 11px; border: none; cursor: pointer;
   background: var(--t-grad); color: #fff;
@@ -436,8 +445,6 @@ body:not(.authed) .tquick .qi { background: transparent; border-color: rgba(255,
   .tl-pinlabel { margin-bottom: 6px; }
   .tl-pins { gap: 10px; margin-bottom: 8px; }
   .tl-pins span { width: 40px; height: 40px; }
-  .tl-pad { gap: 7px; margin-bottom: 10px; }
-  .tl-pad button { height: 38px; font-size: 16px; }
   .tl-login { height: 44px; font-size: 15px; }
   .tlogin-card .demo-row { margin-top: 10px; padding-top: 7px; }
   .tlogin-card .demo-row p { font-size: 11px; margin-bottom: 4px; }
@@ -477,8 +484,6 @@ body:not(.authed) .tquick .qi { background: transparent; border-color: rgba(255,
   .tl-pinlabel { margin-bottom: 4px; font-size: 12.5px; }
   .tl-pins { gap: 8px; margin-bottom: 6px; }
   .tl-pins span { width: 34px; height: 34px; font-size: 18px; }
-  .tl-pad { gap: 6px; margin-bottom: 8px; max-width: 260px; }
-  .tl-pad button { height: 32px; font-size: 14px; }
   .tl-login { height: 38px; font-size: 14px; }
   .tlogin-card .demo-row { margin-top: 6px; padding-top: 5px; }
   .tlogin-card .demo-row p { font-size: 10.5px; margin-bottom: 3px; }

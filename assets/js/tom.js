@@ -43,6 +43,8 @@ const TOM_STR = {
   pass: { en: 'Password', hi: 'पासवर्ड' },
   or: { en: 'OR', hi: 'या' },
   pinlabel: { en: 'Login with PIN', hi: 'PIN से लॉगिन करें' },
+  pinhint: { en: 'Type your 4-digit PIN', hi: 'अपना 4 अंकों का PIN टाइप करें' },
+  credbtn: { en: 'Login with ID & Password', hi: 'आईडी व पासवर्ड से लॉगिन करें' },
   login: { en: 'LOGIN', hi: 'लॉगिन' },
   devnote: { en: 'Development accounts — any non-empty password or PIN.', hi: 'डेवलपमेंट खाते — कोई भी पासवर्ड या PIN मान्य है।' },
   selectlang: { en: 'Select Language', hi: 'भाषा चुनें' },
@@ -338,19 +340,28 @@ function boot() {
     if ($('#sysDate')) { $('#sysDate').textContent = ds; $('#sysTime').textContent = ts; }
   };
   tick(); setInterval(tick, 15000);
-  /* PIN pad — dev sign-in: 4 digits act as tom.dev credentials */
+  /* PIN mode — toggled by button, typed on the keyboard; 4 digits
+     auto-submit (dev sign-in: any PIN acts as tom.dev credentials) */
   let PIN = '';
+  const pinInput = $('#pinInput');
   const drawPin = () => {
     $$('#pinBoxes span').forEach((b, i) => { b.textContent = i < PIN.length ? '•' : ''; b.classList.toggle('f', i < PIN.length); });
-    upd();
   };
-  $('#pinPad')?.addEventListener('click', e => {
-    const k = e.target.closest('button')?.dataset.k; if (!k) return;
-    if (k === 'clear') PIN = '';
-    else if (k === 'back') PIN = PIN.slice(0, -1);
-    else if (PIN.length < 4) PIN += k;
+  pinInput?.addEventListener('input', () => {
+    PIN = pinInput.value.replace(/\D/g, '').slice(0, 4);
+    pinInput.value = PIN;
     drawPin();
+    if (PIN.length === 4) $('#tLoginForm').requestSubmit();
   });
+  const setPinMode = (on) => {
+    $('#tLoginForm').classList.toggle('pinmode', on);
+    $('#pinModeBtn')?.setAttribute('aria-pressed', String(on));
+    PIN = ''; if (pinInput) pinInput.value = '';
+    drawPin();
+    if (on) pinInput?.focus(); else $('#tUser')?.focus();
+  };
+  $('#pinModeBtn')?.addEventListener('click', () => setPinMode(!$('#tLoginForm').classList.contains('pinmode')));
+  $('#pinBoxes')?.addEventListener('click', () => pinInput?.focus());
   /* the button stays enabled; validation happens on submit */
   const upd = () => { $('#tSignIn').disabled = false; };
   $('#tUser').addEventListener('input', upd); $('#tPass').addEventListener('input', upd);
