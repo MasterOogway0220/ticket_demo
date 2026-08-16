@@ -195,10 +195,11 @@ PAGES.dashboard = () => {
   const rows = (db.opsDaily || []).filter(r => days.has(r.date));
   const agg = {};
   for (const r of rows) {
-    const a = agg[r.code] || (agg[r.code] = { code: r.code, tomT: 0, tomG: 0, tvmT: 0, tvmG: 0, taps: 0 });
+    const a = agg[r.code] || (agg[r.code] = { code: r.code, tomT: 0, tomG: 0, tvmT: 0, tvmG: 0, taps: 0, ent: 0, ext: 0 });
     a.tomT += r.tom.tickets; a.tomG += r.tom.grossPaise;
     a.tvmT += r.tvm.tickets; a.tvmG += r.tvm.grossPaise;
     a.taps += r.ncmcTaps;
+    a.ent += r.entries || 0; a.ext += r.exits || 0;
   }
   const stAgg = db.stations.slice().sort((a, b) => a.seq - b.seq).map(s => agg[s.code]).filter(Boolean);
   const sum = (f) => stAgg.reduce((a, o) => a + f(o), 0);
@@ -308,9 +309,9 @@ PAGES.dashboard = () => {
     const dIn = db.devices.filter(d => !scope || d.station === scope);
     const act = (t) => { const l = dIn.filter(d => d.type === t); return { on: l.filter(x => x.status === 'active').length, total: l.length }; };
     const tom = act('TOM'), tvm = act('TVM'), srv = act('STATION_SERVER'), ecu = act('ECU');
-    const entry = dIn.filter(d => d.type === 'ECU' && d.dir === 'entry').length;
-    const exit = dIn.filter(d => d.type === 'ECU' && d.dir === 'exit').length;
-    const o = scope ? (agg[scope] || { tomT: 0, tomG: 0, tvmT: 0, tvmG: 0, taps: 0 }) : { tomT, tomG, tvmT, tvmG, taps };
+    const o = scope ? (agg[scope] || { tomT: 0, tomG: 0, tvmT: 0, tvmG: 0, taps: 0, ent: 0, ext: 0 })
+      : { tomT, tomG, tvmT, tvmG, taps, ent: sum(x => x.ent), ext: sum(x => x.ext) };
+    const inside = Math.max(0, o.ent - o.ext);
     const t = o.tomT + o.tvmT, g = o.tomG + o.tvmG;
     const stIn = db.stations.filter(s => !scope || s.code === scope);
     const stOn = stIn.filter(s => s.status === 'active').length;
@@ -321,6 +322,7 @@ PAGES.dashboard = () => {
     const nowH = new Date().getHours() + new Date().getMinutes() / 60;
     const frac = DASH.range === 'today' ? Math.min(1, Math.max(0.05, (nowH - 5) / 16)) : 1;
     const pT = pRows.reduce((a, r) => a + r.tom.tickets + r.tvm.tickets, 0) * frac;
+    const pE = pRows.reduce((a, r) => a + (r.entries || 0), 0) * frac;
     const pG = pRows.reduce((a, r) => a + r.tom.grossPaise + r.tvm.grossPaise, 0) * frac;
     const vsWhat = DASH.range === 'today' ? 'vs same time yesterday' : 'vs previous period';
     const trend = (now, before) => {
@@ -343,8 +345,10 @@ PAGES.dashboard = () => {
       ${kpi(4, KI.tom, `${tom.on} / ${tom.total}`, 'ToM counters active', dot(tom.on, tom.total))}
       ${kpi(5, KI.tvm, `${tvm.on} / ${tvm.total}`, 'TVM kiosks active', dot(tvm.on, tvm.total))}
       ${kpi(6, KI.srv, `${srv.on} / ${srv.total}`, 'Station servers active', dot(srv.on, srv.total))}
-      ${kpi(7, KI.entry, num(entry), 'Entry gates', live)}
-      ${kpi(8, KI.exit, num(exit), 'Exit gates', live)}
+      ${kpi(7, KI.entry, num(o.ent), 'Passengers entered', trend(o.ent, pE))}
+      ${kpi(8, KI.exit, num(o.ext), 'Passengers exited', inside
+        ? `<span class="kpi-m warn">${num(inside)} still on the line</span>`
+        : `<span class="kpi-m ok">Everyone who entered has left</span>`)}
     </div>`;
   };
 

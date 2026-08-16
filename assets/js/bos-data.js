@@ -222,10 +222,16 @@ function buildOps() {
       const total = Math.round(b.t * wk * (0.88 + n1 * 0.24) * part);
       const tomT = Math.round(total * (0.68 + n2 * 0.1)), tvmT = total - tomT;
       const fare = Math.round(b.f * (0.94 + n2 * 0.12));
+      const taps = Math.round(total * (0.09 + n1 * 0.05));
+      /* gate passages: every ticket and every card tap is a person through
+         an entry gate. On a completed day everyone who entered has left;
+         part-way through today some are still on the line. */
+      const entries = total + taps;
+      const exits = i === 0 ? Math.round(entries * 0.93) : entries;
       out.push({ date: k, code,
         tom: { tickets: tomT, grossPaise: tomT * fare },
         tvm: { tickets: tvmT, grossPaise: tvmT * Math.round(fare * 0.93) },
-        ncmcTaps: Math.round(total * (0.09 + n1 * 0.05)) });
+        ncmcTaps: taps, entries, exits });
     }
   }
   return out;
@@ -234,7 +240,7 @@ function buildOps() {
 function seedDB() {
   const now = Date.now();
   return {
-    v: 7,
+    v: 8,
     stations: STN.map(s => ({ ...s })),
     devices: buildDevices(),
     products: PRODUCTS.map(p => ({ ...p })),
@@ -328,7 +334,7 @@ const store = {
   load() {
     try {
       const raw = localStorage.getItem(DB_KEY);
-      if (raw) { this.db = JSON.parse(raw); if (this.db.v === 7) return; }
+      if (raw) { this.db = JSON.parse(raw); if (this.db.v === 8) return; }
     } catch (e) { /* fall through to reseed */ }
     this.db = seedDB(); this.save();
   },
